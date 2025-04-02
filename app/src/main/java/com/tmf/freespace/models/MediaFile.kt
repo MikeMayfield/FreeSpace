@@ -11,7 +11,7 @@ data class MediaFile(
     val width: Int,
     val height: Int,
     val mediaType: MediaType,
-    val currentCompressionLevel: Int = 0,
+    var currentCompressionLevel: Int = 0,
     var desiredCompressionLevel: Int = 0,
     val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z

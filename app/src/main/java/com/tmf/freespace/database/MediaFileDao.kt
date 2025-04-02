@@ -75,4 +75,8 @@ class MediaFileDao(private val database: AppDatabase) {
             put("isOnServer", database.boolToInt(mediaFile.isOnServer))
         }
     }
+
+    fun update(file: MediaFile) {
+        database.writable.update(tableName, getContentValues(file, true), "id = ?", arrayOf(file.id.toString()))
+    }
 }

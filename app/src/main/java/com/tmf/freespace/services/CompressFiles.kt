@@ -39,14 +39,13 @@ class CompressFiles(
 
     //region Public Methods
 
-    //Start compression process. Must be called on IO coroutine dispatcher
-    suspend fun start()  {
+    //Start compression process. Must be called on background thread
+    fun start()  {
         addAllNewMediaFilesToDB()  //Add all new media files to DB
         val bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0L) {
             selectFilesToCompress(bytesToRecover)  //Get all files to compress
-            val loginToken = loginToCloudServer()  //Log into user account and get access token
-            compressFiles(loginToken)
+            compressSelectedFiles(bytesToRecover)  //Compress all pending files
         }
     }
 
@@ -78,11 +77,12 @@ class CompressFiles(
     private fun selectFilesToCompress(bytesToRecover: Long) {
         //Desired compression levels for images and videos, depending on their age
         val compressionLevels = listOf(
-            CompressionLevel(0, 31, 0, 0),
-            CompressionLevel(31, 60, 100, 0),
-            CompressionLevel(60, 180, 200, 250),
-            CompressionLevel(180, 365, 300, 350),
-            CompressionLevel(365, 10000, 400, 450),
+            CompressionLevel(0, 31, 0, 0),  //No compression allowed
+            CompressionLevel(31, 60, 100, 0),  //Image: Resolution 100% of screen, Compression 80%
+            CompressionLevel(60, 180, 200, 250),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p, Compression 50%
+            CompressionLevel(180, 365, 300, 350),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p, Compression 80%
+            CompressionLevel(365, 10000, 400, 450),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p, Compression 90%
+
         )
 
         val nowSecs = System.currentTimeMillis() / 1000L
@@ -99,7 +99,7 @@ class CompressFiles(
         return ""  //TODO("Not yet implemented")
     }
 
-    private fun compressFiles(loginToken: String) {  //TODO Handle abort when no longer idle
+    private fun compressSelectedFiles(bytesToRecover: Long) {  //TODO Handle abort when no longer idle
         //Get list of files needing to be compressed or recompressed from db
         //For all files to compress (possibly batched)
         // . Send file to cloud, if not already uploaded
@@ -107,21 +107,33 @@ class CompressFiles(
         // . . Restore file from cloud
         // . Compress file and replace original; update db
         // . Update space used/available on server in db
+        var compressionRemainingBytes = bytesToRecover
+        val loginToken = loginToCloudServer()  //Log into user account and get access token
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var file: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
-        while (file != null) {
+        while (file != null && compressionRemainingBytes > 0) {
+            //If file is not on server, send to cloud
             if (!file.isOnServer) {
                 sendMediaFileToCloud(loginToken, file)
                 file.isOnServer = true
             }
+
+            //If file is already compressed, restore from cloud before recompressing
             if (file.currentCompressionLevel != 0) {
-                restoreMediaFileFromCloud(file)
+                restoreMediaFileFromCloud(loginToken, file)
             }
+
+            //Compress file
             val compressedSize = compressMediaFile(file)
             file.compressedSize = compressedSize
+            file.currentCompressionLevel = file.desiredCompressionLevel
+            val bytesSaved = file.originalSize - compressedSize
+            compressionRemainingBytes -= bytesSaved
 
-//            database.mediaFileDao.update(file)  //Save changed to MediaFile object in db
+            //MediaFile has changed, so update the DB
+//TODO            database.mediaFileDao.update(file)
 
+            //Go to the next file, if any
             file = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         }
         filesToCompressCursor.close()
@@ -131,7 +143,7 @@ class CompressFiles(
 //        TODO("Not yet implemented")
     }
 
-    private fun restoreMediaFileFromCloud(file: MediaFile) {
+    private fun restoreMediaFileFromCloud(loginToken: String, file: MediaFile) {
 //        TODO("Not yet implemented")
     }
 
