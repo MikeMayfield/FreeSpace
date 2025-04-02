@@ -51,9 +51,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     private fun createMediaFileTable(): String {
         val sb = StringBuilder("CREATE TABLE IF NOT EXISTS MediaFile (")
-        sb.append("id INTEGER PRIMARY KEY AUTOINCREMENT, ")
+        sb.append("id INTEGER NOT NULL PRIMARY KEY, ")
         sb.append("displayName TEXT NOT NULL, ")
-        sb.append("directoryPath TEXT NOT NULL, ")
+        sb.append("relativePath TEXT NOT NULL, ")
         sb.append("originalSize INTEGER NOT NULL, ")
         sb.append("compressedSize INTEGER NOT NULL, ")
         sb.append("width INTEGER NOT NULL, ")
@@ -71,8 +71,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     private fun createUserTable(): String {
         val sb = StringBuilder("CREATE TABLE IF NOT EXISTS User (")
-        sb.append("idGuid TEXT, ")
-        sb.append("phoneNumber TEXT, ")
+        sb.append("idGuid TEXT NOT NULL, ")
+        sb.append("phoneNumber TEXT NOT NULL, ")
         sb.append("emailAddress TEXT NOT NULL, ")
         sb.append("password TEXT NOT NULL, ")
         sb.append("maxExpansionAllowed INTEGER NOT NULL, ")

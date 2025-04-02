@@ -3,6 +3,7 @@ package com.tmf.freespace.services
 import android.content.Context
 import android.os.Environment
 import android.os.StatFs
+import android.util.Log
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.models.MediaFile
@@ -73,16 +74,32 @@ class CompressFiles(
         return desiredFreeSpace - currentFreeSpace
     }
 
-    //Update the database for any files that should be compressed (more). Those files will be processed in the background, possibly multithreaded
+    //Update the database for any files that should be compressed (or recompressed)
     private fun selectFilesToCompress(bytesToRecover: Long) {
-//        TODO("Not yet implemented")
+        //Desired compression levels for images and videos, depending on their age
+        val compressionLevels = listOf(
+            CompressionLevel(0, 31, 0, 0),
+            CompressionLevel(31, 60, 100, 0),
+            CompressionLevel(60, 180, 200, 250),
+            CompressionLevel(180, 365, 300, 350),
+            CompressionLevel(365, 10000, 400, 450),
+        )
+
+        val nowSecs = System.currentTimeMillis() / 1000L
+        Log.d("CompressFiles", "Now: $nowSecs")
+        val secondsPerDay: Long = 60 * 60 * 24
+        for (compressionLevel in compressionLevels) {
+            Log.d("CompressFiles", "Min: ${compressionLevel.minDays} ${nowSecs - compressionLevel.minDays * secondsPerDay}, Max: ${compressionLevel.maxDays} ${nowSecs - compressionLevel.maxDays * secondsPerDay}")
+            database.mediaFileDao.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
+                compressionLevel.imageCompressionLevel, compressionLevel.videoCompressionLevel)
+        }
     }
 
     private fun loginToCloudServer(): String {
         return ""  //TODO("Not yet implemented")
     }
 
-    private suspend fun compressFiles(loginToken: String) {  //TODO Handle abort when no longer idle
+    private fun compressFiles(loginToken: String) {  //TODO Handle abort when no longer idle
         //Get list of files needing to be compressed or recompressed from db
         //For all files to compress (possibly batched)
         // . Send file to cloud, if not already uploaded
@@ -95,14 +112,19 @@ class CompressFiles(
         while (file != null) {
             if (!file.isOnServer) {
                 sendMediaFileToCloud(loginToken, file)
+                file.isOnServer = true
             }
             if (file.currentCompressionLevel != 0) {
                 restoreMediaFileFromCloud(file)
             }
-            compressMediaFile(file)
+            val compressedSize = compressMediaFile(file)
+            file.compressedSize = compressedSize
+
+//            database.mediaFileDao.update(file)  //Save changed to MediaFile object in db
 
             file = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         }
+        filesToCompressCursor.close()
     }
 
     private fun sendMediaFileToCloud(loginToken: String, file: MediaFile) {
@@ -113,10 +135,16 @@ class CompressFiles(
 //        TODO("Not yet implemented")
     }
 
-    private fun compressMediaFile(file: MediaFile): Long {
-//        TODO("Not yet implemented")
-        return 10L  //TODO Return bytes compressed
+    private fun compressMediaFile(file: MediaFile): Int {
+        return (file.originalSize.toFloat() * 0.5f).toInt()  //TODO Return bytes compressed
     }
+
+    private data class CompressionLevel(
+        val minDays: Int,
+        val maxDays: Int,
+        val imageCompressionLevel: Int,
+        val videoCompressionLevel: Int,
+    ){}
 
     //endregion
 }

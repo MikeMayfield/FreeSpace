@@ -79,7 +79,7 @@ class MediaReader(
                     val newMediaFile = MediaFile(
                         id = mediaID,
                         displayName = name,
-                        directoryPath = relativePath,  //TODO Maybe extract directory path from relative path to use Directory model?  //directoryIdFromRelativePath(relativePath),
+                        relativePath = relativePath,  //TODO Maybe extract directory path from relative path to use Directory model?  //directoryIdFromRelativePath(relativePath),
                         originalSize = size,
                         width = width,
                         height = height,

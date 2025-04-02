@@ -2,18 +2,18 @@ package com.tmf.freespace.models
 
 //Media File data
 data class MediaFile(
-    var id: Long = 0,  //Based on mediaStoreID
+    val id: Long = 0,  //Based on mediaStoreID
     val displayName: String,
-    val directoryPath: String,
+    val relativePath: String,
 //    val directoryPathID: Int,
     val originalSize: Int,
-    val compressedSize: Int = originalSize,
+    var compressedSize: Int = originalSize,
     val width: Int,
     val height: Int,
     val mediaType: MediaType,
     val currentCompressionLevel: Int = 0,
-    val desiredCompressionLevel: Int = 0,
-    val creationDtm: Long,
-    val modifiedDtm: Long,
-    val isOnServer: Boolean,
+    var desiredCompressionLevel: Int = 0,
+    val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
+    val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
+    var isOnServer: Boolean,
 )

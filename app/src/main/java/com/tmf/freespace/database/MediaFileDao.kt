@@ -3,7 +3,6 @@ package com.tmf.freespace.database
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE
-import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.MediaType
 
@@ -12,23 +11,36 @@ class MediaFileDao(private val database: AppDatabase) {
 
     //Insert record if it doesn't already exist (based on MediaStoreID). Call with Async.Wait if new record ID is needed
     fun insertIfNew(mediaFile: MediaFile) {
-        val newId = database.writable.insertWithOnConflict(tableName, null, getContentValues(mediaFile), CONFLICT_IGNORE)
-        if (newId != -1L && newId != mediaFile.id) {
-            mediaFile.id = newId  //Save new ID for record if inserted
-        }
+        database.writable.insertWithOnConflict(tableName, null, getContentValues(mediaFile), CONFLICT_IGNORE)
+    }
+
+    fun setCompressionLevel(minDateMs: Long, maxDateMs: Long, imageCompressionLevel: Int, videoCompressionLevel: Int)  {
+        database.writable.execSQL(
+            "UPDATE MediaFile " +
+                    "SET desiredCompressionLevel = $imageCompressionLevel " +
+                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.IMAGE.ordinal} AND currentCompressionLevel != $imageCompressionLevel AND originalSize > 4095")
+
+        database.writable.execSQL(
+            "UPDATE MediaFile " +
+                    "SET desiredCompressionLevel = $videoCompressionLevel " +
+                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.VIDEO.ordinal} AND currentCompressionLevel != $videoCompressionLevel AND originalSize > 4095")
     }
 
     fun getFilesToBeCompressed() : Cursor {
-        //SELECT * FROM MediaFile WHERE currentCompressionLevel != desiredCompressionLevel
-        return database.readOnly.query(tableName, null, "currentCompressionLevel != desiredCompressionLevel", null, null, null, null)
+        return database.readOnly.rawQuery(
+            "SELECT * FROM MediaFile ",
+//            "SELECT * FROM MediaFile " +
+//                    "WHERE currentCompressionLevel != desiredCompressionLevel " +
+//                    "ORDER BY desiredCompressionLevel DESC, creationDtm DESC",
+            null)
     }
 
     fun nextMediaFile(cursor: Cursor) : MediaFile? {
         if (cursor.moveToNext()) {
             return MediaFile(
-                id = cursor.getLong(cursor.getColumnIndexOrThrow("mediaStoreID")),
+                id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
                 displayName = cursor.getString(cursor.getColumnIndexOrThrow("displayName")),
-                directoryPath = cursor.getString(cursor.getColumnIndexOrThrow("relativePath")),
+                relativePath = cursor.getString(cursor.getColumnIndexOrThrow("relativePath")),
                 originalSize = cursor.getInt(cursor.getColumnIndexOrThrow("originalSize")),
                 compressedSize = cursor.getInt(cursor.getColumnIndexOrThrow("compressedSize")),
                 width = cursor.getInt(cursor.getColumnIndexOrThrow("width")),
@@ -50,7 +62,7 @@ class MediaFileDao(private val database: AppDatabase) {
         return ContentValues().apply {
             put("id", mediaFile.id)
             put("displayName", mediaFile.displayName)
-            put("directoryPath", mediaFile.directoryPath)
+            put("relativePath", mediaFile.relativePath)
             put("originalSize", mediaFile.originalSize)
             put("compressedSize", mediaFile.compressedSize)
             put("width", mediaFile.width)
