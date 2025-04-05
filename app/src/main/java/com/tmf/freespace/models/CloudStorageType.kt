@@ -1,8 +1,8 @@
 package com.tmf.freespace.models
 
-enum class ExternalStorageType {
-    TeraBoxFree,
-    TeraBox,
+enum class CloudStorageType {
+//    TeraBox,
     //GoggleDrive,
     //etc.
+    Simulated,
 }

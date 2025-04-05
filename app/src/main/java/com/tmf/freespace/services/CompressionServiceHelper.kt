@@ -5,7 +5,9 @@ import android.os.Environment
 import android.os.StatFs
 import android.util.Log
 import com.tmf.freespace.MediaReader
+import com.tmf.freespace.cloudstorage.CloudStorageFactory
 import com.tmf.freespace.database.AppDatabase
+import com.tmf.freespace.models.CloudStorageType
 import com.tmf.freespace.models.MediaFile
 
 
@@ -29,9 +31,10 @@ import com.tmf.freespace.models.MediaFile
 . . Update space used/available on server in db
  */
 
-class CompressFiles(
+class CompressionServiceHelper(
     private val context: Context,
-    private val database: AppDatabase) {
+    private val database: AppDatabase
+) {
 
     //region Properties and locals
 
@@ -82,7 +85,7 @@ class CompressFiles(
             CompressionLevel(60, 180, 200, 250),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p, Compression 50%
             CompressionLevel(180, 365, 300, 350),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p, Compression 80%
             CompressionLevel(365, 10000, 400, 450),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p, Compression 90%
-
+            //TODO Add more compression level(s) in case normal compression is not enough after a pass
         )
 
         val nowSecs = System.currentTimeMillis() / 1000L
@@ -107,12 +110,13 @@ class CompressFiles(
         // . . Restore file from cloud
         // . Compress file and replace original; update db
         // . Update space used/available on server in db
+        var cloudStorage = CloudStorageFactory().CloudStorage(CloudStorageType.Simulated)  //TODO use user-selected cloud storage from User record
         var compressionRemainingBytes = bytesToRecover
         val loginToken = loginToCloudServer()  //Log into user account and get access token
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var file: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         while (file != null && compressionRemainingBytes > 0) {
-            //If file is not on server, send to cloud
+            //If file is not on server, send to cloud before it is compressed
             if (!file.isOnServer) {
                 sendMediaFileToCloud(loginToken, file)
                 file.isOnServer = true
@@ -137,6 +141,11 @@ class CompressFiles(
             file = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         }
         filesToCompressCursor.close()
+
+        //TODO In the future we might want to provide a more aggressive compression selection if first pass doesn't meet free space goal
+        if (compressionRemainingBytes > 0) {
+            Log.w("compressSelectedFiles", "Not enough space was recovered. Remaining bytes: $compressionRemainingBytes")
+        }
     }
 
     private fun sendMediaFileToCloud(loginToken: String, file: MediaFile) {
@@ -156,7 +165,7 @@ class CompressFiles(
         val maxDays: Int,
         val imageCompressionLevel: Int,
         val videoCompressionLevel: Int,
-    ){}
+    )
 
     //endregion
 }

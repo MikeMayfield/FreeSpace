@@ -22,6 +22,11 @@ class AppDatabase(
             return MediaFileDao(this)
         }
 
+    val userDao: UserDao
+        get() {
+            return UserDao(this)
+        }
+
     fun boolToInt(value: Boolean): Int {
         return if (value) 1 else 0
     }

@@ -12,7 +12,7 @@ class CompressionService {
         runBlocking {
             database = AppDatabase(context.applicationContext)
 
-            val compressFiles = CompressFiles(context.applicationContext, database)
+            val compressFiles = CompressionServiceHelper(context.applicationContext, database)
             compressFiles.start()
         }
     }
