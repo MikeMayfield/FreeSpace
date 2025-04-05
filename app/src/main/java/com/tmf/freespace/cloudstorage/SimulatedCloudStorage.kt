@@ -9,10 +9,10 @@ class SimulatedCloudStorage : ICloudStorage {
     }
 
     override fun sendMediaFile(mediaFile: MediaFile) {
-        TODO("Not yet implemented")
+//        TODO("Not yet implemented")
     }
 
     override fun restoreMediaFile(mediaFile: MediaFile) {
-        TODO("Not yet implemented")
+//        TODO("Not yet implemented")
     }
 }
