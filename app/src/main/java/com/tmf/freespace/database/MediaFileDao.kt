@@ -38,6 +38,6 @@ class MediaFileDao(private val database: AppDatabase) {
     }
 
     fun update(mediaFile: MediaFile) {
-        database.write.update(tableName, mediaFile.getContentValues(true), "id = ?", arrayOf(mediaFile.id.toString()))
+        database.write.update(tableName, mediaFile.getContentValues(true), "id = ${mediaFile.id}", null)
     }
 }
