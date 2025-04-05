@@ -3,8 +3,6 @@ package com.tmf.freespace.database
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase.CONFLICT_IGNORE
-import com.tmf.freespace.models.MediaFile
-import com.tmf.freespace.models.MediaType
 import com.tmf.freespace.models.Preferences
 
 class PreferencesDao(private val database: AppDatabase) {
@@ -28,7 +26,7 @@ class PreferencesDao(private val database: AppDatabase) {
         }
         else {
             val newPreferences = Preferences()
-            database.writable.insertWithOnConflict(tableName, null, getContentValues(newPreferences), CONFLICT_IGNORE)
+            database.write.insertWithOnConflict(tableName, null, getContentValues(newPreferences), CONFLICT_IGNORE)
             return newPreferences
         }
     }

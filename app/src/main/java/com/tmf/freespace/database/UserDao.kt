@@ -1,7 +1,8 @@
 package com.tmf.freespace.database
 
-import android.database.sqlite.SQLiteDatabase
+import com.tmf.freespace.models.CloudStorageType
 import com.tmf.freespace.models.User
+import java.util.UUID
 
 class UserDao(private val database: AppDatabase) {
     private val tableName = "User"
@@ -17,10 +18,13 @@ class UserDao(private val database: AppDatabase) {
 //    }
 
     //    @Query("SELECT * FROM User LIMIT 1")
-    suspend fun get(): User {
-        TODO("Not yet implemented")
+    fun get(): User {
+        database.read.rawQuery("SELECT * FROM User LIMIT 1", null).use { cursor ->
+            if (cursor.moveToFirst()) {
+                return User.fromCursor(cursor)!!
+            } else {
+                return User(0, UUID.randomUUID(), "", "", "", 0, CloudStorageType.Simulated)
+            }
+        }
     }
-
-//    @Insert
-//    suspend fun Insert(user: User)
 }

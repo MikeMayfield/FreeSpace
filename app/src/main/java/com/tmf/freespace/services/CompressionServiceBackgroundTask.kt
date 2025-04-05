@@ -7,7 +7,6 @@ import android.util.Log
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.cloudstorage.CloudStorageFactory
 import com.tmf.freespace.database.AppDatabase
-import com.tmf.freespace.models.CloudStorageType
 import com.tmf.freespace.models.MediaFile
 
 
@@ -31,7 +30,7 @@ import com.tmf.freespace.models.MediaFile
 . . Update space used/available on server in db
  */
 
-class CompressionServiceHelper(
+class CompressionServiceBackgroundTask(
     private val context: Context,
     private val database: AppDatabase
 ) {
@@ -103,39 +102,33 @@ class CompressionServiceHelper(
     }
 
     private fun compressSelectedFiles(bytesToRecover: Long) {  //TODO Handle abort when no longer idle
-        //Get list of files needing to be compressed or recompressed from db
-        //For all files to compress (possibly batched)
-        // . Send file to cloud, if not already uploaded
-        // . If file is already compressed
-        // . . Restore file from cloud
-        // . Compress file and replace original; update db
-        // . Update space used/available on server in db
-        var cloudStorage = CloudStorageFactory().CloudStorage(CloudStorageType.Simulated)  //TODO use user-selected cloud storage from User record
+        val user = database.userDao.get()
+        val cloudStorage = CloudStorageFactory().cloudStorage(user)  //TODO use user-selected cloud storage from User record
         var compressionRemainingBytes = bytesToRecover
-        val loginToken = loginToCloudServer()  //Log into user account and get access token
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var file: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         while (file != null && compressionRemainingBytes > 0) {
             //If file is not on server, send to cloud before it is compressed
             if (!file.isOnServer) {
-                sendMediaFileToCloud(loginToken, file)
+                cloudStorage.sendMediaFile(file)
                 file.isOnServer = true
             }
 
-            //If file is already compressed, restore from cloud before recompressing
+            //If file was already compressed, restore from cloud before recompressing
             if (file.currentCompressionLevel != 0) {
-                restoreMediaFileFromCloud(loginToken, file)
+                cloudStorage.restoreMediaFile(file)
             }
 
             //Compress file
+            val priorCompressedSize = file.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
             val compressedSize = compressMediaFile(file)
             file.compressedSize = compressedSize
             file.currentCompressionLevel = file.desiredCompressionLevel
-            val bytesSaved = file.originalSize - compressedSize
+            val bytesSaved = priorCompressedSize - compressedSize
             compressionRemainingBytes -= bytesSaved
 
             //MediaFile has changed, so update the DB
-//TODO            database.mediaFileDao.update(file)
+            database.mediaFileDao.update(file)
 
             //Go to the next file, if any
             file = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
@@ -146,14 +139,6 @@ class CompressionServiceHelper(
         if (compressionRemainingBytes > 0) {
             Log.w("compressSelectedFiles", "Not enough space was recovered. Remaining bytes: $compressionRemainingBytes")
         }
-    }
-
-    private fun sendMediaFileToCloud(loginToken: String, file: MediaFile) {
-//        TODO("Not yet implemented")
-    }
-
-    private fun restoreMediaFileFromCloud(loginToken: String, file: MediaFile) {
-//        TODO("Not yet implemented")
     }
 
     private fun compressMediaFile(file: MediaFile): Int {

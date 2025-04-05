@@ -10,26 +10,26 @@ class MediaFileDao(private val database: AppDatabase) {
 
     //Insert record if it doesn't already exist (based on MediaStoreID). Call with Async.Wait if new record ID is needed
     fun insertIfNew(mediaFile: MediaFile) {
-        database.writable.insertWithOnConflict(tableName, null, mediaFile.getContentValues(), CONFLICT_IGNORE)
+        database.write.insertWithOnConflict(tableName, null, mediaFile.getContentValues(), CONFLICT_IGNORE)
     }
 
     fun setCompressionLevel(minDateMs: Long, maxDateMs: Long, imageCompressionLevel: Int, videoCompressionLevel: Int)  {
-        database.writable.execSQL(
+        database.write.execSQL(
             "UPDATE MediaFile " +
                     "SET desiredCompressionLevel = $imageCompressionLevel " +
                     "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.IMAGE.ordinal} AND currentCompressionLevel != $imageCompressionLevel AND originalSize > 4095")
 
-        database.writable.execSQL(
+        database.write.execSQL(
             "UPDATE MediaFile " +
                     "SET desiredCompressionLevel = $videoCompressionLevel " +
                     "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.VIDEO.ordinal} AND currentCompressionLevel != $videoCompressionLevel AND originalSize > 4095")
     }
 
     fun getFilesToBeCompressed() : Cursor {
-        return database.readOnly.rawQuery(
+        return database.read.rawQuery(
             "SELECT * FROM MediaFile " +
                     "WHERE currentCompressionLevel != desiredCompressionLevel " +
-                    "ORDER BY desiredCompressionLevel DESC, creationDtm DESC",
+                    "ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC",
             null)
     }
 
@@ -38,6 +38,6 @@ class MediaFileDao(private val database: AppDatabase) {
     }
 
     fun update(mediaFile: MediaFile) {
-        database.writable.update(tableName, mediaFile.getContentValues(true), "id = ?", arrayOf(mediaFile.id.toString()))
+        database.write.update(tableName, mediaFile.getContentValues(true), "id = ?", arrayOf(mediaFile.id.toString()))
     }
 }
