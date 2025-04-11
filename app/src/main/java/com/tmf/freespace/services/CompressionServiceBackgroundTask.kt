@@ -6,6 +6,7 @@ import android.os.StatFs
 import android.util.Log
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.cloudstorage.CloudStorageFactory
+import com.tmf.freespace.compression.Compressor
 import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.models.MediaFile
 
@@ -44,10 +45,16 @@ class CompressionServiceBackgroundTask(
     //Start compression process. Must be called on background thread
     fun start()  {
         addAllNewMediaFilesToDB()  //Add all new media files to DB
-        val bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
+        var bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
+        for (compressionLevelGroupIdx in 0..1) {  //If first pass doesn’t meet free space goal, try second pass with more aggressive compression
+            if (bytesToRecover > 0L) {
+                selectFilesToCompress(bytesToRecover, compressionLevelGroupIdx)  //Get all files to compress
+                bytesToRecover = compressSelectedFiles(bytesToRecover)  //Compress all pending files
+            }
+        }
+
         if (bytesToRecover > 0L) {
-            selectFilesToCompress(bytesToRecover)  //Get all files to compress
-            compressSelectedFiles(bytesToRecover)  //Compress all pending files
+            Log.w("start", "Not enough space was recovered. Remaining bytes: $bytesToRecover")
         }
     }
 
@@ -76,41 +83,49 @@ class CompressionServiceBackgroundTask(
     }
 
     //Update the database for any files that should be compressed (or recompressed)
-    private fun selectFilesToCompress(bytesToRecover: Long) {
+    private fun selectFilesToCompress(bytesToRecover: Long, compressionLevelGroupIdx: Int) {
         //Desired compression levels for images and videos, depending on their age
         val compressionLevels = listOf(
-            CompressionLevel(0, 31, 0, 0),  //No compression allowed
-            CompressionLevel(31, 60, 100, 0),  //Image: Resolution 100% of screen, Compression 80%
-            CompressionLevel(60, 180, 200, 250),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p, Compression 50%
-            CompressionLevel(180, 365, 300, 350),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p, Compression 80%
-            CompressionLevel(365, 10000, 400, 450),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p, Compression 90%
-            //TODO Add more compression level(s) in case normal compression is not enough after a pass
+            listOf(  //Normal compression
+                CompressionLevel(0, 31, 0, 0),  //No compression allowed
+                CompressionLevel(31, 60, 1, 0),  //Image: Resolution 100% of screen, Compression 25%
+                CompressionLevel(60, 180, 2, 1),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen resolution), Compression 50%
+                CompressionLevel(180, 365, 3, 2),  //Image: Resolution 50% of screen, Compression 75%; Video: Resolution 720p (<=screen), Compression 80%
+                CompressionLevel(365, 10000, 4, 3),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+            ),
+            listOf(  //Extra aggressive compression if normal compression was not enough
+                CompressionLevel(0, 31, 0, 0),  //No compression allowed
+                CompressionLevel(31, 60, 2, 1),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen), Compression 50%
+                CompressionLevel(60, 180, 3, 2),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p (<=screen), Compression 80%
+                CompressionLevel(180, 365, 4, 3),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+                CompressionLevel(365, 10000, 5, 4),  //Image: Resolution 25% of screen, Compression 90%; Video: Resolution 320p (<=screen), Compression 90%
+            ),
+            //TODO: Add support for audio compression
         )
 
         val nowSecs = System.currentTimeMillis() / 1000L
         Log.d("CompressFiles", "Now: $nowSecs")
         val secondsPerDay: Long = 60 * 60 * 24
-        for (compressionLevel in compressionLevels) {
-            Log.d("CompressFiles", "Min: ${compressionLevel.minDays} ${nowSecs - compressionLevel.minDays * secondsPerDay}, Max: ${compressionLevel.maxDays} ${nowSecs - compressionLevel.maxDays * secondsPerDay}")
-            database.mediaFileDao.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
+        for (compressionLevel in compressionLevels[compressionLevelGroupIdx]) {
+            Log.d("CompressFiles",
+                "Min: ${compressionLevel.minDays} ${nowSecs - compressionLevel.minDays * secondsPerDay}, Max: ${compressionLevel.maxDays} ${nowSecs - compressionLevel.maxDays * secondsPerDay}")
+            database.mediaFileDao.setCompressionLevels(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
                 compressionLevel.imageCompressionLevel, compressionLevel.videoCompressionLevel)
         }
+        //TODO Add support for optional full backup of all files
     }
 
-    private fun loginToCloudServer(): String {
-        return ""  //TODO("Not yet implemented")
-    }
-
-    private fun compressSelectedFiles(bytesToRecover: Long) {  //TODO Handle abort when no longer idle
+    private fun compressSelectedFiles(bytesToRecover: Long) : Long {  //TODO Handle abort when no longer idle
         val user = database.userDao.get()
-        val cloudStorage = CloudStorageFactory().cloudStorage(user)  //TODO use user-selected cloud storage from User record
+        val cloudStorage = CloudStorageFactory().cloudStorage(user, context)
         var compressionRemainingBytes = bytesToRecover
+        val compressor = Compressor(context)
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var file: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
-        while (file != null && compressionRemainingBytes > 0) {
+        while (file != null && compressionRemainingBytes > 0) {  //TODO Support optional backup of all files
             //If file is not on server, send to cloud before it is compressed
             if (!file.isOnServer) {
-                cloudStorage.sendMediaFile(file)
+                cloudStorage.sendMediaFile(file)  //TODO Send file to cloud async (coroutine), be sure compressing it while it is sending doesn't interfere with transfer and vice-versa
                 file.isOnServer = true
             }
 
@@ -121,7 +136,7 @@ class CompressionServiceBackgroundTask(
 
             //Compress file
             val priorCompressedSize = file.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
-            val compressedSize = compressMediaFile(file)
+            val compressedSize = compressor.compress(file)
             file.compressedSize = compressedSize
             file.currentCompressionLevel = file.desiredCompressionLevel
             val bytesSaved = priorCompressedSize - compressedSize
@@ -135,14 +150,11 @@ class CompressionServiceBackgroundTask(
         }
         filesToCompressCursor.close()
 
-        //TODO In the future we might want to provide a more aggressive compression selection if first pass doesn't meet free space goal
-        if (compressionRemainingBytes > 0) {
-            Log.w("compressSelectedFiles", "Not enough space was recovered. Remaining bytes: $compressionRemainingBytes")
-        }
+        return compressionRemainingBytes
     }
 
     private fun compressMediaFile(file: MediaFile): Int {
-        return (file.originalSize.toFloat() * 0.5f).toInt()  //TODO Return bytes compressed
+        return (file.originalSize.toFloat() * 0.5f).toInt()  //TODO Use Compressor in coroutine and return bytes compressed
     }
 
     private data class CompressionLevel(

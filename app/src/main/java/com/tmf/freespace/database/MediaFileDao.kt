@@ -13,7 +13,7 @@ class MediaFileDao(private val database: AppDatabase) {
         database.write.insertWithOnConflict(tableName, null, mediaFile.getContentValues(), CONFLICT_IGNORE)
     }
 
-    fun setCompressionLevel(minDateMs: Long, maxDateMs: Long, imageCompressionLevel: Int, videoCompressionLevel: Int)  {
+    fun setCompressionLevels(minDateMs: Long, maxDateMs: Long, imageCompressionLevel: Int, videoCompressionLevel: Int)  {
         database.write.execSQL(
             "UPDATE MediaFile " +
                     "SET desiredCompressionLevel = $imageCompressionLevel " +

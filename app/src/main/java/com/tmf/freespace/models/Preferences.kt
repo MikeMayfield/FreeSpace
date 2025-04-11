@@ -1,14 +1,15 @@
 package com.tmf.freespace.models
 
 data class Preferences(
-    val desiredFreeSpaceGB: Int = 10,
-    val shouldCompressImages: Boolean = true,
-    val shouldCompressVideos: Boolean = true,
-    val shouldCompressAudios: Boolean = true,
-    val shouldCompressDocuments: Boolean = true,
-    val shouldCompressOtherFiles: Boolean = true,
-    val requireWifi: Boolean = true,
-    val screenMustBeOff: Boolean = true,
-    val emailAddress: String = "",
-    val password: String = "",
+    var desiredFreeSpaceGB: Int = 10,
+    var shouldCompressImages: Boolean = true,
+    var shouldCompressVideos: Boolean = true,
+    var shouldCompressAudios: Boolean = true,
+    var shouldCompressDocuments: Boolean = true,
+    var shouldCompressOtherFiles: Boolean = true,
+    var backupAllFiles: Boolean = false,
+    var requireWifi: Boolean = true,
+    var screenMustBeOff: Boolean = true,
+    var emailAddress: String = "",
+    var password: String = "",
 )

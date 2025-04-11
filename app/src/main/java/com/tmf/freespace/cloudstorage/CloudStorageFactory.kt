@@ -1,17 +1,18 @@
 package com.tmf.freespace.cloudstorage
 
-import com.tmf.freespace.models.CloudStorageType.Simulated
+import android.content.Context
+import com.tmf.freespace.models.CloudStorageType
 import com.tmf.freespace.models.User
 
 class CloudStorageFactory {
-    fun cloudStorage(user: User): ICloudStorage {
+    fun cloudStorage(user: User, context: Context): ICloudStorage {
         val cloudStorage =  when (user.cloudStorageType) {
-//            CloudStorageType.TeraBox -> TeraBoxCloudStorage()
-            Simulated -> SimulatedCloudStorage()
-            //Add more cases as needed
-            else -> SimulatedCloudStorage()
+            CloudStorageType.TeraBox -> SimulatedCloudStorage()  //TODO Implement real cloud storage
+            CloudStorageType.GoggleDrive -> SimulatedCloudStorage()  //TODO Implement real cloud storage
+            CloudStorageType.DropBox -> SimulatedCloudStorage()  //TODO Implement real cloud storage
+            CloudStorageType.Simulated -> SimulatedCloudStorage()
         }
-        cloudStorage.init(user)
+        cloudStorage.init(user, context)
 
         return cloudStorage
     }
