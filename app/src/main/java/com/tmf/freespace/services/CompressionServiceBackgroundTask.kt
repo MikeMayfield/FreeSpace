@@ -153,10 +153,6 @@ class CompressionServiceBackgroundTask(
         return compressionRemainingBytes
     }
 
-    private fun compressMediaFile(file: MediaFile): Int {
-        return (file.originalSize.toFloat() * 0.5f).toInt()  //TODO Use Compressor in coroutine and return bytes compressed
-    }
-
     private data class CompressionLevel(
         val minDays: Int,
         val maxDays: Int,

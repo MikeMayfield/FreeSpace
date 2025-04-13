@@ -6,7 +6,8 @@ import com.tmf.freespace.models.MediaFile
 abstract class ICompressor(val context: Context) {
     abstract val ffmpegCompressionCommands : List<String>
 
-    //Compress media file using FFmpeg
+    //Compress media file using FFmpeg. Returns the compressed file size. Compressed file path is original file path with "_" prepended to file name.
+    //  e.g. /full/file/path/ImageName.jpg -> /full/file/path/_ImageName.jpg
     fun compress(mediaFile: MediaFile) : Int {
         val ffmpegCommand = ffmpegCompressionCommands[if (ffmpegCompressionCommands.size > mediaFile.desiredCompressionLevel) mediaFile.desiredCompressionLevel else 0]
         if (ffmpegCommand.isNotEmpty()) {

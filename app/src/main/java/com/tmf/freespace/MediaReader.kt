@@ -30,14 +30,13 @@ class MediaReader(
 
         val projection = arrayOf(
             MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns.DATA,
             MediaStore.Files.FileColumns.MIME_TYPE,
             MediaStore.Files.FileColumns.SIZE,
             MediaStore.Files.FileColumns.HEIGHT,
             MediaStore.Files.FileColumns.WIDTH,
             MediaStore.Files.FileColumns.DATE_ADDED,
             MediaStore.Files.FileColumns.DATE_MODIFIED,
-            MediaStore.Files.FileColumns.RELATIVE_PATH,
         )
 
         //TODO On API >=30, we can check for just newly added/changed files
@@ -49,37 +48,35 @@ class MediaReader(
             null
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+            val fullPathColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)
             val mimeTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE)
             val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)
             val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.HEIGHT)
             val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.WIDTH)
             val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)
             val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
-            val relativePathColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.RELATIVE_PATH)
 
             while (cursor.moveToNext()) {
                 val mediaID = cursor.getLong(idColumn)
-                val name = cursor.getString(nameColumn)
+                val fullPath = cursor.getString(fullPathColumn)
                 val mimeType = cursor.getString(mimeTypeColumn)
                 val size = cursor.getInt(sizeColumn)
                 val height = cursor.getInt(heightColumn)
                 val width = cursor.getInt(widthColumn)
                 val dateAdded = cursor.getLong(dateAddedColumn)
                 val dateModified = cursor.getLong(dateModifiedColumn)
-                val relativePath = cursor.getString(relativePathColumn)
 
-                if (name != null && mimeType != null) {
+                if (fullPath != null && mimeType != null) {
                     val mediaType = when {
                         mimeType.startsWith("audio/") -> MediaType.AUDIO
                         mimeType.startsWith("video/") -> MediaType.VIDEO
+                        mimeType.startsWith("image/") -> MediaType.IMAGE
                         else -> MediaType.IMAGE
                     }
 
                     val newMediaFile = MediaFile(
                         id = mediaID,
-                        displayName = name,
-                        relativePath = relativePath,  //TODO Maybe extract directory path from relative path to use Directory model?  //directoryIdFromRelativePath(relativePath),
+                        fullPath = fullPath,
                         originalSize = size,
                         width = width,
                         height = height,
@@ -92,9 +89,5 @@ class MediaReader(
                 }
             }
         }
-    }
-
-    private fun directoryIdFromRelativePath(relativePath: String): Int {
-        return 0  //TODO Extract directory path and disk path from relative path and return directory ID for shared directory info
     }
 }

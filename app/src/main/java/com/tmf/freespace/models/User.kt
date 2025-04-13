@@ -44,6 +44,19 @@ data class User(
                 return null
             }
         }
+
+        fun createTable() : String {
+            val sb = StringBuilder("CREATE TABLE IF NOT EXISTS User (")
+            sb.append("id INTEGER PRIMARY KEY AUTOINCREMENT, ")
+            sb.append("idGuid TEXT NOT NULL, ")
+            sb.append("phoneNumber TEXT NOT NULL, ")
+            sb.append("emailAddress TEXT NOT NULL, ")
+            sb.append("password TEXT NOT NULL, ")
+            sb.append("maxExpansionAllowed INTEGER NOT NULL, ")
+            sb.append("externalStorageType INTEGER NOT NULL")
+            sb.append(");")
+            return sb.toString()
+        }
     }
 }
 

@@ -2,12 +2,12 @@ package com.tmf.freespace.models
 
 import android.content.ContentValues
 import android.database.Cursor
+import java.nio.file.Paths
 
 //Media File data
 data class MediaFile(
     val id: Long = 0,  //Based on mediaStoreID
-    val displayName: String,
-    val relativePath: String,
+    val fullPath: String,
     val originalSize: Int,
     var compressedSize: Int = originalSize,
     val width: Int,
@@ -22,8 +22,7 @@ data class MediaFile(
     fun getContentValues(excludeId: Boolean = false) : ContentValues {
         return ContentValues().apply {
             put("id", id)
-            put("displayName", displayName)
-            put("relativePath", relativePath)
+            put("fullPath", fullPath)
             put("originalSize", originalSize)
             put("compressedSize", compressedSize)
             put("width", width)
@@ -37,13 +36,15 @@ data class MediaFile(
         }
     }
 
+    val displayName: String
+        get() = Paths.get(fullPath).fileName.toString()
+
     companion object {
         fun fromCursor(cursor: Cursor) : MediaFile? {
             if (cursor.moveToNext()) {
                 return MediaFile(
                     id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
-                    displayName = cursor.getString(cursor.getColumnIndexOrThrow("displayName")),
-                    relativePath = cursor.getString(cursor.getColumnIndexOrThrow("relativePath")),
+                    fullPath = cursor.getString(cursor.getColumnIndexOrThrow("fullPath")),
                     originalSize = cursor.getInt(cursor.getColumnIndexOrThrow("originalSize")),
                     compressedSize = cursor.getInt(cursor.getColumnIndexOrThrow("compressedSize")),
                     width = cursor.getInt(cursor.getColumnIndexOrThrow("width")),
@@ -59,6 +60,24 @@ data class MediaFile(
             else {
                 return null
             }
+        }
+
+        fun createTable() : String {
+            val sb = StringBuilder("CREATE TABLE IF NOT EXISTS MediaFile (")
+            sb.append("id INTEGER NOT NULL PRIMARY KEY, ")
+            sb.append("fullPath TEXT NOT NULL, ")
+            sb.append("originalSize INTEGER NOT NULL, ")
+            sb.append("compressedSize INTEGER NOT NULL, ")
+            sb.append("width INTEGER NOT NULL, ")
+            sb.append("height INTEGER NOT NULL, ")
+            sb.append("mediaType INTEGER NOT NULL, ")
+            sb.append("currentCompressionLevel INTEGER NOT NULL, ")
+            sb.append("desiredCompressionLevel INTEGER NOT NULL, ")
+            sb.append("creationDtm INTEGER NOT NULL, ")
+            sb.append("modifiedDtm INTEGER NOT NULL, ")
+            sb.append("isOnServer INTEGER NOT NULL ")
+            sb.append(");")
+            return sb.toString()
         }
     }
 }

@@ -3,6 +3,8 @@ package com.tmf.freespace.cloudstorage
 import android.content.Context
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.User
+import java.io.File
+import java.nio.file.Files
 
 class SimulatedCloudStorage : ICloudStorage {
     private lateinit var user: User
@@ -16,7 +18,14 @@ class SimulatedCloudStorage : ICloudStorage {
     }
 
     override fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean) {
-//        TODO("Not yet implemented")
+//        val sourceFile = File(mediaFile.fullPath)
+//        val targetFile = File("${mediaFile.fullPath}.rmt")
+//
+//        if (!sourceFile.exists()) {
+//            throw NoSuchFileException(sourceFile)
+//        }
+//
+//        sourceFile.copyTo(targetFile, true)
     }
 
     override fun restoreMediaFile(mediaFile: MediaFile, encoded: Boolean) {
