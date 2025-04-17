@@ -4,6 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
 android {
     namespace = "com.tmf.freespace"
     compileSdk = 35
@@ -47,7 +52,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
-
+    implementation(name: 'ffmpeg-kit', ext: 'aar')
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
