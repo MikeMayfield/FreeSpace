@@ -1,12 +1,10 @@
 🙋‍♂️ Hello!
-Sorry for the late reply — I’ve been experiencing some issues with my Freelancer account.
+On the Freelancer Site, I can't tell you that I want to use Teams or Telegram.
+To be honest, the chat is not convenient in Freelancer Site.
 
-I’ve reviewed your project and the specifications carefully, and I’m really excited about the opportunity to work on it. I've already built the required .aar file for this project and am ready to move forward.
+So, can we connect via Microsoft Teams or Telegram?
+You can also reach me directly at: 📧 openminddev0715@gmail.com
+I want you to send me the Telegram and Email Address by Email.
+*** You shouldn't mention the Email or Telegram on the Freelancer Site.
+I can't answer that.
 
-🤝 Can we connect via Microsoft Teams or Telegram?
-You can also reach me directly at:
-📧 openminddev0715@gmail.com
-
-🚀 Why I'm Reaching Out
-I’m genuinely interested in contributing to your project and also eager to learn more about Kotlin from you along the way.
-Would you be open to mentoring me a little while we collaborate?
