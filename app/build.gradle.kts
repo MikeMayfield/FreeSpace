@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
+    implementation(libs.arthenica.smart.exception.java)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
 
     testImplementation(libs.junit)

@@ -1,8 +1,12 @@
 package com.tmf.freespace.models
 
+import android.R.attr.data
 import android.content.ContentValues
 import android.database.Cursor
+import android.net.Uri
+import java.io.File
 import java.nio.file.Paths
+
 
 //Media File data
 data class MediaFile(
@@ -38,6 +42,10 @@ data class MediaFile(
 
     val displayName: String
         get() = Paths.get(fullPath).fileName.toString()
+
+    val absolutePath: String
+        get() = if (fullPath.contains(':')) fullPath.split(':')[1] else fullPath
+
 
     companion object {
         fun fromCursor(cursor: Cursor) : MediaFile? {

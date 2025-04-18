@@ -88,17 +88,17 @@ class CompressionServiceBackgroundTask(
         val compressionLevels = listOf(
             listOf(  //Normal compression
                 CompressionLevel(0, 31, 0, 0),  //No compression allowed
-                CompressionLevel(31, 60, 1, 0),  //Image: Resolution 100% of screen, Compression 25%
-                CompressionLevel(60, 180, 2, 1),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen resolution), Compression 50%
-                CompressionLevel(180, 365, 3, 2),  //Image: Resolution 50% of screen, Compression 75%; Video: Resolution 720p (<=screen), Compression 80%
-                CompressionLevel(365, 10000, 4, 3),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+                CompressionLevel(31, 60, 1, 1),  //Image: Resolution 100% of screen, Compression 25%; Video: Screen resolution, Compression 25%
+                CompressionLevel(60, 180, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen resolution), Compression 50%
+                CompressionLevel(180, 365, 3, 3),  //Image: Resolution 50% of screen, Compression 75%; Video: Resolution 720p (<=screen), Compression 80%
+                CompressionLevel(365, 10000, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
             ),
             listOf(  //Extra aggressive compression if normal compression was not enough
                 CompressionLevel(0, 31, 0, 0),  //No compression allowed
-                CompressionLevel(31, 60, 2, 1),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen), Compression 50%
-                CompressionLevel(60, 180, 3, 2),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p (<=screen), Compression 80%
-                CompressionLevel(180, 365, 4, 3),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
-                CompressionLevel(365, 10000, 5, 4),  //Image: Resolution 25% of screen, Compression 90%; Video: Resolution 320p (<=screen), Compression 90%
+                CompressionLevel(31, 60, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen), Compression 50%
+                CompressionLevel(60, 180, 3, 3),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p (<=screen), Compression 80%
+                CompressionLevel(180, 365, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+                CompressionLevel(365, 10000, 5, 5),  //Image: Resolution 25% of screen, Compression 90%; Video: Resolution 320p (<=screen), Compression 90%
             ),
             //TODO: Add support for audio compression
         )
