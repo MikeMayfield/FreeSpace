@@ -1,5 +1,6 @@
 package com.tmf.freespace.compression
 
+import android.util.Log
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 
@@ -7,6 +8,11 @@ import com.arthenica.ffmpegkit.ReturnCode
 class FFmpeg() {
     fun runCommand(ffmpegCommand: String) : Boolean {
         val session = FFmpegKit.execute(ffmpegCommand)
-        return ReturnCode.isSuccess(session.returnCode)
+        if (ReturnCode.isSuccess(session.returnCode)) {
+            return true
+        } else {
+            Log.d("FFmpeg", "Command failed with return code ${session.returnCode} - ${session.logs.last()}")
+            return false
+        }
     }
 }

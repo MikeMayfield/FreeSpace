@@ -8,20 +8,20 @@ class Compressor(val context: Context) {
     private var imageCompressor: ImageCompressor = ImageCompressor(context)
     private var videoCompressor: VideoCompressor = VideoCompressor(context)
     private var audioCompressor: AudioCompressor = AudioCompressor(context)
-    private val outputFilePath = "${context.getExternalFilesDir(null)?.absolutePath}/output."
+    private val outputFilePath = "${context.cacheDir.absolutePath}/freespace/output."
 
-    fun compress(mediaFile: MediaFile): Int {
+    fun compress(mediaFile: MediaFile): String? {
         return when (mediaFile.mediaType) {
             MediaType.IMAGE -> {
-                imageCompressor.compress(mediaFile, outputFilePath + "jpg")
+                if (imageCompressor.compress(mediaFile, outputFilePath + "jpg")) outputFilePath + "jpg" else null
             }
 
             MediaType.VIDEO -> {
-                videoCompressor.compress(mediaFile, outputFilePath + "mp4")
+                if (videoCompressor.compress(mediaFile, outputFilePath + "mp4")) outputFilePath + "mp4" else null
             }
 
             MediaType.AUDIO -> {
-                audioCompressor.compress(mediaFile, outputFilePath + "mp3")
+                if (audioCompressor.compress(mediaFile, outputFilePath + "mp3")) outputFilePath + "mp3" else null
             }
         }
     }
