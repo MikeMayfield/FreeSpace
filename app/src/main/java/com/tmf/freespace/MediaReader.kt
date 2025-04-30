@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.ContextCompat
+import com.tmf.freespace.files.MediaStoreUtil
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.MediaType
 
@@ -13,8 +14,7 @@ class MediaReader(
     private val context: Context
 ) {
     fun forNewMediaFiles(onNextMediaFile: (MediaFile) -> Unit) {
-        // Not having permission on < 33 makes the app crash
-        // when attempting to query
+        // Not having permission on < 33 makes the app crash when attempting to query
         val skipQuery = if (Build.VERSION.SDK_INT <= 32) {
             ContextCompat.checkSelfPermission(
                 context,

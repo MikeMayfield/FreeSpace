@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         viewModel.mediaReader = mediaReader
         enableEdgeToEdge()
 
-        val permissions = if (Build.VERSION.SDK_INT>= 33) {
+        val permissions = if (Build.VERSION.SDK_INT >= 33) {
             arrayOf(
                 Manifest.permission.READ_MEDIA_AUDIO,
                 Manifest.permission.READ_MEDIA_VIDEO,

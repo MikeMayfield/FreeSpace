@@ -1,11 +1,11 @@
 package com.tmf.freespace.models
 
-import android.R.attr.data
 import android.content.ContentValues
 import android.database.Cursor
-import android.net.Uri
-import java.io.File
+import androidx.compose.ui.text.substring
 import java.nio.file.Paths
+import kotlin.text.lastIndexOf
+import kotlin.text.lowercase
 
 
 //Media File data
@@ -39,6 +39,18 @@ data class MediaFile(
             put("isOnServer", if (isOnServer) 1 else 0)
         }
     }
+
+    val fileType: String
+        get() {
+            val fileName = Paths.get(fullPath).fileName.toString()
+            val lastDotIndex = fileName.lastIndexOf('.')
+
+            return if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
+                fileName.substring(lastDotIndex + 1).lowercase()
+            } else {
+                ""
+            }
+        }
 
     val displayName: String
         get() = Paths.get(fullPath).fileName.toString()

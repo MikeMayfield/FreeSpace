@@ -28,7 +28,8 @@ class SimulatedCloudStorage : ICloudStorage {
 //        sourceFile.copyTo(targetFile, true)
     }
 
-    override fun restoreMediaFile(mediaFile: MediaFile, encoded: Boolean) {
+    override fun restoreMediaFile(mediaFile: MediaFile, encoded: Boolean) : String {
 //        TODO("Not yet implemented")
+        return ""  //TODO Return local file path to where file was restored
     }
 }

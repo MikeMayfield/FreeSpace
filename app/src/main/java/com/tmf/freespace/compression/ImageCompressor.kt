@@ -6,12 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Build
-import android.util.DisplayMetrics
-import android.view.Display
 import android.view.WindowManager
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
-
 import com.tmf.freespace.models.MediaFile
 import java.io.File
 import java.io.FileOutputStream
@@ -31,13 +26,13 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         "{{inputFilePath}}|{{outputFilePath}}|0.10|75",  //5: Compression ultra high
     )
 
-    //TODO Implement compression instead of using FFmpeg, which is missing codec for .png and probably others
-    override fun compress(mediaFile: MediaFile, outputFilePath: String) : Boolean {
-        val ffmpegCommand = super.ffmpegCommand(mediaFile, outputFilePath)
+    //Compress an image file to JPEG
+    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String) : Boolean {
+        val ffmpegCommand = super.ffmpegCommand(mediaFile, inputFilePath, outputFilePath)
         if (ffmpegCommand.isNotEmpty()) {
             val tokens = ffmpegCommand.split("|")
             if (tokens.size != 4) { throw IllegalArgumentException("Invalid ffmpegCompressionCommand definition: $ffmpegCommand") }
-            val compressedWidth = compressedWidth(tokens[2].toFloat())
+            val compressedWidth = compressedWidth(tokens[2].toFloat())  //TODO Don't process if new width or height is larger than original
             val compressedHeight = compressedHeight(tokens[2].toFloat())
             val compressionQuality = tokens[3].toInt()
 
