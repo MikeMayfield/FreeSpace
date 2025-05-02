@@ -28,9 +28,8 @@ class MediaFileDao(private val database: AppDatabase) {
     fun getFilesToBeCompressed() : Cursor {
         return database.read.rawQuery(
             "SELECT * FROM MediaFile " +
-                    "",
-//                    "WHERE currentCompressionLevel != desiredCompressionLevel " +
-//                    "ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC",
+//                    "WHERE currentCompressionLevel != desiredCompressionLevel " +  //TODO
+                    "ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC",
             null)
     }
 

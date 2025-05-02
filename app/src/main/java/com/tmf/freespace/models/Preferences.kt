@@ -38,7 +38,7 @@ data class Preferences(
         fun fromCursor(cursor: Cursor) : Preferences? {
             if (cursor.moveToNext()) {
                 return Preferences(
-                    desiredFreeSpaceGB = cursor.getInt(cursor.getColumnIndexOrThrow("desiredFreeSpaceGB")),
+                    desiredFreeSpaceGB = 1000_000_000, //TODO cursor.getInt(cursor.getColumnIndexOrThrow("desiredFreeSpaceGB")),
                     shouldCompressImages = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressImages")) != 0,
                     shouldCompressVideos = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressVideos")) != 0,
                     shouldCompressAudios = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressAudios")) != 0,

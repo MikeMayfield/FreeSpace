@@ -40,6 +40,25 @@ class CompressionServiceBackgroundTask(
 
     //region Properties and locals
 
+    //Desired compression levels for images and videos, depending on their age
+    private val compressionLevels = listOf(
+        listOf(  //Normal compression
+            CompressionLevel(0, 31, 1, 1),  //No compression allowed  //TODO change to 0s
+            CompressionLevel(31, 60, 1, 1),  //Image: Resolution 100% of screen, Compression 25%; Video: Screen resolution, Compression 25%
+            CompressionLevel(60, 180, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen resolution), Compression 50%
+            CompressionLevel(180, 365, 3, 3),  //Image: Resolution 50% of screen, Compression 75%; Video: Resolution 720p (<=screen), Compression 80%
+            CompressionLevel(365, 10000, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+        ),
+        listOf(  //Extra aggressive compression if normal compression was not enough
+            CompressionLevel(0, 31, 0, 0),  //No compression allowed
+            CompressionLevel(31, 60, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen), Compression 50%
+            CompressionLevel(60, 180, 3, 3),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p (<=screen), Compression 80%
+            CompressionLevel(180, 365, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
+            CompressionLevel(365, 10000, 5, 5),  //Image: Resolution 25% of screen, Compression 90%; Video: Resolution 320p (<=screen), Compression 90%
+        ),
+        //TODO: Add support for audio compression
+    )
+
     //endregion
 
     //region Public Methods
@@ -48,7 +67,7 @@ class CompressionServiceBackgroundTask(
     fun start()  {
         addAllNewMediaFilesToDB()  //Add all new media files to DB
         var bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
-        for (compressionLevelGroupIdx in 0..1) {  //If first pass doesn’t meet free space goal, try second pass with more aggressive compression
+        for (compressionLevelGroupIdx in compressionLevels.indices) {  //If first pass doesn’t meet free space goal, try second pass with more aggressive compression
             if (bytesToRecover > 0L) {
                 selectFilesToCompress(bytesToRecover, compressionLevelGroupIdx)  //Get all files to compress
                 bytesToRecover = compressSelectedFiles(bytesToRecover)  //Compress all pending files
@@ -79,31 +98,13 @@ class CompressionServiceBackgroundTask(
         val currentFreeSpace = statFs.availableBytes
 
         //Get desired free space from user preferences
-        val desiredFreeSpace = currentFreeSpace + 10L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
+        val desiredFreeSpace = currentFreeSpace + 1000_000_000L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
 
         return desiredFreeSpace - currentFreeSpace
     }
 
     //Update the database for any files that should be compressed (or recompressed)
     private fun selectFilesToCompress(bytesToRecover: Long, compressionLevelGroupIdx: Int) {
-        //Desired compression levels for images and videos, depending on their age
-        val compressionLevels = listOf(
-            listOf(  //Normal compression
-                CompressionLevel(0, 31, 0, 0),  //No compression allowed
-                CompressionLevel(31, 60, 1, 1),  //Image: Resolution 100% of screen, Compression 25%; Video: Screen resolution, Compression 25%
-                CompressionLevel(60, 180, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen resolution), Compression 50%
-                CompressionLevel(180, 365, 3, 3),  //Image: Resolution 50% of screen, Compression 75%; Video: Resolution 720p (<=screen), Compression 80%
-                CompressionLevel(365, 10000, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
-            ),
-            listOf(  //Extra aggressive compression if normal compression was not enough
-                CompressionLevel(0, 31, 0, 0),  //No compression allowed
-                CompressionLevel(31, 60, 2, 2),  //Image: Resolution 100% of screen, Compression 50%; Video: Resolution 720p (<=screen), Compression 50%
-                CompressionLevel(60, 180, 3, 3),  //Image: Resolution 50% of screen, Compression 80%; Video: Resolution 720p (<=screen), Compression 80%
-                CompressionLevel(180, 365, 4, 4),  //Image: Resolution 50% of screen, Compression 90%; Video: Resolution 480p (<=screen), Compression 90%
-                CompressionLevel(365, 10000, 5, 5),  //Image: Resolution 25% of screen, Compression 90%; Video: Resolution 320p (<=screen), Compression 90%
-            ),
-            //TODO: Add support for audio compression
-        )
 
         val nowSecs = System.currentTimeMillis() / 1_000L
         val secondsPerDay: Long = 60 * 60 * 24
@@ -141,15 +142,18 @@ class CompressionServiceBackgroundTask(
             val compressedFilePath = compressor.compress(mediaFile, extractedFilePath)
             if (compressedFilePath != null) {
                 val compressedFile = File(compressedFilePath)
-                if (compressedFile.exists() && compressedFile.length() < priorCompressedSize) {
-                    if (mediaStoreUtil.replaceFileInMediaStore(context, mediaFile, compressedFilePath)) {
-                        mediaFile.compressedSize = compressedFile.length().toInt()
-                        mediaFile.currentCompressionLevel = mediaFile.desiredCompressionLevel
-                        val bytesSaved = priorCompressedSize - mediaFile.compressedSize
-                        compressionRemainingBytes -= bytesSaved
-                        database.mediaFileDao.update(mediaFile)  //MediaFile has changed, so update the DB
-                        Log.d("compressSelectedFiles", "Compressed ${mediaFile.displayName} from $priorCompressedSize to ${mediaFile.compressedSize} bytes. Remaining: $compressionRemainingBytes")
+                if (compressedFile.exists()) {
+                    if (compressedFile.length() < priorCompressedSize - compressor.minFileSizeToCompress) {
+                        if (mediaStoreUtil.replaceFileInMediaStore(context, mediaFile, compressedFilePath)) {
+                            mediaFile.compressedSize = compressedFile.length().toInt()
+                            mediaFile.currentCompressionLevel = mediaFile.desiredCompressionLevel
+                            val bytesSaved = priorCompressedSize - mediaFile.compressedSize
+                            compressionRemainingBytes -= bytesSaved
+                            database.mediaFileDao.update(mediaFile)  //MediaFile has changed, so update the DB
+                            Log.d("compressSelectedFiles", "Compressed ${mediaFile.displayName} from $priorCompressedSize to ${mediaFile.compressedSize} bytes. Remaining: $compressionRemainingBytes")
+                        }
                     }
+                    compressedFile.delete()  //Delete temp compressed file
                 }
             }
 

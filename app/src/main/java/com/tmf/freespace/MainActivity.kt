@@ -42,7 +42,10 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.MANAGE_EXTERNAL_STORAGE,
             )
         } else {
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            )
         }
 
         ActivityCompat.requestPermissions(  //TODO Use user-oriented permission request (see video)

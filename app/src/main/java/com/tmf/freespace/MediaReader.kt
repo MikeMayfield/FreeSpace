@@ -71,21 +71,24 @@ class MediaReader(
                         mimeType.startsWith("audio/") -> MediaType.AUDIO
                         mimeType.startsWith("video/") -> MediaType.VIDEO
                         mimeType.startsWith("image/") -> MediaType.IMAGE
-                        else -> MediaType.IMAGE
+                        else -> null
                     }
 
-                    val newMediaFile = MediaFile(
-                        id = mediaID,
-                        fullPath = fullPath,
-                        originalSize = size,
-                        width = width,
-                        height = height,
-                        mediaType = mediaType,
-                        creationDtm = dateAdded,
-                        modifiedDtm = dateModified,
-                        isOnServer = false,
-                    )
-                    onNextMediaFile(newMediaFile)
+                    if (mediaType != null) {
+                        val newMediaFile = MediaFile(
+                            id = mediaID,
+                            fullPath = fullPath,
+                            originalSize = size,
+                            width = width,
+                            height = height,
+                            mediaType = mediaType,
+                            creationDtm = dateAdded,
+                            modifiedDtm = dateModified,
+                            isOnServer = false,
+                        )
+                        onNextMediaFile(newMediaFile)
+                    }
+
                 }
             }
         }
