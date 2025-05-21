@@ -5,17 +5,17 @@ import android.database.Cursor
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
+import com.tmf.freespace.MediaReader
+import com.tmf.freespace.cloudstorage.CloudStorageFactory
+import com.tmf.freespace.cloudstorage.ICloudStorage
+import com.tmf.freespace.compression.Compressor
 import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.database.MediaFileDao
 import com.tmf.freespace.database.UserDao
-import com.tmf.freespace.model.User
-import com.tmf.freespace.ui.model.CloudStorage
-import com.tmf.freespace.ui.model.CloudStorageFactory
-import com.tmf.freespace.ui.model.Compressor
-import com.tmf.freespace.ui.model.MediaFile
-import com.tmf.freespace.ui.model.MediaReader
-import com.tmf.freespace.ui.model.MediaType
-import com.tmf.freespace.util.MediaStoreUtil
+import com.tmf.freespace.files.MediaStoreUtil
+import com.tmf.freespace.models.MediaFile
+import com.tmf.freespace.models.MediaType
+import com.tmf.freespace.models.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -30,11 +30,11 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.powermock.api.mockito.PowerMockito
 import org.powermock.core.classloader.annotations.PrepareForTest
@@ -61,7 +61,7 @@ class CompressionServiceBackgroundTaskTest {
     @Mock private lateinit var mockUserDao: UserDao
     @Mock private lateinit var mockMediaReader: MediaReader
     @Mock private lateinit var mockCloudStorageFactory: CloudStorageFactory
-    @Mock private lateinit var mockCloudStorage: CloudStorage
+    @Mock private lateinit var mockCloudStorage: ICloudStorage
     @Mock private lateinit var mockCompressor: Compressor
     @Mock private lateinit var mockMediaStoreUtil: MediaStoreUtil
     @Mock private lateinit var mockStatFs: StatFs

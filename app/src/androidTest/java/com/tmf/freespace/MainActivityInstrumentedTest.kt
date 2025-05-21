@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
-import com.tmf.freespace.ui.viewmodel.MainViewModel
+import com.tmf.freespace.viewmodels.MainViewModel
 import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
