@@ -10,6 +10,10 @@ activityCompose = "1.10.1"
 composeBom = "2024.04.01"
 coilCompose = "2.7.0"
 smartExceptionJavaVersion = "0.2.1"
+mockitoCore = "5.11.0"
+mockitoKotlin = "5.2.1"
+powermock = "2.0.9"
+androidxTestRules = "1.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -28,6 +32,11 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose"}
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockitoKotlin" }
+powermock-module-junit4 = { group = "org.powermock", name = "powermock-module-junit4", version.ref = "powermock" }
+powermock-api-mockito2 = { group = "org.powermock", name = "powermock-api-mockito2", version.ref = "powermock" }
+androidx-rules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

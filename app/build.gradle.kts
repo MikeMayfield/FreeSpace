@@ -51,7 +51,12 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.powermock.module.junit4)
+    testImplementation(libs.powermock.api.mockito2)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.rules) // Added for GrantPermissionRule
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
