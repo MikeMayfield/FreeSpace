@@ -55,6 +55,7 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.powermock.module.junit4)
     testImplementation(libs.powermock.api.mockito2)
+    testImplementation(kotlin("test"))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.rules) // Added for GrantPermissionRule
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,4 +63,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation(libs.kotlinx.coroutines.test)
 }

@@ -84,7 +84,7 @@ class CompressionServiceBackgroundTask(
     //region Private Methods
 
     //Find all new media files on disk and add them to the database for future processing
-    private fun addAllNewMediaFilesToDB() {
+    fun addAllNewMediaFilesToDB() {
         val mediaFileReader = MediaReader(context)
         mediaFileReader.forNewMediaFiles{ mediaFile ->
             database.mediaFileDao.insertIfNew(mediaFile)
@@ -92,7 +92,7 @@ class CompressionServiceBackgroundTask(
     }
 
     //Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
-    private fun getBytesToRecover(): Long {
+    fun getBytesToRecover(): Long {
         //Get current free space on primary disk
         val statFs = StatFs(Environment.getExternalStorageDirectory().absolutePath)
         val currentFreeSpace = statFs.availableBytes
@@ -165,11 +165,11 @@ class CompressionServiceBackgroundTask(
         return compressionRemainingBytes
     }
 
-    private data class CompressionLevel(
+    data class CompressionLevel(
         val minDays: Int,
         val maxDays: Int,
         val imageCompressionLevel: Int,
-        val videoCompressionLevel: Int,
+        val videoCompressionLevel: Int = imageCompressionLevel,
     )
 
     //endregion

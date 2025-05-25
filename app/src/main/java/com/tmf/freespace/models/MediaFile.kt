@@ -23,6 +23,7 @@ data class MediaFile(
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     var isOnServer: Boolean,
 ) {
+
     fun getContentValues(excludeId: Boolean = false) : ContentValues {
         return ContentValues().apply {
             put("id", id)
