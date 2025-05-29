@@ -2,10 +2,7 @@ package com.tmf.freespace.models
 
 import android.content.ContentValues
 import android.database.Cursor
-import androidx.compose.ui.text.substring
 import java.nio.file.Paths
-import kotlin.text.lastIndexOf
-import kotlin.text.lowercase
 
 
 //Media File data
