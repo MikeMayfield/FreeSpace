@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -38,7 +39,7 @@ android {
 
 dependencies {
 
-    implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.android) // If using Android
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -49,6 +50,16 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.arthenica.smart.exception.java)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+    implementation(libs.commons.net)
+    implementation(libs.retrofit) // Or latest
+    implementation(libs.kotlinx.serialization.json) // Or latest
+    implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
+    implementation(libs.kotlinx.serialization.json) // Or latest
+    implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
+    implementation(libs.logging.interceptor) // Optional: For logging requests/responses
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

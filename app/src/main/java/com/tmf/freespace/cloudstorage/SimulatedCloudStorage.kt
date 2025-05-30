@@ -3,8 +3,6 @@ package com.tmf.freespace.cloudstorage
 import android.content.Context
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.User
-import java.io.File
-import java.nio.file.Files
 
 class SimulatedCloudStorage : ICloudStorage {
     private lateinit var user: User

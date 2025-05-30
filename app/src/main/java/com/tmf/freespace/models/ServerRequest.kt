@@ -1,5 +1,8 @@
 package com.tmf.freespace.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ServerRequest(
     val requestType: ServerRequestType,
     val userID: Int? = null,  //User ID (HEARTBEAT, ALLOCATE_FILE)
