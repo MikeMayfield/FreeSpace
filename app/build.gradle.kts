@@ -60,6 +60,7 @@ dependencies {
     implementation(platform(libs.okhttp.bom))
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
+    implementation(libs.firebase.crashlytics.buildtools)
 
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

@@ -182,7 +182,7 @@ class MediaStoreUtil {
 
     //TODO Just for testing/debugging. Not used for app functionality
     fun cloneAllContentValues(contentResolver: ContentResolver, mediaStoreUri: Uri) : ContentValues? {
-        val columnsToClone = listOf(MediaStore.Audio.Playlists.OWNER_PACKAGE_NAME, "_id", "duration", "album_artist", "resolution", "orientation", "artist", "author", "format", "height", "is_drm", "volume_name", "date_modified", "writer", "date_expires", "composer", "_display_name", "datetaken", "mime_type", "bitrate", "cd_track_number", "xmp", "year", "_data", "_size", "album", "genre", "title", "width", "is_favorite", "is_trashed", "group_id", "document_id", "generation_added", "is_download", "generation_modified", "is_pending", "date_added", "capture_framerate", "num_tracks", "original_document_id", "bucket_id", "media_type", "relative_path",)
+        val columnsToClone = listOf("_id", "duration", "album_artist", "resolution", "orientation", "artist", "author", "format", "height", "is_drm", "volume_name", "date_modified", "writer", "date_expires", "composer", "_display_name", "datetaken", "mime_type", "bitrate", "cd_track_number", "xmp", "year", "_data", "_size", "album", "genre", "title", "width", "is_favorite", "is_trashed", "group_id", "document_id", "generation_added", "is_download", "generation_modified", "is_pending", "date_added", "capture_framerate", "num_tracks", "original_document_id", "bucket_id", "media_type", "relative_path",)
         val values = ContentValues()
 
         contentResolver.query(
