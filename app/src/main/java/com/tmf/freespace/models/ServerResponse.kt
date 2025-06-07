@@ -1,14 +1,15 @@
 package com.tmf.freespace.models
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class ServerResponse(
     val responseType: ServerResponseType,
-    val userID: Int,  //User ID (All)
-    val serverID: Int,  //Server ID (Register, Allocate File)
-    val ftpToken: String,  //FTP access token ((IpAsInt32 + space + login + space + password) XOR with userID, converted to UrlBase64 string)
+    val userID: String,  //User ID as GUID string (All)
+    val ftpToken: String,  //FTP access token (('1:' + serverID + ':' + dotted.Ip.Address + ':' + login + ':' + password) XOR with -1, converted to UrlBase64 string)
 ) {
     enum class ServerResponseType(val value: Int) {
         REGISTERED(0),  //Registration or User update completed
         FILE_ACCESS(1),  //Allocate a file on one of the file servers
     }
 }
-

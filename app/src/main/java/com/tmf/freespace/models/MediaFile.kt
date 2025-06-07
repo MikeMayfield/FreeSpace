@@ -3,10 +3,12 @@ package com.tmf.freespace.models
 import android.content.ContentValues
 import android.database.Cursor
 import java.nio.file.Paths
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 //Media File data
-data class MediaFile(
+data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
     val id: Long = 0,  //Based on mediaStoreID
     val fullPath: String,
     val originalSize: Int,
@@ -21,6 +23,7 @@ data class MediaFile(
     var isOnServer: Boolean,
 ) {
 
+    @OptIn(ExperimentalUuidApi::class)
     fun getContentValues(excludeId: Boolean = false) : ContentValues {
         return ContentValues().apply {
             put("id", id)
@@ -58,6 +61,7 @@ data class MediaFile(
 
 
     companion object {
+        @OptIn(ExperimentalUuidApi::class)
         fun fromCursor(cursor: Cursor) : MediaFile? {
             if (cursor.moveToNext()) {
                 return MediaFile(

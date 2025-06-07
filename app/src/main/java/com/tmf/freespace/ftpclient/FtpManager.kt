@@ -85,7 +85,6 @@ class FtpManager {
      * @return True if logout and disconnection were successful, false otherwise.
      */
     suspend fun logout(): Boolean {
-        // ... implementation from previous response ...
         return withContext(Dispatchers.IO) {
             if (!isConnected && !ftpClient.isConnected) {
                 return@withContext true
@@ -185,7 +184,6 @@ class FtpManager {
      * @throws IllegalStateException If not connected to the FTP server.
      */
     suspend fun downloadFile(remoteFileName: String, localFile: File): Boolean {
-        // ... implementation from previous response ...
         if (!isConnected()) {
             throw IllegalStateException("Not connected to FTP server. Please login first.")
         }

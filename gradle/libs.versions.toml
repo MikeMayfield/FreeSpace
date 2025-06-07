@@ -20,6 +20,7 @@ mockitoCore = "5.11.0"
 mockitoKotlin = "5.2.1"
 powermock = "2.0.9"
 androidxTestRules = "1.6.1"
+firebaseCrashlyticsBuildtools = "3.0.3"
 
 [libraries]
 arthenica-smart-exception-java = { module = "com.arthenica:smart-exception-java", version.ref = "smartExceptionJavaVersion" }
@@ -51,6 +52,7 @@ androidx-rules = { group = "androidx.test", name = "rules", version.ref = "andro
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version = "1.7.3" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
+firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

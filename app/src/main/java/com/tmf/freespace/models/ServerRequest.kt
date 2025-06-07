@@ -5,10 +5,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ServerRequest(
     val requestType: ServerRequestType,
-    val userID: Int? = null,  //User ID (HEARTBEAT, ALLOCATE_FILE)
+    val userID: String? = null,  //User ID GUID (REGISTER_USER, ALLOCATE_FILE, HEARTBEAT)
     val phoneNumber: String? = null,  //Phone number or unique ID of phone (REGISTER_USER)
     val email: String? = null,  //Email (REGISTER_USER)
     val password: String? = null,  //Password (REGISTER_USER)
+    val fileID: Long? = null,  //File ID (from MediaStore)
     val fileSize: Int? = null,  //File size in bytes (REGISTER_USER, ALLOCATE_FILE)
     val sdSize: Long? = null,  //SD card size in bytes (REGISTER_USER)
     val sdFreeSpace: Long? = null,  //SD card free space at registration in bytes (REGISTER_USER)

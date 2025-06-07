@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.ContextCompat
-import com.tmf.freespace.files.MediaStoreUtil
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.MediaType
 
