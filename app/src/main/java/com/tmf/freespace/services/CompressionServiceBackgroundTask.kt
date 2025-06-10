@@ -31,8 +31,7 @@ import java.io.File
 . . . . Restore file from cloud
 . . . Compress file and replace original; update db
 . . Update space used/available on server in db
- */
-
+*/
 class CompressionServiceBackgroundTask(
     private val context: Context,
     private val database: AppDatabase
@@ -58,13 +57,16 @@ class CompressionServiceBackgroundTask(
         ),
         //TODO: Add support for audio compression
     )
+    private lateinit var extractedFilePath: String
 
     //endregion
 
     //region Public Methods
 
     //Start compression process. Must be called on background thread
-    fun start()  {
+    suspend fun start()  {
+        extractedFilePath = "${Environment.getExternalStorageDirectory().absolutePath}/TempFile.tmp"
+
         addAllNewMediaFilesToDB()  //Add all new media files to DB
         var bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         for (compressionLevelGroupIdx in compressionLevels.indices) {  //If first pass doesn’t meet free space goal, try second pass with more aggressive compression
@@ -76,6 +78,7 @@ class CompressionServiceBackgroundTask(
 
         if (bytesToRecover > 0L) {
             Log.w("start", "Not enough space was recovered. Remaining bytes: $bytesToRecover")
+            //TODO Compress again with more aggressive settings
         }
     }
 
@@ -115,7 +118,7 @@ class CompressionServiceBackgroundTask(
         //TODO Add support for optional full backup of all files
     }
 
-    private fun compressSelectedFiles(bytesToRecover: Long) : Long {  //TODO Handle abort when no longer idle
+    private suspend fun compressSelectedFiles(bytesToRecover: Long) : Long {  //TODO Handle abort when no longer idle
         val mediaStoreUtil = MediaStoreUtil()
         val user = database.userDao.get()
         val cloudStorage = CloudStorageFactory().cloudStorage(user, context)
@@ -124,18 +127,19 @@ class CompressionServiceBackgroundTask(
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var mediaFile: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         while (mediaFile != null && compressionRemainingBytes > 0) {  //TODO Support optional backup of all files
-            var extractedFilePath: String? = null
-
             //If file is not on server, send to cloud before it is compressed
             if (!mediaFile.isOnServer) {
                 cloudStorage.sendMediaFile(mediaFile)  //TODO Send file to cloud async (coroutine), be sure compressing it while it is sending doesn't interfere with transfer and vice-versa
-                mediaFile.isOnServer = true
             }
 
             //If file was already compressed, restore from cloud before recompressing
-//TODO            if (mediaFile.currentCompressionLevel != 0) {
-//                extractedFilePath = cloudStorage.restoreMediaFile(mediaFile)  //Restore media file from cloud to local file
-//            }
+            if (mediaFile.currentCompressionLevel != 0) {
+                if (!cloudStorage.restoreMediaFile(mediaFile, extractedFilePath)) {  //Restore media file from cloud to local file
+                    Log.e("CompressSelectedFiles:", "Failed to restore original file to be recompressed")
+                    mediaFile = database.mediaFileDao.nextMediaFile(filesToCompressCursor)  //Skip to next file to compress
+                    continue  //Skip recompression
+                }
+            }
 
             //Compress file
             val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
@@ -156,11 +160,13 @@ class CompressionServiceBackgroundTask(
                     compressedFile.delete()  //Delete temp compressed file
                 }
             }
+            database.mediaFileDao.update(mediaFile)  //Save changes (if any) to MediaFile
 
             //Go to the next file, if any
             mediaFile = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
         }
         filesToCompressCursor.close()
+        cloudStorage.close()
 
         return compressionRemainingBytes
     }

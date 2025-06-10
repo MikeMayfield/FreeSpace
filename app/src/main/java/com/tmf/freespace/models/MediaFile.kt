@@ -20,7 +20,7 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
     var desiredCompressionLevel: Int = 0,
     val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
-    var isOnServer: Boolean,
+    var serverID: Int,
 ) {
 
     @OptIn(ExperimentalUuidApi::class)
@@ -37,7 +37,7 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
             put("desiredCompressionLevel", desiredCompressionLevel)
             put("creationDtm", creationDtm)
             put("modifiedDtm", modifiedDtm)
-            put("isOnServer", if (isOnServer) 1 else 0)
+            put("serverID", serverID)
         }
     }
 
@@ -59,6 +59,8 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
     val absolutePath: String
         get() = if (fullPath.contains(':')) fullPath.split(':')[1] else fullPath
 
+    val isOnServer: Boolean
+        get() = serverID >= 0
 
     companion object {
         @OptIn(ExperimentalUuidApi::class)
@@ -76,7 +78,7 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
                     desiredCompressionLevel = cursor.getInt(cursor.getColumnIndexOrThrow("desiredCompressionLevel")),
                     creationDtm = cursor.getLong(cursor.getColumnIndexOrThrow("creationDtm")),
                     modifiedDtm = cursor.getLong(cursor.getColumnIndexOrThrow("modifiedDtm")),
-                    isOnServer = cursor.getInt(cursor.getColumnIndexOrThrow("isOnServer")) != 0,
+                    serverID = cursor.getInt(cursor.getColumnIndexOrThrow("serverID")),
                 )
             }
             else {
@@ -97,7 +99,7 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
             sb.append("desiredCompressionLevel INTEGER NOT NULL, ")
             sb.append("creationDtm INTEGER NOT NULL, ")
             sb.append("modifiedDtm INTEGER NOT NULL, ")
-            sb.append("isOnServer INTEGER NOT NULL ")
+            sb.append("serverID INTEGER NULL ")
             sb.append(");")
             return sb.toString()
         }

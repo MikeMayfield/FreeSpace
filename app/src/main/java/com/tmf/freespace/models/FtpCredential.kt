@@ -1,7 +1,7 @@
 package com.tmf.freespace.models
 
-import java.nio.charset.StandardCharsets
-import kotlin.io.encoding.Base64
+import android.database.Cursor
+import java.util.UUID
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.text.isBlank
 
@@ -10,7 +10,7 @@ import kotlin.text.isBlank
  *
  * @param ftpToken The FTP token in the format "1:serverID:dotted.Ip.Address:login:password".
  */
-class FtpCredentials(
+class FtpCredential(
     var ftpToken: String  //Format: "1:serverID:dotted.Ip.Address:login:password"
 ) {
     var serverID = -1  //Unique identifier for the FTP server
@@ -108,4 +108,26 @@ class FtpCredentials(
     override fun toString(): String {
         return "FtpCredentials(ipAddress='$ipAddress', username='$username', serverID=$serverID)"
         // Avoid logging or toString-ing the password directly for security.
-    }}
+    }
+
+    companion object {
+        fun fromCursor(cursor: Cursor) : FtpCredential? {
+            if (cursor.moveToNext()) {
+                return FtpCredential(
+                    ftpToken = cursor.getString(cursor.getColumnIndexOrThrow("ftpToken"))
+                )
+            }
+            else {
+                return null
+            }
+        }
+
+        fun createTable() : String {
+            val sb = StringBuilder("CREATE TABLE IF NOT EXISTS FtpCredential (")
+            sb.append("serverID INTEGER PRIMARY KEY, ")
+            sb.append("ftpToken TEXT NOT NULL, ")
+            sb.append(");")
+            return sb.toString()
+        }
+    }
+}

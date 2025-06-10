@@ -7,12 +7,9 @@ import com.tmf.freespace.models.User
 class CloudStorageFactory {
     fun cloudStorage(user: User, context: Context): ICloudStorage {
         val cloudStorage =  when (user.cloudStorageType) {
-            CloudStorageType.Integrated -> SimulatedCloudStorage()  //TODO Implement real cloud storage
-            CloudStorageType.GoggleDrive -> SimulatedCloudStorage()  //TODO Implement real cloud storage
-            CloudStorageType.DropBox -> SimulatedCloudStorage()  //TODO Implement real cloud storage
-            CloudStorageType.Simulated -> SimulatedCloudStorage()
+            CloudStorageType.Integrated -> InterserverCloudStorage(user, context)
+            CloudStorageType.Simulated -> SimulatedCloudStorage(user, context)
         }
-        cloudStorage.init(user, context)
 
         return cloudStorage
     }

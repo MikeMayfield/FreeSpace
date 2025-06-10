@@ -5,9 +5,17 @@ import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.User
 
 interface ICloudStorage {
-    fun init(user: User, context: Context) : String
+    suspend fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean = false)  //TODO  Before uploading video, use ffmpeg -movflags +faststart option with FFmpeg can relocate the necessary metadata to the beginning, allowing file to be streamed, if sufficient bandwidth
 
-    fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean = false)  //TODO  Before uploading video, use ffmpeg -movflags +faststart option with FFmpeg can relocate the necessary metadata to the beginning, allowing file to be streamed, if sufficient bandwidth
+    /**
+     * Restore original file previously saved in the cloud
+     *
+     * @param mediaFile MediaFile to restore
+     * @param outputPath Path to local file to create from cloud file
+     * @param encoded Flag: The file was encoded when saved
+     * @return Flag: The file was restored successfully
+     */
+    suspend fun restoreMediaFile(mediaFile: MediaFile, outputFilePath: String, encoded: Boolean = false) : Boolean
 
-    fun restoreMediaFile(mediaFile: MediaFile, encoded: Boolean = false) : String
+    suspend fun close()  //Close file manager, if open
 }

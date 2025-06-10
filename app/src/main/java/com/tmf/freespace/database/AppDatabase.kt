@@ -26,6 +26,11 @@ class AppDatabase(
             return UserDao(this)
         }
 
+    val ftpCredentialsDao: FtpCredentialDao
+        get() {
+            return FtpCredentialDao(this)
+        }
+
     fun boolToInt(value: Boolean): Int {
         return if (value) 1 else 0
     }

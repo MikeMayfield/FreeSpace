@@ -4,18 +4,8 @@ import android.content.Context
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.User
 
-class SimulatedCloudStorage : ICloudStorage {
-    private lateinit var user: User
-    private lateinit var context: Context
-
-    override fun init(user: User, context: Context): String {
-        this.user = user
-        this.context = context
-
-        return "${user.emailAddress}_${user.password}"
-    }
-
-    override fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean) {
+class SimulatedCloudStorage(val user: User, val context: Context) : ICloudStorage {
+    override suspend fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean) {
 //        val sourceFile = File(mediaFile.fullPath)
 //        val targetFile = File("${mediaFile.fullPath}.rmt")
 //
@@ -26,8 +16,11 @@ class SimulatedCloudStorage : ICloudStorage {
 //        sourceFile.copyTo(targetFile, true)
     }
 
-    override fun restoreMediaFile(mediaFile: MediaFile, encoded: Boolean) : String {
-//        TODO("Not yet implemented")
-        return ""  //TODO Return local file path to where file was restored
+    override suspend fun restoreMediaFile(mediaFile: MediaFile, outputFilePath: String, encoded: Boolean): Boolean {
+        return false  //TODO("Not yet implemented")
+    }
+
+    override suspend fun close() {
+        //TODO("Not yet implemented")
     }
 }

@@ -17,6 +17,7 @@ class FtpManager {
     private val ftpClient = FTPClient()
     @Volatile
     private var isConnected = false
+    private var currentServer = ""
 
 
     //begin Public API methods
@@ -32,7 +33,15 @@ class FtpManager {
      * @throws IOException If an error occurs during connection or login.
      */
     suspend fun login(server: String, port: Int = 21, username: String, password: String): Boolean {
+        if (server == currentServer) {
+            return true  //Already logged into this server
+        }
+
         return withContext(Dispatchers.IO) {
+            if (currentServer.isNotEmpty()) {
+                logout()
+            }
+
             try {
                 if (isConnected && ftpClient.isConnected) {
                     return@withContext true
@@ -84,23 +93,19 @@ class FtpManager {
      *
      * @return True if logout and disconnection were successful, false otherwise.
      */
-    suspend fun logout(): Boolean {
+    suspend fun logout() {
         return withContext(Dispatchers.IO) {
-            if (!isConnected && !ftpClient.isConnected) {
-                return@withContext true
-            }
             try {
                 var loggedOut = true
+                currentServer = ""
                 if (ftpClient.isConnected) {
                     loggedOut = ftpClient.logout()
                     ftpClient.disconnect()
                 }
                 isConnected = false
-                loggedOut
             } catch (e: IOException) {
                 System.err.println("Error logging out or disconnecting from FTP server: ${e.message}")
                 isConnected = false
-                false
             }
         }
     }
@@ -110,18 +115,19 @@ class FtpManager {
      * and creating the remote directory path if it doesn't exist.
      *
      * @param localFile The local file to upload.
-     * @param remotePath The full remote path including directory and filename (e.g., "uploads/data/myfile.dat").
+     * @param remotePath The full remote path including directory and filename (e.g., "freespace/userID/fileID.tmp").
      * @return True if the file was successfully uploaded, false otherwise.
      * @throws IOException If an error occurs during file transfer or directory creation.
      * @throws IllegalStateException If not connected to the FTP server.
      */
     suspend fun uploadFile(localFile: File, remotePath: String): Boolean {
-        if (!isConnected()) {
-            throw IllegalStateException("Not connected to FTP server. Please login first.")
-        }
         if (!localFile.exists() || !localFile.isFile) {
             System.err.println("Local file does not exist or is not a regular file: ${localFile.absolutePath}")
             return false
+        }
+
+        if (!isConnected) {
+            throw IllegalStateException("BUG: Not connected to FTP server")
         }
 
         return withContext(Dispatchers.IO) {
@@ -144,7 +150,8 @@ class FtpManager {
                             return@withContext false
                         }
                     }
-                } else {
+                }
+                else {
                     // No directory path, uploading to current working directory
                     remoteDir = "" // Or ftpClient.printWorkingDirectory() if you need to be explicit
                     remoteFileName = remotePath
@@ -176,14 +183,14 @@ class FtpManager {
      * Downloads a file from the FTP server to a local file.
      * This is a suspend function and should be called from a coroutine.
      *
-     * @param remoteFileName The name of the file on the FTP server (can include path).
+     * @param remoteFilePath The name of the file on the FTP server (can include path).
      * @param localFile The local File object where the downloaded content will be saved.
      *                  The parent directory of this file must exist.
      * @return True if the file was successfully downloaded, false otherwise.
      * @throws IOException If an error occurs during file transfer or local file operations.
      * @throws IllegalStateException If not connected to the FTP server.
      */
-    suspend fun downloadFile(remoteFileName: String, localFile: File): Boolean {
+    suspend fun downloadFile(remoteFilePath: String, localFile: File): Boolean {
         if (!isConnected()) {
             throw IllegalStateException("Not connected to FTP server. Please login first.")
         }
@@ -191,10 +198,10 @@ class FtpManager {
         return withContext(Dispatchers.IO) {
             try {
                 FileOutputStream(localFile).use { outputStream: OutputStream ->
-                    ftpClient.retrieveFile(remoteFileName, outputStream)
+                    ftpClient.retrieveFile(remoteFilePath, outputStream)
                 }
             } catch (e: IOException) {
-                System.err.println("Error downloading file '$remoteFileName' from FTP server: ${e.message}")
+                System.err.println("Error downloading file '$remoteFilePath' from FTP server: ${e.message}")
                 if (localFile.exists()) {
                     localFile.delete()
                 }
@@ -228,6 +235,15 @@ class FtpManager {
                 System.err.println("Error renaming remote item from '$fromPath' to '$toPath': ${e.message}")
                 throw e // Or return false and log
             }
+        }
+    }
+
+    /**
+     * Close FTP client if currently connected
+     */
+    suspend fun close() {
+        if (currentServer.isNotEmpty()) {
+            logout()
         }
     }
 

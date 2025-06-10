@@ -3,6 +3,7 @@ package com.tmf.freespace.database
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.tmf.freespace.models.FtpCredential
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.Preferences
 import com.tmf.freespace.models.User
@@ -14,7 +15,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(MediaFile.createTable())
         db.execSQL(User.createTable())
         db.execSQL(Preferences.createTable())
-//        db.execSQL(TeraBox.createTable()))
+        db.execSQL(FtpCredential.createTable())
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
