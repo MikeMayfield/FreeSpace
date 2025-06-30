@@ -83,7 +83,7 @@ class MediaReader(
                             mediaType = mediaType,
                             creationDtm = dateAdded,
                             modifiedDtm = dateModified,
-                            isOnServer = false,
+                            serverID = -1,
                         )
                         onNextMediaFile(newMediaFile)
                     }

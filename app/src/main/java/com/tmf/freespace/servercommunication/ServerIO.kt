@@ -1,9 +1,10 @@
 package com.tmf.freespace.servercommunication
 
+import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.models.FtpCredential
 import java.util.UUID
 
-class ServerIO {
+class ServerIO(val database: AppDatabase) {
     //region Public API
 
     /**
@@ -16,9 +17,9 @@ class ServerIO {
      * @param sdFreeSpaceBytes The amount of free space on the user's SD card in bytes.
      * @return Identical to allocateUploadFile
      */
-    suspend fun registerUser(userIDGuid: String, phoneNumber: String, emailAddress: String, sdSizeBytes: Long, sdFreeSpaceBytes: Long) : String {
-        return "1:1:66.45.241.246:st60470:9N2mxY@V"  //TODO
-    }
+//    suspend fun registerUser(userIDGuid: String, phoneNumber: String, emailAddress: String, sdSizeBytes: Long, sdFreeSpaceBytes: Long) : String {
+//        return "1:1:66.45.241.246:st60470:9N2mxY@V"  //TODO
+//    }
 
     /**
      * Request FTP access information for a file upload request in preparation for uploading the file to one of the FTP servers
@@ -31,8 +32,21 @@ class ServerIO {
      *  Converted to a byte array, XORed with -1, converted to URL-encoded Base64
      *  ("*ERROR*_message" if error)
      */
-    suspend fun allocateUploadFile(userIDGuid: UUID, fileID: Long, fileSizeBytes: Int) : FtpCredential {
-        return decodeFtpToken("1:1:66.45.241.246:st60470:9N2mxY@V")  //TODO
+    fun allocateUploadFile(userIDGuid: UUID, fileID: Long, fileSizeBytes: Int) : FtpCredential? {
+        var ftpCredential: FtpCredential? = null
+
+        try {
+            //TODO Get FTP credentials from server
+            val ftpCredentialsFromServer = "1:1:66.45.241.246:st60470:9N2mxY@V"
+
+            ftpCredential = decodeFtpToken(ftpCredentialsFromServer)
+            database.ftpCredentialsDao.insertIfNew(ftpCredential)
+        }
+        catch (e: Exception) {
+            //TODO Handle error getting credentials from server
+        }
+
+        return ftpCredential
     }
 
     /**
@@ -41,9 +55,9 @@ class ServerIO {
      * @param userIDGuid The user's unique identifier.
      * @return None
      */
-    suspend fun sendHeartBeat(userIDGuid: String) {
-        //TODO
-    }
+//    suspend fun sendHeartBeat(userIDGuid: String) {
+//        //TODO
+//    }
 
     //endregion Public API
     //region Private methods

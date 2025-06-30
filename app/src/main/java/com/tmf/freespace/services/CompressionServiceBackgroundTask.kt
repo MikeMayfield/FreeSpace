@@ -6,11 +6,13 @@ import android.os.StatFs
 import android.util.Log
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.cloudstorage.CloudStorageFactory
+import com.tmf.freespace.cloudstorage.ICloudStorage
 import com.tmf.freespace.compression.Compressor
 import com.tmf.freespace.database.AppDatabase
 import com.tmf.freespace.files.MediaStoreUtil
 import com.tmf.freespace.models.MediaFile
 import java.io.File
+import kotlin.io.path.createTempFile
 
 
 //Perform background compression of media files for CompressionService
@@ -57,7 +59,13 @@ class CompressionServiceBackgroundTask(
         ),
         //TODO: Add support for audio compression
     )
-    private lateinit var extractedFilePath: String
+
+    private lateinit var extractedFilePath: String  //ExtractedFile.tmp on ExternalStorageDirectory storage (used for extracting media file from storage or restoring media from server
+    private lateinit var compressedFilePath: String  //CompressedFile.tmp on ExternalStorageDirectory storage (used for extracting media file from storage or restoring media from server
+    private lateinit var cloudStorage: ICloudStorage
+    private lateinit var compressor: Compressor
+    private val mediaStoreUtil = MediaStoreUtil()
+    val user = database.userDao.get()
 
     //endregion
 
@@ -65,14 +73,17 @@ class CompressionServiceBackgroundTask(
 
     //Start compression process. Must be called on background thread
     suspend fun start()  {
-        extractedFilePath = "${Environment.getExternalStorageDirectory().absolutePath}/TempFile.tmp"
+        extractedFilePath = createTempFile(prefix = "Extract_", suffix = ".tmp").toString()
+        compressedFilePath = createTempFile(prefix = "Compress_", suffix = ".tmp").toString()
+        cloudStorage = CloudStorageFactory().cloudStorage(user, context, database)
+        compressor = Compressor(context)
 
         addAllNewMediaFilesToDB()  //Add all new media files to DB
-        var bytesToRecover = getBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
+        var bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         for (compressionLevelGroupIdx in compressionLevels.indices) {  //If first pass doesn’t meet free space goal, try second pass with more aggressive compression
             if (bytesToRecover > 0L) {
-                selectFilesToCompress(bytesToRecover, compressionLevelGroupIdx)  //Get all files to compress
-                bytesToRecover = compressSelectedFiles(bytesToRecover)  //Compress all pending files
+                selectFilesToCompress(compressionLevelGroupIdx)  //Get all files to compress
+                bytesToRecover -= compressSelectedFiles(bytesToRecover)  //Compress all pending files
             }
         }
 
@@ -95,7 +106,7 @@ class CompressionServiceBackgroundTask(
     }
 
     //Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
-    fun getBytesToRecover(): Long {
+    fun calculateBytesToRecover(): Long {
         //Get current free space on primary disk
         val statFs = StatFs(Environment.getExternalStorageDirectory().absolutePath)
         val currentFreeSpace = statFs.availableBytes
@@ -107,7 +118,7 @@ class CompressionServiceBackgroundTask(
     }
 
     //Update the database for any files that should be compressed (or recompressed)
-    private fun selectFilesToCompress(bytesToRecover: Long, compressionLevelGroupIdx: Int) {
+    private fun selectFilesToCompress(compressionLevelGroupIdx: Int) {
 
         val nowSecs = System.currentTimeMillis() / 1_000L
         val secondsPerDay: Long = 60 * 60 * 24
@@ -118,49 +129,51 @@ class CompressionServiceBackgroundTask(
         //TODO Add support for optional full backup of all files
     }
 
+    /**
+     * Compress all files that should be compressed (or recompressed)
+     *
+     * @param bytesToRecover The amount of space to recover
+     * @return The amount of space that still needs to be recovered after compressing all files (<=0 if no more recovery needed)
+     */
     private suspend fun compressSelectedFiles(bytesToRecover: Long) : Long {  //TODO Handle abort when no longer idle
-        val mediaStoreUtil = MediaStoreUtil()
-        val user = database.userDao.get()
-        val cloudStorage = CloudStorageFactory().cloudStorage(user, context)
-        var compressionRemainingBytes = bytesToRecover
+        var bytesRemainingToRecover = bytesToRecover
         val compressor = Compressor(context)
         val filesToCompressCursor = database.mediaFileDao.getFilesToBeCompressed()
         var mediaFile: MediaFile? = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
-        while (mediaFile != null && compressionRemainingBytes > 0) {  //TODO Support optional backup of all files
-            //If file is not on server, send to cloud before it is compressed
-            if (!mediaFile.isOnServer) {
-                cloudStorage.sendMediaFile(mediaFile)  //TODO Send file to cloud async (coroutine), be sure compressing it while it is sending doesn't interfere with transfer and vice-versa
-            }
+        while (mediaFile != null && bytesRemainingToRecover > 0) {  //TODO Support optional backup of all files
+            //TODO Check for enough free space to store extracted file twice (once for original, once for compressed)
 
-            //If file was already compressed, restore from cloud before recompressing
-            if (mediaFile.currentCompressionLevel != 0) {
-                if (!cloudStorage.restoreMediaFile(mediaFile, extractedFilePath)) {  //Restore media file from cloud to local file
-                    Log.e("CompressSelectedFiles:", "Failed to restore original file to be recompressed")
-                    mediaFile = database.mediaFileDao.nextMediaFile(filesToCompressCursor)  //Skip to next file to compress
-                    continue  //Skip recompression
+            if (fileExists(mediaFile)) {
+                var okToCompressFile = true
+
+                //If file is not already on server, send to cloud before it is compressed (TODO: Send to cloud async while compressing)
+                if (!mediaFile.isOnServer) {
+                    if (!cloudStorage.sendMediaFile(mediaFile)) {  //TODO Send file to cloud async (coroutine). Be sure compressing it while it is sending doesn't interfere with transfer and vice-versa
+                        Log.w("compressSelectedFiles", "Failed to send file to cloud: ${mediaFile.displayName}. Not compressing")
+                        //TODO Send diagnostic info to server
+                        okToCompressFile = false
+                    }
                 }
-            }
 
-            //Compress file
-            val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
-            val compressedFilePath = compressor.compress(mediaFile, extractedFilePath)
-            if (compressedFilePath != null) {
-                val compressedFile = File(compressedFilePath)
-                if (compressedFile.exists()) {
-                    if (compressedFile.length() < priorCompressedSize - compressor.minFileSizeToCompress) {
-                        if (mediaStoreUtil.replaceFileInMediaStore(context, mediaFile, compressedFilePath)) {
-                            mediaFile.compressedSize = compressedFile.length().toInt()
-                            mediaFile.currentCompressionLevel = mediaFile.desiredCompressionLevel
-                            val bytesSaved = priorCompressedSize - mediaFile.compressedSize
-                            compressionRemainingBytes -= bytesSaved
-                            database.mediaFileDao.update(mediaFile)  //MediaFile has changed, so update the DB
-                            Log.d("compressSelectedFiles", "Compressed ${mediaFile.displayName} from $priorCompressedSize to ${mediaFile.compressedSize} bytes. Remaining: $compressionRemainingBytes")
+                //Compress (or recompress) the file if it is eligible
+                if (okToCompressFile) {
+                    val uncompressedFilePath = extractOrRecoverMediaFile(mediaFile)
+                    if (uncompressedFilePath != null) {
+                        val priorFileSize = mediaFile.compressedSize
+                        if (compressor.compress(mediaFile, uncompressedFilePath, compressedFilePath)) {
+                            if (updateMediaStoreWithCompressedFile(mediaFile, compressedFilePath)) {
+                                bytesRemainingToRecover -= (priorFileSize - mediaFile.compressedSize)
+                            }
+                            else {
+                                Log.w("compressSelectedFiles", "Not enough space recovered from compression to update media store for ${mediaFile.displayName}")
+                            }
                         }
                     }
-                    compressedFile.delete()  //Delete temp compressed file
                 }
+
+                deleteTempFiles()
             }
-            database.mediaFileDao.update(mediaFile)  //Save changes (if any) to MediaFile
+            database.mediaFileDao.update(mediaFile)  //MediaFile has (probably) changed, so update the DB
 
             //Go to the next file, if any
             mediaFile = database.mediaFileDao.nextMediaFile(filesToCompressCursor)
@@ -168,8 +181,72 @@ class CompressionServiceBackgroundTask(
         filesToCompressCursor.close()
         cloudStorage.close()
 
-        return compressionRemainingBytes
+        return bytesRemainingToRecover
     }
+
+    private fun fileExists(mediaFile: MediaFile): Boolean {
+        if (File(mediaFile.fullPath).exists()) {
+            return true
+        }
+        else {
+            Log.w("compressSelectedFiles", "File no longer exists: ${mediaFile.displayName}")
+            //Ignore this file in the future
+            mediaFile.compressedSize = 0
+            mediaFile.currentCompressionLevel = 0
+            mediaFile.desiredCompressionLevel = 0
+            database.mediaFileDao.update(mediaFile)
+            return false
+        }
+    }
+
+    private suspend fun extractOrRecoverMediaFile(mediaFile: MediaFile): String? {
+        //Extract media file from local media store or from cloud, if previously sent to cloud
+        if (mediaFile.currentCompressionLevel == 0) {  //Never compressed, so original version is in media store
+            return mediaFile.fullPath  //Path to file in Media Store
+        }
+        else {  //If file was already compressed, restore from cloud before recompressing
+            if (cloudStorage.restoreFileFromCloud(mediaFile, extractedFilePath)) {  //Restore media file from cloud to local file
+                return extractedFilePath
+            }
+            else {
+                Log.e("CompressSelectedFiles:", "Failed to restore original file to be recompressed: ${mediaFile.id}: ${mediaFile.displayName}")
+                return null
+            }
+        }
+    }
+
+    private fun updateMediaStoreWithCompressedFile(mediaFile: MediaFile, compressedFilePath: String) : Boolean {
+        val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
+        val compressedFile = File(compressedFilePath)
+        if (compressedFile.exists()) {
+            if (compressedFile.length() < (priorCompressedSize - compressor.minSignificantCompressionBytes)) {
+                //If compressed file is smaller than prior version, replace media file with compressed file
+                try {
+                    if (mediaStoreUtil.overwriteMediaStoreFile(context, mediaFile, compressedFilePath)) {
+                        mediaFile.compressedSize = compressedFile.length().toInt()
+                        mediaFile.currentCompressionLevel = mediaFile.desiredCompressionLevel
+                        Log.d("updateMediaStoreWithCompressedFile", "Updated media store for ${mediaFile.displayName} from $priorCompressedSize to ${mediaFile.compressedSize} bytes")
+                        return true
+                    }
+                } catch (e: Exception) {
+                    Log.e("updateMediaStoreWithCompressedFile", "Error updating media store for ${mediaFile.displayName}: ${e.message}")
+                    return false
+                }
+            }
+        }
+        return false
+    }
+
+    private fun deleteTempFiles() {
+        val extractedFile = File(extractedFilePath)
+        if (extractedFile.exists()) extractedFile.delete()
+
+        val compressedFilePath = File(compressedFilePath)
+        if (compressedFilePath.exists()) compressedFilePath.delete()
+    }
+
+    //endregion
+
 
     data class CompressionLevel(
         val minDays: Int,
@@ -177,6 +254,4 @@ class CompressionServiceBackgroundTask(
         val imageCompressionLevel: Int,
         val videoCompressionLevel: Int = imageCompressionLevel,
     )
-
-    //endregion
 }

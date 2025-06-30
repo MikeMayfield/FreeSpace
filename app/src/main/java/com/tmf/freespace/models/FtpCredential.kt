@@ -1,9 +1,9 @@
 package com.tmf.freespace.models
 
+import android.content.ContentValues
 import android.database.Cursor
-import java.util.UUID
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.text.isBlank
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Decode and provide access to FTP credentials from a given FTP token.
@@ -77,7 +77,7 @@ class FtpCredential(
             throw IllegalArgumentException("Invalid version number in token: $versionStr", e)
         }
 
-        // 5. Update fields. Assign parts based on your defined order
+        // 5. Update fields. Assign parts based on defined order
         this.serverID = parts[1].toInt()
         this.ipAddress = parts[2]
         this.username = parts[3]
@@ -105,27 +105,28 @@ class FtpCredential(
         return combinedParts  //TODO Encode string to match encoding used with server
     }
 
+    @OptIn(ExperimentalUuidApi::class)
+    fun getContentValues() : ContentValues {
+        return ContentValues().apply {
+            put("serverID", serverID)
+            put("ftpToken", ftpToken)
+        }
+    }
+
     override fun toString(): String {
         return "FtpCredentials(ipAddress='$ipAddress', username='$username', serverID=$serverID)"
         // Avoid logging or toString-ing the password directly for security.
     }
 
     companion object {
-        fun fromCursor(cursor: Cursor) : FtpCredential? {
-            if (cursor.moveToNext()) {
-                return FtpCredential(
-                    ftpToken = cursor.getString(cursor.getColumnIndexOrThrow("ftpToken"))
-                )
-            }
-            else {
-                return null
-            }
+        fun fromCursor(cursor: Cursor) : FtpCredential {
+            return FtpCredential(ftpToken = cursor.getString(cursor.getColumnIndexOrThrow("ftpToken")))
         }
 
         fun createTable() : String {
             val sb = StringBuilder("CREATE TABLE IF NOT EXISTS FtpCredential (")
-            sb.append("serverID INTEGER PRIMARY KEY, ")
-            sb.append("ftpToken TEXT NOT NULL, ")
+            sb.append("serverID INTEGER PRIMARY KEY NOT NULL, ")
+            sb.append("ftpToken TEXT NOT NULL")
             sb.append(");")
             return sb.toString()
         }

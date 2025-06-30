@@ -5,8 +5,8 @@ import com.tmf.freespace.models.User
 import java.util.UUID
 
 class UserDao(private val database: AppDatabase) {
-    private val tableName = "User"
-
+//    private val tableName = "User"
+//
 //    fun insert(user: User) {
 //        if (user.id == 0) {
 //            val id = database.writable.insertWithOnConflict(tableName, null, getContentValues(user), SQLiteDatabase.CONFLICT_IGNORE)
@@ -23,7 +23,8 @@ class UserDao(private val database: AppDatabase) {
             if (cursor.moveToFirst()) {
                 return User.fromCursor(cursor)!!
             } else {
-                return User(0, UUID.randomUUID(), "", "", "", 0, CloudStorageType.Simulated)
+//                return User(0, UUID.randomUUID(), "", "", "", 0, CloudStorageType.Integrated)
+                return User(0, UUID.fromString("dfc3f61f-e302-4b79-874c-fef5b1e1d78b"), "", "", "", 0, CloudStorageType.Integrated)
             }
         }
     }

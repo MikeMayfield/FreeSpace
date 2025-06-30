@@ -17,18 +17,19 @@ class MediaFileDao(private val database: AppDatabase) {
         database.write.execSQL(
             "UPDATE MediaFile " +
                     "SET desiredCompressionLevel = $imageCompressionLevel " +
-                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.IMAGE.ordinal} AND currentCompressionLevel != $imageCompressionLevel AND originalSize > 4095")
+                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.IMAGE.ordinal} AND currentCompressionLevel != $imageCompressionLevel AND originalSize > 4096 AND compressedSize > 4096")
 
         database.write.execSQL(
             "UPDATE MediaFile " +
                     "SET desiredCompressionLevel = $videoCompressionLevel " +
-                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.VIDEO.ordinal} AND currentCompressionLevel != $videoCompressionLevel AND originalSize > 4095")
+                    "WHERE creationDtm <= $minDateMs AND creationDtm > $maxDateMs AND mediaType = ${MediaType.VIDEO.ordinal} AND currentCompressionLevel != $videoCompressionLevel AND originalSize > 4096 AND compressedSize > 4096")
+        //TODO Process other media file types in the future when they are supported for compression
     }
 
     fun getFilesToBeCompressed() : Cursor {
         return database.read.rawQuery(
             "SELECT * FROM MediaFile " +
-                    "WHERE currentCompressionLevel != desiredCompressionLevel " +
+                    "WHERE currentCompressionLevel != desiredCompressionLevel AND desiredCompressionLevel > 0 " +
                     "ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC",
             null)
     }
@@ -38,6 +39,6 @@ class MediaFileDao(private val database: AppDatabase) {
     }
 
     fun update(mediaFile: MediaFile) {
-        database.write.update(tableName, mediaFile.getContentValues(true), "id = ${mediaFile.id}", null)
+        database.write.update(tableName, mediaFile.getContentValues(), "id = ${mediaFile.id}", null)
     }
 }

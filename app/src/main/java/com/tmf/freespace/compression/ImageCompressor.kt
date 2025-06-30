@@ -39,7 +39,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
             return compressToJpeg(tokens[0], tokens[1], compressedWidth, compressedHeight, compressionQuality)
         }
 
-        return true;  //No compression needed
+        return true  //No compression needed
     }
 
     @Suppress("DEPRECATION")
@@ -67,11 +67,11 @@ class ImageCompressor(context: Context) : ICompressor(context) {
     }
 
     private fun compressedWidth(screenSizePct: Float) : Int {
-        return Math.round(screenWidth * screenSizePct + 0.5f)
+        return Math.round(screenWidth * screenSizePct + 0.4f)
     }
 
     private fun compressedHeight(screenSizePct: Float) : Int {
-        return Math.round(screenHeight * screenSizePct + 0.5f)
+        return Math.round(screenHeight * screenSizePct + 0.4f)
     }
 
     /**

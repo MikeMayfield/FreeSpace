@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.database.Cursor
 import java.nio.file.Paths
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 //Media File data
@@ -17,14 +16,14 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
     val height: Int,
     val mediaType: MediaType,
     var currentCompressionLevel: Int = 0,
-    var desiredCompressionLevel: Int = 0,
+    var desiredCompressionLevel: Int = currentCompressionLevel,
     val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     var serverID: Int,
 ) {
 
     @OptIn(ExperimentalUuidApi::class)
-    fun getContentValues(excludeId: Boolean = false) : ContentValues {
+    fun getContentValues() : ContentValues {
         return ContentValues().apply {
             put("id", id)
             put("fullPath", fullPath)
@@ -41,23 +40,23 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
         }
     }
 
-    val fileType: String
-        get() {
-            val fileName = Paths.get(fullPath).fileName.toString()
-            val lastDotIndex = fileName.lastIndexOf('.')
-
-            return if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
-                fileName.substring(lastDotIndex + 1).lowercase()
-            } else {
-                ""
-            }
-        }
+//    val fileType: String
+//        get() {
+//            val fileName = Paths.get(fullPath).fileName.toString()
+//            val lastDotIndex = fileName.lastIndexOf('.')
+//
+//            return if (lastDotIndex > 0 && lastDotIndex < fileName.length - 1) {
+//                fileName.substring(lastDotIndex + 1).lowercase()
+//            } else {
+//                ""
+//            }
+//        }
 
     val displayName: String
         get() = Paths.get(fullPath).fileName.toString()
 
-    val absolutePath: String
-        get() = if (fullPath.contains(':')) fullPath.split(':')[1] else fullPath
+//    val absolutePath: String
+//        get() = if (fullPath.contains(':')) fullPath.split(':')[1] else fullPath
 
     val isOnServer: Boolean
         get() = serverID >= 0

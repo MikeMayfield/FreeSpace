@@ -2,7 +2,6 @@ package com.tmf.freespace.models
 
 import android.content.ContentValues
 import android.database.Cursor
-import java.util.UUID
 
 data class Preferences(
     var desiredFreeSpaceGB: Int = 10,
