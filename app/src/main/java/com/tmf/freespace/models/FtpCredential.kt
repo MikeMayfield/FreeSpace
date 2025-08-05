@@ -4,16 +4,19 @@ import android.content.ContentValues
 import android.database.Cursor
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
+import kotlinx.serialization.Serializable
+
 
 /**
  * Decode and provide access to FTP credentials from a given FTP token.
  *
  * @param ftpToken The FTP token in the format "1:serverID:dotted.Ip.Address:login:password".
  */
+@Serializable
 class FtpCredential(
     var ftpToken: String  //Format: "1:serverID:dotted.Ip.Address:login:password"
 ) {
-    var serverID = -1  //Unique identifier for the FTP server
+    var serverID = -1  //Unique identifier for the FTP server    //Flags: -1 = Retry later; -2 = DB error
     lateinit var ipAddress: String  //IP address of FTP server in dotted notation
     lateinit var username: String  //FTP username
     lateinit var password: String  //FTP password
@@ -31,6 +34,7 @@ class FtpCredential(
             System.err.println("Error decoding FTP token: ${e.message}")
             // Set fields to a default/error state if initialization fails
 
+            serverID = -1
             ipAddress = "ERROR_DECODING_TOKEN"
             username = "ERROR_DECODING_TOKEN"
             password = "ERROR_DECODING_TOKEN"
@@ -114,7 +118,7 @@ class FtpCredential(
     }
 
     override fun toString(): String {
-        return "FtpCredentials(ipAddress='$ipAddress', username='$username', serverID=$serverID)"
+        return "1:$serverID:$ipAddress:$username:$password"
         // Avoid logging or toString-ing the password directly for security.
     }
 

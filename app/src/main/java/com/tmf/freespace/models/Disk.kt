@@ -1,7 +1,7 @@
 package com.tmf.freespace.models
 
 
-//Disk portion of file path
+//Disk portion of local file path
 data class Disk(
     var id: Int = 0,
     val path: String,  //Path to disk (the part before the directory path)

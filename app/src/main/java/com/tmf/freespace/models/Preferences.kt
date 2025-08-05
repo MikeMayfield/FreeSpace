@@ -7,21 +7,21 @@ data class Preferences(
     var desiredFreeSpaceGB: Int = 10,
     var shouldCompressImages: Boolean = true,
     var shouldCompressVideos: Boolean = true,
-    var shouldCompressAudios: Boolean = true,
+    var shouldCompressAudio: Boolean = true,
     var shouldCompressDocuments: Boolean = true,
     var shouldCompressOtherFiles: Boolean = true,
     var backupAllFiles: Boolean = false,
     var requireWifi: Boolean = true,
     var screenMustBeOff: Boolean = true,
     var emailAddress: String = "",
-    var password: String = "",
+    var password: String = "",  //Hashed password
 ) {
     fun getContentValues(excludeId: Boolean = false) : ContentValues {
         return ContentValues().apply {
             put("desiredFreeSpaceGB", desiredFreeSpaceGB)
             put("shouldCompressImages", shouldCompressImages)
             put("shouldCompressVideos", shouldCompressVideos)
-            put("shouldCompressAudios", shouldCompressAudios)
+            put("shouldCompressAudios", shouldCompressAudio)
             put("shouldCompressDocuments", shouldCompressDocuments)
             put("shouldCompressOtherFiles", shouldCompressOtherFiles)
             put("backupAllFiles", backupAllFiles)
@@ -40,7 +40,7 @@ data class Preferences(
                     desiredFreeSpaceGB = 1000_000_000, //TODO cursor.getInt(cursor.getColumnIndexOrThrow("desiredFreeSpaceGB")),
                     shouldCompressImages = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressImages")) != 0,
                     shouldCompressVideos = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressVideos")) != 0,
-                    shouldCompressAudios = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressAudios")) != 0,
+                    shouldCompressAudio = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressAudios")) != 0,
                     shouldCompressDocuments = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressDocuments")) != 0,
                     shouldCompressOtherFiles = cursor.getInt(cursor.getColumnIndexOrThrow("shouldCompressOtherFiles")) != 0,
                     backupAllFiles = cursor.getInt(cursor.getColumnIndexOrThrow("backupAllFiles")) != 0,

@@ -7,8 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import com.tmf.freespace.services.CompressionService
-import com.tmf.freespace.viewmodels.MainViewModel
+import com.tmf.freespace.uilayer.ui.services.CompressionService
+import com.tmf.freespace.uilayer.ui.viewmodels.MainViewModel
 
 
 class MainActivity : ComponentActivity() {

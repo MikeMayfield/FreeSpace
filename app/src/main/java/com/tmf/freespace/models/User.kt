@@ -9,7 +9,7 @@ data class User(
     val phoneNumber: String,
     val emailAddress: String,
     val password: String,
-    var maxExpansionAllowed: Int,
+    var maxDiskSize: Int,
     var cloudStorageType: CloudStorageType,
 ) {
 //    fun getContentValues(excludeId: Boolean = false) : ContentValues {
@@ -33,7 +33,7 @@ data class User(
                     phoneNumber = cursor.getString(cursor.getColumnIndexOrThrow("phoneNumber")),
                     emailAddress = cursor.getString(cursor.getColumnIndexOrThrow("emailAddress")),
                     password = cursor.getString(cursor.getColumnIndexOrThrow("password")),
-                    maxExpansionAllowed = cursor.getInt(cursor.getColumnIndexOrThrow("maxExpansionAllowed")),
+                    maxDiskSize = cursor.getInt(cursor.getColumnIndexOrThrow("maxDiskSize")),
                     cloudStorageType = CloudStorageType.valueOf(cursor.getString(cursor.getColumnIndexOrThrow("cloudStorageType"))),
                 )
             }
@@ -49,7 +49,7 @@ data class User(
             sb.append("phoneNumber TEXT NOT NULL, ")
             sb.append("emailAddress TEXT NOT NULL, ")
             sb.append("password TEXT NOT NULL, ")
-            sb.append("maxExpansionAllowed INTEGER NOT NULL, ")
+            sb.append("maxDiskSize INTEGER NOT NULL, ")
             sb.append("externalStorageType INTEGER NOT NULL")
             sb.append(");")
             return sb.toString()
