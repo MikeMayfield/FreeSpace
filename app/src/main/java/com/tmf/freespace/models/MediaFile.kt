@@ -8,7 +8,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 //Media File data
 data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
-    val id: Long = 0,  //Based on mediaStoreID
+    val id: Long = 0,  //Based on mediaStoreID  //TODO BUG: **** MediaStore ID can change between reboots. Fix this!!
     val fullPath: String,
     val originalSize: Int,
     var compressedSize: Int = originalSize,
@@ -59,7 +59,7 @@ data class MediaFile @OptIn(ExperimentalUuidApi::class) constructor(
 //        get() = if (fullPath.contains(':')) fullPath.split(':')[1] else fullPath
 
     val isOnServer: Boolean
-        get() = serverID >= 0
+        get() = serverID > 0
 
     companion object {
         @OptIn(ExperimentalUuidApi::class)

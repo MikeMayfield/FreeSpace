@@ -1,4 +1,4 @@
-package com.tmf.freespace.datalayer.datasources.servercommunication
+package com.tmf.freespace.datalayer.datasources.network
 
 import com.tmf.freespace.datalayer.datasources.database.AppDatabase
 import com.tmf.freespace.models.FtpCredential

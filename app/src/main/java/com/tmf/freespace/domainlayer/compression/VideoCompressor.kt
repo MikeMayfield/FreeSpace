@@ -1,6 +1,8 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
+import android.net.Uri
+import com.tmf.freespace.models.MediaFile
 
 class VideoCompressor(context: Context) : ICompressor(context) {
     override val ffmpegCompressionCommands = listOf(
@@ -11,4 +13,10 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         "-y -i {{inputFilePath}} {{outputFilePath}}",  //4: Compression very high  //TODO Define real command
         "-y -i {{inputFilePath}} {{outputFilePath}}",  //5: Compression ultra high  //TODO Define real command
     )
+
+    //Compress media file using FFmpeg. Returns the compressed file size
+    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String): Boolean {
+        val ffmpegCommand = ffmpegCommand(mediaFile, inputFilePath, outputFilePath)
+        return if (ffmpegCommand.isNotEmpty()) ffmpeg.runCommand(ffmpegCommand) else false
+    }
 }

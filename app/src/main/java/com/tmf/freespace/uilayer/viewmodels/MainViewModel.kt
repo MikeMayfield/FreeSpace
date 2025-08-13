@@ -1,4 +1,4 @@
-package com.tmf.freespace.uilayer.ui.viewmodels
+package com.tmf.freespace.uilayer.viewmodels
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf

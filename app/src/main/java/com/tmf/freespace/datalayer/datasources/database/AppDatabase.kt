@@ -7,6 +7,7 @@ class AppDatabase(
     context: Context
 ) {
     private val dbHelper = DatabaseHelper(context)
+
     val read: Database
         get() {
             return dbHelper.readableDatabase

@@ -4,18 +4,18 @@ import android.util.Log
 import com.tmf.freespace.datalayer.datasources.database.AppDatabase
 import com.tmf.freespace.models.MediaFile
 import com.tmf.freespace.models.User
-import com.tmf.freespace.datalayer.datasources.servercommunication.ServerIO
+import com.tmf.freespace.datalayer.datasources.network.ServerIO
 import java.io.File
 
 class InterserverCloudStorage(val user: User, val database: AppDatabase) : ICloudStorage {
     private val serverIO = ServerIO(database)
     private val ftpManager = FtpManager()
 
-    override suspend fun sendMediaFile(mediaFile: MediaFile, encoded: Boolean) : Boolean {
+    override suspend fun uploadMediaFile(mediaFile: MediaFile, encoded: Boolean) : String? {
         val sourceFile = File(mediaFile.fullPath)
         if (!sourceFile.exists()) {
-            Log.e("sendMediaFile", "Source file does not exist: ${mediaFile.fullPath}")
-            return false
+            Log.e("uploadMediaFile", "Source file does not exist: ${mediaFile.fullPath}")
+            return null
         }
 
         //Allocate space for file on FTP server
@@ -25,11 +25,11 @@ class InterserverCloudStorage(val user: User, val database: AppDatabase) : IClou
             if (ftpManager.uploadFile(sourceFile, "$remotePath.x")) {  //TODO Add encoding support
                 ftpManager.renameRemoteFile("$remotePath.x", extractFileNameFromFullPath(remotePath))
                 mediaFile.serverID = ftpCredentials.serverID
-                Log.d("sendMediaFile", "File $remotePath sent successfully")
-                return true
+                Log.d("uploadMediaFile", "File $remotePath sent successfully")
+                return remotePath
             }
         }
-        return false
+        return null
     }
 
     /**
@@ -40,7 +40,7 @@ class InterserverCloudStorage(val user: User, val database: AppDatabase) : IClou
      * @param encoded Flag: The file was encoded when saved
      * @return Flag: The file was restored successfully
      */
-    override suspend fun restoreFileFromCloud(mediaFile: MediaFile, outputFilePath: String, encoded: Boolean) : Boolean {
+    override suspend fun downloadMediaFile(mediaFile: MediaFile, outputFilePath: String, encoded: Boolean) : Boolean {
         val ftpCredentials = database.ftpCredentialsDao.get(mediaFile.serverID)
 
         if (ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {

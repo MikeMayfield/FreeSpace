@@ -1,14 +1,15 @@
 package com.tmf.freespace
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import com.tmf.freespace.uilayer.ui.services.CompressionService
-import com.tmf.freespace.uilayer.ui.viewmodels.MainViewModel
+import com.tmf.freespace.uilayer.backgroundworkers.PeriodicBackgroundProcessingWorker
+import com.tmf.freespace.uilayer.viewmodels.MainViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -55,9 +56,9 @@ class MainActivity : ComponentActivity() {
         )
 
         //TODO Test simulated background compression service
-        val compressionService = CompressionService()
-        compressionService.start(this)
+        queuePeriodicBackgroundWorkers(this.applicationContext)
 
+        //
 //        setContent {
 //            ReadExternalMediaFilesAPI35Theme {
 //                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -78,5 +79,9 @@ class MainActivity : ComponentActivity() {
 //            }
 //        }
         //I have already built ARR file for your project.
+    }
+
+    private fun queuePeriodicBackgroundWorkers(context: Context) {
+        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context, 1)
     }
 }

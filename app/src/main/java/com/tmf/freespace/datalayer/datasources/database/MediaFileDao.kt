@@ -8,6 +8,23 @@ import com.tmf.freespace.models.MediaType
 class MediaFileDao(private val database: AppDatabase) {
     private val tableName = "MediaFile"
 
+    fun getByID(mediaID: Long): MediaFile? {
+        val cursor = database.read.query(
+            tableName,
+            null,  //TODO Column list
+            "id = $mediaID",
+            null,
+            null,
+            null,
+            null
+        )
+
+        return if (cursor.moveToFirst()) {
+            MediaFile.fromCursor(cursor)
+        } else {
+            null
+        }
+    }
     //Insert record if it doesn't already exist (based on MediaStoreID). Call with Async.Wait if new record ID is needed
     fun insertIfNew(mediaFile: MediaFile) {
         database.write.insertWithOnConflict(tableName, null, mediaFile.getContentValues(), CONFLICT_IGNORE)

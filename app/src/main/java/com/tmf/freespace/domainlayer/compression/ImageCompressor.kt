@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
 import com.tmf.freespace.models.MediaFile
@@ -27,7 +28,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
     )
 
     //Compress an image file to JPEG
-    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String) : Boolean {
+    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String): Boolean {
         val ffmpegCommand = super.ffmpegCommand(mediaFile, inputFilePath, outputFilePath)
         if (ffmpegCommand.isNotEmpty()) {
             val tokens = ffmpegCommand.split("|")

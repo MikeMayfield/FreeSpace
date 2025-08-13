@@ -21,8 +21,10 @@ mockitoKotlin = "5.2.1"
 powermock = "2.0.9"
 androidxTestRules = "1.6.1"
 firebaseCrashlyticsBuildtools = "3.0.3"
+workRuntimeKtx = "2.10.3"
 
 [libraries]
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 arthenica-smart-exception-java = { module = "com.arthenica:smart-exception-java", version.ref = "smartExceptionJavaVersion" }
 commons-net = { module = "commons-net:commons-net", version.ref = "commonsNet" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
