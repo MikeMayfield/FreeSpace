@@ -1,8 +1,7 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
-import android.net.Uri
-import com.tmf.freespace.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaFile
 
 class AudioCompressor(context: Context) : ICompressor(context) {
     override val ffmpegCompressionCommands = listOf(

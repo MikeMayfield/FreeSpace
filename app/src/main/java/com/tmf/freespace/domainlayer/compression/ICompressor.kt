@@ -3,11 +3,10 @@ package com.tmf.freespace.domainlayer.compression
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import com.tmf.freespace.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import kotlin.io.path.exists
 
 abstract class ICompressor(val context: Context) {
     abstract val ffmpegCompressionCommands : List<String>

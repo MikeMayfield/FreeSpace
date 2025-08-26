@@ -8,8 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import com.tmf.freespace.uilayer.backgroundworkers.PeriodicBackgroundProcessingWorker
-import com.tmf.freespace.uilayer.viewmodels.MainViewModel
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
+import com.tmf.freespace.presentationlayer.viewmodels.MainViewModel
 
 
 class MainActivity : ComponentActivity() {

@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.MediaStore
 import androidx.core.content.ContextCompat
-import com.tmf.freespace.models.MediaFile
-import com.tmf.freespace.models.MediaType
+import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaType
 
 class MediaReader(
     private val context: Context
@@ -57,6 +57,7 @@ class MediaReader(
 
             while (cursor.moveToNext()) {
                 val mediaID = cursor.getLong(idColumn)
+                val mediaStoreID = cursor.getLong(idColumn)  //TODO Compute MediaStoreID from ID and full path
                 val fullPath = cursor.getString(fullPathColumn)
                 val mimeType = cursor.getString(mimeTypeColumn)
                 val size = cursor.getInt(sizeColumn)
@@ -67,15 +68,16 @@ class MediaReader(
 
                 if (fullPath != null && mimeType != null) {
                     val mediaType = when {
-                        mimeType.startsWith("audio/") -> MediaType.AUDIO
-                        mimeType.startsWith("video/") -> MediaType.VIDEO
                         mimeType.startsWith("image/") -> MediaType.IMAGE
+                        mimeType.startsWith("video/") -> MediaType.VIDEO
+                        mimeType.startsWith("audio/") -> MediaType.AUDIO
                         else -> null
                     }
 
                     if (mediaType != null) {
                         val newMediaFile = MediaFile(
                             id = mediaID,
+                            mediaStoreID = mediaStoreID,
                             fullPath = fullPath,
                             originalSize = size,
                             width = width,

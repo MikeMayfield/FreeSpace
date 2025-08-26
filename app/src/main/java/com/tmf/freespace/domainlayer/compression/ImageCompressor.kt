@@ -5,10 +5,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.net.Uri
 import android.os.Build
 import android.view.WindowManager
-import com.tmf.freespace.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaFile
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException

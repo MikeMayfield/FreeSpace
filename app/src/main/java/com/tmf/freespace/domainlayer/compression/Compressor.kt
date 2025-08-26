@@ -1,9 +1,8 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
-import android.net.Uri
-import com.tmf.freespace.models.MediaFile
-import com.tmf.freespace.models.MediaType
+import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaType
 import java.io.File
 
 class Compressor(val context: Context) {

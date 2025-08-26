@@ -1,35 +1,34 @@
 package com.tmf.freespace.datalayer.datasources.cloudstorage
 
+import User
 import android.util.Log
-import com.tmf.freespace.datalayer.datasources.database.AppDatabase
-import com.tmf.freespace.models.MediaFile
-import com.tmf.freespace.models.User
-import com.tmf.freespace.datalayer.datasources.network.ServerIO
+import com.tmf.freespace.datalayer.models.FtpCredential
+import com.tmf.freespace.datalayer.models.MediaFile
 import java.io.File
 
-class InterserverCloudStorage(val user: User, val database: AppDatabase) : ICloudStorage {
-    private val serverIO = ServerIO(database)
+class InterserverCloudStorage(val user: User) {
     private val ftpManager = FtpManager()
 
-    override suspend fun uploadMediaFile(mediaFile: MediaFile, encoded: Boolean) : String? {
+    suspend fun uploadMediaFile(mediaFile: MediaFile, sourceFilePath: String, ftpCredentials: FtpCredential) : Boolean {
         val sourceFile = File(mediaFile.fullPath)
         if (!sourceFile.exists()) {
             Log.e("uploadMediaFile", "Source file does not exist: ${mediaFile.fullPath}")
-            return null
+            return false
         }
 
         //Allocate space for file on FTP server
-        val ftpCredentials = serverIO.allocateUploadFile(userIDGuid = user.idGuid, fileID = mediaFile.id, filename = mediaFile.fullPath, fileSizeBytes = mediaFile.originalSize)
-        if (ftpCredentials != null && ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
+        if (ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
             val remotePath = remotePath(user, mediaFile)
-            if (ftpManager.uploadFile(sourceFile, "$remotePath.x")) {  //TODO Add encoding support
+            if (ftpManager.uploadFile(sourceFile, "$remotePath.x")) {
                 ftpManager.renameRemoteFile("$remotePath.x", extractFileNameFromFullPath(remotePath))
                 mediaFile.serverID = ftpCredentials.serverID
                 Log.d("uploadMediaFile", "File $remotePath sent successfully")
-                return remotePath
+                return true
             }
         }
-        return null
+        ftpManager.close()
+
+        return false
     }
 
     /**
@@ -40,22 +39,17 @@ class InterserverCloudStorage(val user: User, val database: AppDatabase) : IClou
      * @param encoded Flag: The file was encoded when saved
      * @return Flag: The file was restored successfully
      */
-    override suspend fun downloadMediaFile(mediaFile: MediaFile, outputFilePath: String, encoded: Boolean) : Boolean {
-        val ftpCredentials = database.ftpCredentialsDao.get(mediaFile.serverID)
-
+    suspend fun downloadMediaFile(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential) : Boolean {
         if (ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
             val result = ftpManager.downloadFile(remotePath(user, mediaFile), File(outputFilePath))
+            ftpManager.close()
             return result  //TODO
         }
         return false
     }
 
-    override suspend fun close() {
-        ftpManager.close()
-    }
-
     private fun remotePath(user: User, mediaFile: MediaFile) : String {
-        return "/${user.idGuid}${mediaFile.fullPath}"
+        return "/${user.idGuid}/${mediaFile.fullPath}"  //TODO Trim base of URI that is always the same
     }
 
     private fun extractFileNameFromFullPath(fullPath: String) : String {

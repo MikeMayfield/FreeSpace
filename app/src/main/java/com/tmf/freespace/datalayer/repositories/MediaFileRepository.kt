@@ -1,20 +1,20 @@
 package com.tmf.freespace.datalayer.repositories
 
 import android.content.Context
-import android.net.Uri
-import com.tmf.freespace.datalayer.datasources.database.AppDatabase
-import com.tmf.freespace.models.MediaFile
+import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
+import com.tmf.freespace.datalayer.models.FtpCredential
+import com.tmf.freespace.datalayer.models.MediaFile
 
 class MediaFileRepository(context: Context) {
-    private val mediaFileDao = AppDatabase(context).mediaFileDao
+     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
 
     suspend fun getMediaFileByID(mediaID: Long): MediaFile? {
-        return mediaFileDao.getByID(mediaID)
+        return mediaFileDao.getMediaFileByID(mediaID)
     }
 
-    fun addMediaFile(mediaFile: MediaFile) {
-        mediaFileDao.insertIfNew(mediaFile)
-    }
+//    fun addMediaFile(mediaFile: MediaFile) {
+//        mediaFileDao.insertIfNew(mediaFile)
+//    }
 
     /**
      * Update media file in database
@@ -22,7 +22,7 @@ class MediaFileRepository(context: Context) {
      * @param mediaFile Media file to update
      */
     suspend fun updateMediaFile(mediaFile: MediaFile) {
-        mediaFileDao.update(mediaFile)
+        mediaFileDao.updateMediaFile(mediaFile)
     }
 
     /**
@@ -38,7 +38,7 @@ class MediaFileRepository(context: Context) {
      * @param mediaFile Media file to upload
      * @param inputFilePath Path to file to upload
      */
-    suspend fun uploadFileToCloud(mediaFile: MediaFile): Uri? {
+    suspend fun uploadMediaToCloud(mediaFile: MediaFile, inputFilePath: String, ftpCredentials: FtpCredential): Boolean {
         TODO()
     }
 
@@ -48,7 +48,7 @@ class MediaFileRepository(context: Context) {
      * @param mediaFile Media file to download
      * @param outputFilePath Path to file to download to
      */
-    suspend fun downloadFileFromCloud(mediaFile: MediaFile): Uri? {
+    suspend fun downloadMediaFromCloud(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential): Boolean {
         TODO()
     }
 }

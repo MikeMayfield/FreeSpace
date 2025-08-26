@@ -3,11 +3,12 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp) // Apply the KSP plugin replacement for KAPT
 }
 
 android {
     namespace = "com.tmf.freespace"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.tmf.freespace"
@@ -26,11 +27,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(17)
+    }
+    ksp {
+        arg("room.schemaLocation", "${projectDir}/schemas")
     }
     buildFeatures {
         compose = true
@@ -38,7 +42,8 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
     implementation(libs.kotlinx.coroutines.android) // If using Android
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -61,6 +66,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.work.runtime.ktx)
+
+
 //    implementation(libs.firebase.crashlytics.buildtools)
 
     testImplementation(libs.junit)
