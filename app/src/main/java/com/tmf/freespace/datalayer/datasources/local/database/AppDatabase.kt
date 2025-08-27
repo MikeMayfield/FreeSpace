@@ -14,13 +14,13 @@ import com.tmf.freespace.datalayer.models.MediaFile
 @Database(
     entities = [
         MediaFile::class,
-//        User::class
+        User::class
     ],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract val mediaFileDao: MediaFileDao
-//    abstract val userDao: UserDao
+    abstract val userDao: UserDao
 
     companion object {
         fun create(context: Context): AppDatabase {

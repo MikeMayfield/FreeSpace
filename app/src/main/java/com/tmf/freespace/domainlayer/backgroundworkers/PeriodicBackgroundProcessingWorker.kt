@@ -9,8 +9,9 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tmf.freespace.MediaReader
-import com.tmf.freespace.datalayer.datasources.local.dao.MediaFileDao
-import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
+import com.tmf.freespace.datalayer.models.MediaType
+import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import com.tmf.freespace.datalayer.repositories.UserRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
 
 
@@ -51,17 +52,27 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
  */
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private lateinit var mediaFileDao: MediaFileDao
+    private lateinit var mediaFileRepository: MediaFileRepository
 
+    /**
+     * Worker: Start of periodic processing of background compression tasks
+     *
+     * . Add each new media file to database
+     * . Update potential compression level for all files
+     * . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain to process first pending file
+     */
     override suspend fun doWork(): Result {
-        mediaFileDao = AppDatabase.create(appContext).mediaFileDao
+        mediaFileRepository = MediaFileRepository(appContext)
+
+        //Send heartbeat to server
+        UserRepository(appContext).sendHeartbeat()  //TODO()
 
         val bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0) {
             addAllNewMediaFilesToDB()  //Add all new media files to DB
             updateDesiredCompressionLevelsInDB()  //Update potential compression level for all files
 
-//            queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
+            queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
         }
 
         return Result.success()
@@ -89,22 +100,22 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: Wo
     private fun addAllNewMediaFilesToDB() {
         val mediaFileReader = MediaReader(appContext)
         mediaFileReader.forNewMediaFiles { mediaFile ->
-            mediaFileDao.insertIfNew(mediaFile)
+            mediaFileRepository.addMediaFile(mediaFile)
         }
     }
 
     /**
      * Set or update desired compression level for all files in database based on their creation date
      */
-    private fun updateDesiredCompressionLevelsInDB() {
+    private suspend fun updateDesiredCompressionLevelsInDB() {
         val nowSecs = System.currentTimeMillis() / 1_000L
         val secondsPerDay: Long = 60 * 60 * 24
         val compressionLevels = CompressionLevels().compressionLevels
         for (compressionLevel in compressionLevels) {
-            mediaFileDao.setImageCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
-                compressionLevel.imageCompressionLevel)
-            mediaFileDao.setVideoCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
-                compressionLevel.videoCompressionLevel)
+            mediaFileRepository.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
+                compressionLevel.imageCompressionLevel, MediaType.IMAGE.ordinal)
+            mediaFileRepository.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
+                compressionLevel.videoCompressionLevel, MediaType.VIDEO.ordinal)
         }
     }
     /**

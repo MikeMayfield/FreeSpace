@@ -1,7 +1,6 @@
 package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -12,7 +11,6 @@ import com.tmf.freespace.datalayer.mediastore.MediaStoreUtil
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.Compressor
 import java.io.File
-import androidx.core.net.toUri
 import com.tmf.freespace.datalayer.models.MediaFile
 
 /**
@@ -21,28 +19,38 @@ import com.tmf.freespace.datalayer.models.MediaFile
  * @param FileID ID of file to compress
  * @param UncompressedFileUri URI (as string) to uncompressed file to compress
  */
-class CompressionWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
+@Suppress("KDocUnresolvedReference")
+class CompressionWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     //TODO Add support for foreground service if working takes longer than almost 10 minutes to complete
 
+    /**
+     * Worker: Compress (or re-compress) a file
+     *
+     * <param>params.FileID</param> - ID of file to compress
+     * <param>params.UncompressedFilePath</param> - Path to uncompressed file to compress
+     *
+     * . Compress the uncompressed (original or recovered) media file
+     * . Replace file in MediaStore with compressed file
+     * . Delete temporary files (if any)
+     */
     override suspend fun doWork(): Result {
-        val fileID = inputData.getLong("FileID", 0)
-        val uncompressedFileUri = inputData.getString("UncompressedFileUri")!!.toUri()
+        val fileID = inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID, 0)
+        val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
         val mediaFileRepository = MediaFileRepository(applicationContext)
 
         val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
         if (mediaFile != null) {
             //Compress the uncompressed (original or recovered) media file
-            val compressor = Compressor(applicationContext)
             val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
             val compressedFilePath = compressedFilePath(fileID)
-            if (compressor.compress(mediaFile, "uncompressedFileUri", compressedFilePath)) {  //TODO Use extracted uncompressed file path
-//                if (compressor.compress(mediaFile, uncompressedFileUri, compressedFilePath)) {  //TODO Use extracted uncompressed file path
+            if (Compressor(applicationContext).compress(mediaFile, "uncompressedFileUri", compressedFilePath)) {  //TODO Use extracted uncompressed file path
+//            if (Compressor(applicationContext).compress(mediaFile, uncompressedFileUri, compressedFilePath)) {  //TODO Use extracted uncompressed file path
                 val compressedFile = File(compressedFilePath)
                 if (compressedFile.length() < priorCompressedSize) {
-                    //Update file in MediaStore with compressed file
-                    updateMediaStoreWithCompressedFile(mediaFile, compressedFilePath)
+                    deleteFile(uncompressedFilePath)  //Delete temporary uncompressed file to provide more space for creating file in MediaStore
+                    updateMediaStoreWithCompressedFile(mediaFile, compressedFilePath)  //Update file in MediaStore with compressed file
                 }
-                deleteCompressedFile(compressedFilePath)
+                deleteFile(compressedFilePath)
             }
 
             //Update DB to show compression processed (or not needed)
@@ -50,7 +58,7 @@ class CompressionWorker(val appContext: Context, val params: WorkerParameters): 
             mediaFileRepository.updateMediaFile(mediaFile)
 
             //Delete temporary uncompressed file (if any)
-            deleteUncompressedFile(uncompressedFileUri)
+            deleteFile(uncompressedFilePath)
         }
         else {
             Log.e("compressSelectedFiles", "FileID $fileID not found in database")
@@ -59,16 +67,11 @@ class CompressionWorker(val appContext: Context, val params: WorkerParameters): 
         return Result.success()
     }
 
-    private fun deleteUncompressedFile(uncompressedFileUri: Uri) {
-        if (uncompressedFileUri.scheme == "file") {
-            val uncompressedFile = File(uncompressedFileUri.path!!)
+    private fun deleteFile(filePath: String?) {
+        if (filePath != null) {
+            val uncompressedFile = File(filePath)
             if (uncompressedFile.exists()) uncompressedFile.delete()
         }
-    }
-
-    private fun deleteCompressedFile(compressedFilePath: String) {
-        val compressedFile = File(compressedFilePath)
-        if (compressedFile.exists()) compressedFile.delete()  //Delete temporary compressed file
     }
 
     private fun compressedFilePath(id: Long): String {

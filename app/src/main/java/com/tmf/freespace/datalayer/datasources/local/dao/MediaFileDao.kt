@@ -16,14 +16,9 @@ interface MediaFileDao {
     fun insertIfNew(mediaFile: MediaFile)
 
     @Query(
-        "UPDATE MediaFile SET desiredCompressionLevel = :compressionLevel WHERE creationDtm <= :minDateMs AND creationDtm > :maxDateMs AND mediaType = 0 AND currentCompressionLevel < :compressionLevel"
+        "UPDATE MediaFile SET desiredCompressionLevel = :compressionLevel WHERE creationDtm <= :minDateMs AND creationDtm > :maxDateMs AND mediaType = :mediaType AND currentCompressionLevel < :compressionLevel"
     )
-    fun setImageCompressionLevel(minDateMs: Long, maxDateMs: Long, compressionLevel: Int)
-
-    @Query(
-        "UPDATE MediaFile SET desiredCompressionLevel = :compressionLevel WHERE creationDtm <= :minDateMs AND creationDtm > :maxDateMs AND mediaType = 1 AND currentCompressionLevel < :compressionLevel"
-    )
-    fun setVideoCompressionLevel(minDateMs: Long, maxDateMs: Long, compressionLevel: Int)
+    fun setCompressionLevel(minDateMs: Long, maxDateMs: Long, compressionLevel: Int, mediaType: Int)
 
 //    @Query("""
 //        SELECT * FROM MediaFile

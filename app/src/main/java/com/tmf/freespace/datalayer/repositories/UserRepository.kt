@@ -6,7 +6,7 @@ import com.tmf.freespace.datalayer.datasources.cloudstorage.CloudStorageType
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import java.util.UUID
 
-class UserRepository(context: Context) {
+class UserRepository(val context: Context) {
 //    private val userDao = AppDatabase.create(context).userDao
 
     suspend fun createUser(phoneNumber: String, emailAddress: String, password: String, maxDiskSize: Int, cloudStorageType: CloudStorageType) : User {
@@ -15,8 +15,15 @@ class UserRepository(context: Context) {
         return user
     }
 
-    suspend fun getUser() : User? {
-//        return userDao.get()
-    return null  //TODO
+    suspend fun getUser() : User {
+//        return AppDatabase.create(context).userDao.get()
+        return User(UUID.randomUUID(), "", "", "", 0, CloudStorageType.Integrated)  //TODO
+    }
+
+    /**
+     * Send heartbeat message to server
+     */
+    suspend fun sendHeartbeat() {
+        //TODO Send heartbeat to server
     }
 }

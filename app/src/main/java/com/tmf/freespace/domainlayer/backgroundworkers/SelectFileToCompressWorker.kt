@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import com.tmf.freespace.datalayer.datasources.local.dao.MediaFileDao
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
+import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 
 
 /**
@@ -21,24 +22,33 @@ import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
  */
 
 class SelectFileToCompressWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private lateinit var mediaFileDao: MediaFileDao
+    private lateinit var mediaFileRepository: MediaFileRepository
 
+    /**
+     * Worker: Select next file to be uploaded/downloaded and compressed
+     *
+     * <result/>params.FileID
+     *
+     * . Find next file that needs to be compressed, select by highest compression level (desc), file size (desc)
+     * . Pass file to next worker in chain
+     */
     override suspend fun doWork(): Result {
-        mediaFileDao = AppDatabase.create(appContext).mediaFileDao
+        mediaFileRepository = MediaFileRepository(appContext)
 
-        val fileToCompress = mediaFileDao.getFileToCompress()
+        val fileToCompress = mediaFileRepository.getFileToCompress()
         if (fileToCompress == null) {
             return Result.failure()
         }
 
-        //Continue on to next worker in chain, passing it the file ID of the file to compress
+        //Continue on to next worker in chain (UploadDownloadFileWorker), passing it the file ID of the file to compress
         val resultData = Data.Builder()
-            .putLong("FileID", fileToCompress.id)
+            .putLong(PARAM_FILE_ID, fileToCompress.id)
             .build()
         return Result.success(resultData)
     }
 
     companion object {
+        const val PARAM_FILE_ID = "FileID"
 
         fun buildWorkRequest(): OneTimeWorkRequest {
             val constraints = Constraints.Builder()

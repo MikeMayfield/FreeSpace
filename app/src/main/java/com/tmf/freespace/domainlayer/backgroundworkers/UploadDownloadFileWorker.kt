@@ -19,21 +19,27 @@ import com.tmf.freespace.datalayer.repositories.UserRepository
 class UploadDownloadFileWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
 
     /**
-     * Upload/download file to/from file server
+     * Worker: Upload/download file to/from file server
      *
      * <param>params.FileID</param> - ID of file to upload/download
-     * <result/>params.FileID, params.SourceFilePath
+     * <result/>params.FileID - ID of file to compress
+     * <result>params.UncompressedFilePath - Path to uncompressed file to compress
+     *
+     *
+     * . If file not already uploaded
+     * . . Upload file to file server
+     * . Else
+     * . . Download existing file from file server
      */
     override suspend fun doWork(): Result {
         val mediaFileRepository = MediaFileRepository(applicationContext)
         val serverIO = ServerIO()
+        val fileID = inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID, 0)
 
         val user = UserRepository(applicationContext).getUser()
         if (user == null) {
             return Result.failure()
         }
-
-        val fileID = inputData.getLong("FileID", 0)
 
         //Get file info from DB
         val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
@@ -74,8 +80,8 @@ class UploadDownloadFileWorker(val appContext: Context, val params: WorkerParame
 
         //Continue on to next worker in chain, passing it the file ID of the file to compress and the path to the source file to be compressed
         val resultData = Data.Builder()
-            .putLong("FileID", fileID)
-            .putString("UncompressedFilePath", uncompressedFilePath)
+            .putLong(PARAM_FILE_ID, fileID)
+            .putString(PARAM_UNCOMPRESSED_FILE_PATH, uncompressedFilePath)
             .build()
         return Result.success(resultData)
     }
@@ -85,6 +91,9 @@ class UploadDownloadFileWorker(val appContext: Context, val params: WorkerParame
     }
 
     companion object {
+        const val PARAM_FILE_ID = "FileID"
+        const val PARAM_UNCOMPRESSED_FILE_PATH = "UncompressedFilePath"
+
         /**
          * Create request to queue this worker
          */
