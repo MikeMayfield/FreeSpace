@@ -52,8 +52,6 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
  */
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private lateinit var mediaFileRepository: MediaFileRepository
-
     /**
      * Worker: Start of periodic processing of background compression tasks
      *
@@ -62,15 +60,15 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: Wo
      * . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain to process first pending file
      */
     override suspend fun doWork(): Result {
-        mediaFileRepository = MediaFileRepository(appContext)
+        val mediaFileRepository = MediaFileRepository(appContext)
 
         //Send heartbeat to server
         UserRepository(appContext).sendHeartbeat()  //TODO()
 
         val bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0) {
-            addAllNewMediaFilesToDB()  //Add all new media files to DB
-            updateDesiredCompressionLevelsInDB()  //Update potential compression level for all files
+            addAllNewMediaFilesToDB(mediaFileRepository)  //Add all new media files to DB
+            updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
             queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
         }
@@ -85,8 +83,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: Wo
      */
     private fun calculateBytesToRecover(): Long {
         //Get current free space on primary disk
-        val statFs = StatFs(Environment.getExternalStorageDirectory().absolutePath)
-        val currentFreeSpace = statFs.availableBytes
+        val currentFreeSpace = StatFs(Environment.getExternalStorageDirectory().absolutePath).availableBytes
 
         //Get desired free space from user preferences
         val desiredFreeSpace = currentFreeSpace + 1000_000_000L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
@@ -97,9 +94,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: Wo
     /**
      * Find all new media files on disk and add them to the database for possible future processing
      */
-    private fun addAllNewMediaFilesToDB() {
-        val mediaFileReader = MediaReader(appContext)
-        mediaFileReader.forNewMediaFiles { mediaFile ->
+    private fun addAllNewMediaFilesToDB(mediaFileRepository: MediaFileRepository) {
+        MediaReader(appContext).forNewMediaFiles { mediaFile ->
             mediaFileRepository.addMediaFile(mediaFile)
         }
     }
@@ -107,28 +103,32 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: Wo
     /**
      * Set or update desired compression level for all files in database based on their creation date
      */
-    private suspend fun updateDesiredCompressionLevelsInDB() {
+    private suspend fun updateDesiredCompressionLevelsInDB(mediaFileRepository: MediaFileRepository) {
         val nowSecs = System.currentTimeMillis() / 1_000L
         val secondsPerDay: Long = 60 * 60 * 24
-        val compressionLevels = CompressionLevels().compressionLevels
-        for (compressionLevel in compressionLevels) {
-            mediaFileRepository.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
-                compressionLevel.imageCompressionLevel, MediaType.IMAGE.ordinal)
+        for (compressionLevel in CompressionLevels().compressionLevels) {
+            mediaFileRepository.setCompressionLevel(
+                minAgeDays = nowSecs - compressionLevel.minDays * secondsPerDay,
+                maxAgeDays = nowSecs - compressionLevel.maxDays * secondsPerDay,
+                compressionLevel = compressionLevel.imageCompressionLevel,
+                mediaType = MediaType.IMAGE.ordinal)
             mediaFileRepository.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
                 compressionLevel.videoCompressionLevel, MediaType.VIDEO.ordinal)
         }
     }
+
     /**
      * Queue SelectFileToCompress + UploadDownloadFileWorker + CompressionWorker worker chain for first file to be processed.
      * The chain will requeue itself for each additional file needed.
      * NOTE: Chain is not added if chain is already queued/running, in case chain is being requeued from next scheduled compression processing
      */
     private fun queueWorkerToProcessFirstFile() {
-        WorkManager.getInstance(appContext).beginUniqueWork(
-            SelectFileToCompressWorker::class.java.simpleName + "_chain",
-            ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<SelectFileToCompressWorker>().build()  //Task 1: Select next file to compress
-        )
+        WorkManager.getInstance(appContext)
+            .beginUniqueWork(  //Task 1: Select next file to compress
+                SelectFileToCompressWorker::class.java.simpleName + "_chain",
+                ExistingWorkPolicy.KEEP,
+                OneTimeWorkRequestBuilder<SelectFileToCompressWorker>().build()
+            )
             .then(UploadDownloadFileWorker.buildWorkRequest())  //Task 2: Upload/download file to/from file server
             .then(CompressionWorker.buildWorkRequest())  //Task 3: Compress file and update MediaStore
             .then(SelectFileToCompressWorker.buildWorkRequest())  //Task 4: Start over on next file to compress (exits when finished compressing)

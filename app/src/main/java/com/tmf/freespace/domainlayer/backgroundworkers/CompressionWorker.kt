@@ -43,12 +43,12 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
             //Compress the uncompressed (original or recovered) media file
             val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
             val compressedFilePath = compressedFilePath(fileID)
-            if (Compressor(applicationContext).compress(mediaFile, "uncompressedFileUri", compressedFilePath)) {  //TODO Use extracted uncompressed file path
-//            if (Compressor(applicationContext).compress(mediaFile, uncompressedFileUri, compressedFilePath)) {  //TODO Use extracted uncompressed file path
-                val compressedFile = File(compressedFilePath)
-                if (compressedFile.length() < priorCompressedSize) {
+            if (Compressor(applicationContext).compress(mediaFile, uncompressedFilePath!!, compressedFilePath)) {
+                val compressedFileSize = File(compressedFilePath).length().toInt()
+                if (compressedFileSize < priorCompressedSize) {
                     deleteFile(uncompressedFilePath)  //Delete temporary uncompressed file to provide more space for creating file in MediaStore
                     updateMediaStoreWithCompressedFile(mediaFile, compressedFilePath)  //Update file in MediaStore with compressed file
+                    mediaFile.compressedSize = compressedFileSize
                 }
                 deleteFile(compressedFilePath)
             }

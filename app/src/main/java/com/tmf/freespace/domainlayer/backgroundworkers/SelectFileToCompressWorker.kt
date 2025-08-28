@@ -37,7 +37,7 @@ class SelectFileToCompressWorker(val appContext: Context, val params: WorkerPara
 
         val fileToCompress = mediaFileRepository.getFileToCompress()
         if (fileToCompress == null) {
-            return Result.failure()
+            return Result.failure()  //No more files to compress, abort chain until next scheduled processing time
         }
 
         //Continue on to next worker in chain (UploadDownloadFileWorker), passing it the file ID of the file to compress
@@ -52,7 +52,7 @@ class SelectFileToCompressWorker(val appContext: Context, val params: WorkerPara
 
         fun buildWorkRequest(): OneTimeWorkRequest {
             val constraints = Constraints.Builder()
-//TODO                .setRequiresDeviceIdle(true)
+//TODO                .setRequiresDeviceIdle(true)  //TODO Is this needed?
                 .build()
 
             val workRequest = OneTimeWorkRequestBuilder<SelectFileToCompressWorker>()
