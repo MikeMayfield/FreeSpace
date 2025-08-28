@@ -10,9 +10,9 @@ class InterserverCloudStorage(val user: User) {
     private val ftpManager = FtpManager()
 
     suspend fun uploadMediaFile(mediaFile: MediaFile, sourceFilePath: String, ftpCredentials: FtpCredential) : Boolean {
-        val sourceFile = File(mediaFile.fullPath)
-        if (!sourceFile.exists()) {
-            Log.e("uploadMediaFile", "Source file does not exist: ${mediaFile.fullPath}")
+        val sourceFile = File(sourceFilePath)
+        if (!File(sourceFilePath).exists()) {
+            Log.e("uploadMediaFile", "Source file does not exist: ${sourceFilePath}")
             return false
         }
 
@@ -36,7 +36,6 @@ class InterserverCloudStorage(val user: User) {
      *
      * @param mediaFile MediaFile to restore
      * @param outputFilePath Path to local file to create from cloud file
-     * @param encoded Flag: The file was encoded when saved
      * @return Flag: The file was restored successfully
      */
     suspend fun downloadMediaFile(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential) : Boolean {

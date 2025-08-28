@@ -14,14 +14,14 @@ import java.io.IOException
 class MediaStoreUtil {
     //region Public methods
 
-    /**
-     * Extracts a file from the MediaStore given its MediaStore ID.
-     *
-     * @param context The application context.
-     * @param mediaFile Media that you want to replace in the MediaStore.
-     * @param outputFilePath The full path to where the extracted file should be saved.
-     * @return The File object representing the extracted file, or null if the extraction failed.
-     */
+//    /**
+//     * Extracts a file from the MediaStore given its MediaStore ID.
+//     *
+//     * @param context The application context.
+//     * @param mediaFile Media that you want to replace in the MediaStore.
+//     * @param outputFilePath The full path to where the extracted file should be saved.
+//     * @return The File object representing the extracted file, or null if the extraction failed.
+//     */
 //    fun extractFileFromMediaStore(
 //        context: Context,
 //        mediaFile: MediaFile,

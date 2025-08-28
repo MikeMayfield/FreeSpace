@@ -1,6 +1,5 @@
 package com.tmf.freespace.datalayer.repositories
 
-import User
 import android.content.Context
 import com.tmf.freespace.datalayer.datasources.cloudstorage.InterserverCloudStorage
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
@@ -10,7 +9,7 @@ import com.tmf.freespace.datalayer.models.MediaFile
 class MediaFileRepository(val context: Context) {
     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
 
-    suspend fun getMediaFileByID(mediaID: Long): MediaFile? {
+    fun getMediaFileByID(mediaID: Long): MediaFile? {
         return mediaFileDao.getMediaFileByID(mediaID)
     }
 
@@ -28,14 +27,14 @@ class MediaFileRepository(val context: Context) {
      *
      * @param mediaFile Media file to update
      */
-    suspend fun updateMediaFile(mediaFile: MediaFile) {
+    fun updateMediaFile(mediaFile: MediaFile) {
         mediaFileDao.updateMediaFile(mediaFile)
     }
 
     /**
      * Set or update desired compression level for all image files in database based on their creation date
      */
-    suspend fun setCompressionLevel(minAgeDays: Long, maxAgeDays: Long, compressionLevel: Int, mediaType: Int) {
+    fun setCompressionLevel(minAgeDays: Long, maxAgeDays: Long, compressionLevel: Int, mediaType: Int) {
         mediaFileDao.setCompressionLevel(minAgeDays, maxAgeDays, compressionLevel, mediaType)
     }
 

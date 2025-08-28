@@ -15,20 +15,11 @@ abstract class ICompressor(val context: Context) {
      * Compress media file using FFmpeg. Returns the compressed file size
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param sourceFilePath The full path of the source file to compress
+     * @param inputFilePath The full path of the source file to compress
      * @param outputFilePath The full path of the compressed file to create
      * @return Flag: File was compresses successfully
      */
     abstract fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String) : Boolean
-
-    fun extractFileFromUri(uri: Uri) : String? {  //TODO Move to MediaStoreUtil
-        if (uri.scheme == "file") {
-            return uri.path!!
-        }
-        else {
-            return copyFileFromMediaStoreToCache(uri)
-        }
-    }
 
     /**
      * Copies a file from the MediaStore (identified by its content URI) to a temporary file

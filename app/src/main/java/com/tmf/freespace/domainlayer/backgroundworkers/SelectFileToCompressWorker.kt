@@ -7,8 +7,6 @@ import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
-import com.tmf.freespace.datalayer.datasources.local.dao.MediaFileDao
-import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 
 
@@ -21,7 +19,7 @@ import com.tmf.freespace.datalayer.repositories.MediaFileRepository
  *  . .   followed by CompressionWorker (pass file ID, amount of space to recover)
  */
 
-class SelectFileToCompressWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
+class SelectFileToCompressWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     private lateinit var mediaFileRepository: MediaFileRepository
 
     /**

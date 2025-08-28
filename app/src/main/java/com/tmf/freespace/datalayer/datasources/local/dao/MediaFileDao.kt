@@ -41,26 +41,4 @@ interface MediaFileDao {
      */
     @Update
     fun updateMediaFile(mediaFile: MediaFile)
-
-    /**
-     * Update uncompressed media file to cloud server
-     *
-     * @param mediaFile MediaFile object to update
-     * @param uncompressedFilePath Path to uncompressed file to upload
-     * @return True if upload was successful
-     */
-    fun uploadFileToCloud(mediaFile: MediaFile, uncompressedFilePath: String): Boolean {
-        return true  //TODO("Not yet implemented")
-    }
-
-    /**
-     * Download saved uncompressed media file from cloud server
-     *
-     * @param mediaFile MediaFile object to update
-     * @param uncompressedFilePath Path to uncompressed file to download
-     * @return True if download was successful
-     */
-    fun downloadFileFromCloud(mediaFile: MediaFile, uncompressedFilePath: String): Boolean {
-        TODO("Not yet implemented")
-    }
 }

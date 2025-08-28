@@ -51,7 +51,7 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
  *  . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain
  */
 
-class PeriodicBackgroundProcessingWorker(val appContext: Context, val params: WorkerParameters): CoroutineWorker(appContext, params) {
+class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     /**
      * Worker: Start of periodic processing of background compression tasks
      *

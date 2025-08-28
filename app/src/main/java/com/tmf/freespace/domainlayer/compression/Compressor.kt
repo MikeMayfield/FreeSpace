@@ -23,11 +23,11 @@ class Compressor(val context: Context) {
      * Compress a file to create a new file with the compressed data.
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param sourceFileUri The URI of the source file to compress
+     * @param sourceFilePath The full path of the source file to compress
      * @param destinationFile The full path of the compressed file to create
      * @return The full path of the compressed file, or null if compression failed
      */
-    suspend fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String): Boolean {
+    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String): Boolean {
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
             val mediaFileInfo = File(sourceFilePath)
             if (mediaFileInfo.exists() && mediaFileInfo.length() > minFileSizeToCompress) {
