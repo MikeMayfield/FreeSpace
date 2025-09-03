@@ -56,7 +56,6 @@ class MediaReader(
             val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)
 
             while (cursor.moveToNext()) {
-                val mediaID = cursor.getLong(idColumn)
                 val mediaStoreID = cursor.getLong(idColumn)  //TODO Compute MediaStoreID from ID and full path
                 val fullPath = cursor.getString(fullPathColumn)
                 val mimeType = cursor.getString(mimeTypeColumn)
@@ -76,10 +75,10 @@ class MediaReader(
 
                     if (mediaType != null) {
                         val newMediaFile = MediaFile(
-                            id = mediaID,
                             mediaStoreID = mediaStoreID,
                             fullPath = fullPath,
                             originalSize = size,
+                            compressedSize = size,
                             width = width,
                             height = height,
                             mediaType = mediaType,
