@@ -8,10 +8,10 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import com.tmf.freespace.datalayer.mediastore.MediaStoreUtil
+import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.Compressor
 import java.io.File
-import com.tmf.freespace.datalayer.models.MediaFile
 
 /**
  * WorkManager task to compress (or re-compress) a file (Task #4)
@@ -35,8 +35,14 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
      */
     override suspend fun doWork(): Result {
         val fileID = inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID, 0)
+        if (fileID == 0L) {
+            Log.w("compressSelectedFiles.doWork", "No file ID provided. File not being compressed")
+            return Result.success()  //If no file was processed, nothing left to do but continue to possible next file
+        }
+
         val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
         val mediaFileRepository = MediaFileRepository(applicationContext)
+
 
         val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
         if (mediaFile != null) {
@@ -59,9 +65,8 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
 
             //Delete temporary uncompressed file (if any)
             deleteFile(uncompressedFilePath)
-        }
-        else {
-            Log.e("compressSelectedFiles", "FileID $fileID not found in database")
+        } else {
+            Log.e("compressSelectedFiles.doWork", "FileID $fileID not found in database")
         }
 
         return Result.success()
@@ -106,8 +111,8 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
         fun buildWorkRequest(): OneTimeWorkRequest {
             val constraints = Constraints.Builder()
 //                .setRequiresDeviceIdle(true)  //TODO Provide support across OS versions
-//                .setRequiresCharging(true)
-                .setRequiresStorageNotLow(true)
+//                .setRequiresCharging(true)  //TODO
+//                .setRequiresStorageNotLow(true)  //TODO
                 .build()
 
             val workRequest = OneTimeWorkRequestBuilder<CompressionWorker>()

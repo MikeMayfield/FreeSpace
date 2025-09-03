@@ -5,10 +5,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.util.Log
+import androidx.core.net.toUri
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
-import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
@@ -17,9 +18,8 @@ import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.datalayer.repositories.UserRepository
 import java.io.File
-import java.io.IOException
-import androidx.core.net.toUri
 import java.io.FileOutputStream
+import java.io.IOException
 
 
 /**
@@ -32,7 +32,7 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
      *
      * <param>params.FileID</param> - ID of file to upload/download
      * <result/>params.FileID - ID of file to compress
-     * <result>params.UncompressedFilePath - Path to uncompressed file to compress
+     * <result>params.UncompressedFilePath - Path to uncompressed file to compress (null if no file to compress)
      *
      *
      * . If file not already uploaded
@@ -43,29 +43,36 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
     override suspend fun doWork(): Result {
         val mediaFileRepository = MediaFileRepository(applicationContext)
         val serverIO = ServerIO()
-        val fileID = inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID, 0)
+        var fileID = inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID, 0)
         val user = UserRepository(applicationContext).getUser()
+        var uncompressedFilePath: String? = null
 
-        //Get file info from DB
-        val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
-        if (mediaFile == null) {
-            return Result.failure()
+        if (fileID != 0L) {
+            //Get file info from DB
+            val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
+            if (mediaFile != null) {
+                //Upload or download file to/from cloud
+                uncompressedFilePath = if (!mediaFile.isOnServer) {
+                    uploadFile(mediaFile, user, mediaFileRepository, serverIO)
+                } else {
+                    downloadFile(mediaFile, user, mediaFileRepository, serverIO)
+                }
+
+                //If unable to upload/download file, remove it from the list of files to compress. It will be added again the next time files that need compression are identified in PeriodicBackgroundProcessingWorker
+                if (uncompressedFilePath == null) {
+                    Log.d("UploadDownloadFileWorker.doWork", "Unable to upload/download file")
+                    mediaFile.desiredCompressionLevel = 0
+                    mediaFileRepository.updateMediaFile(mediaFile)
+                    fileID = 0L
+                }
+            }
         }
 
-        //Upload or download file to/from cloud
-        val uncompressedFilePath = if (!mediaFile.isOnServer) {
-            uploadFile(mediaFile, user, mediaFileRepository, serverIO)
-        } else {
-            downloadFile(mediaFile, user, mediaFileRepository, serverIO)
-        }
-        if (uncompressedFilePath == null) {
-            return Result.failure()  //Unable to access cloud server, abort until next processing slot
-        }
 
-        //Continue on to next worker in chain, passing it the file ID of the file to compress and the path to the source file to be compressed
+        //Continue on to next worker in chain, passing it the file ID of the file to compress and the path to the source file to be compressed (if any)
         val resultData = Data.Builder()
             .putLong(PARAM_FILE_ID, fileID)
-            .putString(PARAM_UNCOMPRESSED_FILE_PATH, uncompressedFilePath)
+            .putString(PARAM_UNCOMPRESSED_FILE_PATH, uncompressedFilePath ?: "")
             .build()
         return Result.success(resultData)
     }
@@ -80,9 +87,13 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
         val ftpCredentials = serverIO.allocateFileInCloud(user.idGuid, mediaFile.id, mediaFile.fullPath, mediaFile.originalSize)
         if (ftpCredentials != null) {
             transferredSuccessfully = mediaFileRepository.uploadMediaToCloud(mediaFile, uncompressedFilePath, ftpCredentials)
-            if (!transferredSuccessfully)
+            if (transferredSuccessfully) {
                 mediaFile.serverID = ftpCredentials.serverID
-            mediaFileRepository.updateMediaFile(mediaFile)
+                mediaFileRepository.updateMediaFile(mediaFile)
+            }
+            else {
+                Log.d("UploadDownloadFileWorker.uploadFile", "Unable to upload file to cloud")
+            }
         }
 
         return if (transferredSuccessfully) uncompressedFilePath else null
@@ -95,6 +106,9 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
             uncompressedFilePath = uncompressedFilePath(mediaFile.id)
             if (!mediaFileRepository.downloadMediaFromCloud(mediaFile, uncompressedFilePath, ftpCredentials)) {
                 uncompressedFilePath = null
+            }
+            else {
+                Log.d("UploadDownloadFileWorker.downloadFile", "Unable to download file from cloud")
             }
         }
 
@@ -119,10 +133,12 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
 
         if ("content" != contentUri.scheme) {
             // Handle cases where the path might already be a file path or unsupported scheme
-            if (File(mediaFile.fullPath).exists() && "file" == contentUri.scheme) { // If it's a file URI and exists
-                return contentUri.path
+            if (File(mediaFile.fullPath).exists() && (contentUri.scheme == null || contentUri.scheme == "file")) { // If it's a file URI and exists
+                return contentUri.toString()
             }
+
             // Log error or warning: Unsupported URI scheme or not a direct file path
+            Log.d("UploadDownloadFileWorker.extractMediaStoreFile", "Unsupported URI: $contentUri")
             return null
         }
 
@@ -158,6 +174,7 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
                 }
             }
         } catch (e: Exception) {
+            Log.e("UploadDownloadFileWorker.getMediaStoreID", "Error getting MediaStore ID: $contentUri - ${e.message}")
             e.printStackTrace() // Log error during query
             // Fallback for ID if query fails
             mediaStoreId = contentUri.lastPathSegment?.substringAfterLast(':') ?: "temp_media_uri_fallback"
@@ -215,16 +232,20 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
         /**
          * Create request to queue this worker
          */
-        fun buildWorkRequest(): OneTimeWorkRequest {
+        fun buildWorkRequest(fileToDownloadID: Long): OneTimeWorkRequest {
             val constraints = Constraints.Builder()
-//                .setRequiresDeviceIdle(true)
-//                .setRequiresStorageNotLow(true)
-                .setRequiredNetworkType(NetworkType.UNMETERED)
-                .setRequiredNetworkType(NetworkType.CONNECTED)
+//                .setRequiresDeviceIdle(true)  //TODO
+//                .setRequiresStorageNotLow(true)  //TODO
+//                .setRequiredNetworkType(NetworkType.UNMETERED)  //TODO
+//                .setRequiredNetworkType(NetworkType.CONNECTED)  //TODO
+                .build()
+            val data = Data.Builder()
+                .putLong(PARAM_FILE_ID, fileToDownloadID)
                 .build()
 
             val workRequest = OneTimeWorkRequestBuilder<UploadDownloadFileWorker>()
                 .setConstraints(constraints)
+                .setInputData(data)
                 .build()
 
             return workRequest

@@ -18,7 +18,7 @@ class UserRepository(val context: Context) {
 
     fun getUser() : User {
 //        return AppDatabase.create(context).userDao.get()
-        return User(UUID.randomUUID(), "", "", "", 0, CloudStorageType.Integrated)  //TODO
+        return User(UUID.fromString("dfc3f61f-e302-4b79-874c-fef5b1e1d78b"), "", "", "", 0, CloudStorageType.Integrated)  //TODO Get from DB
     }
 
     /**

@@ -16,7 +16,7 @@ data class MediaFile(
     var desiredCompressionLevel: Int = currentCompressionLevel,
     val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
-    var serverID: Long,
+    var serverID: Long = -1,
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
 )
 {

@@ -17,12 +17,11 @@ class InterserverCloudStorage(val user: User) {
         }
 
         //Allocate space for file on FTP server
-        if (ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
-            val remotePath = remotePath(user, mediaFile)
+        if (ftpManager.login(ftpCredentials.hostAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
+            val remotePath = remotePath(mediaFile)
             if (ftpManager.uploadFile(sourceFile, "$remotePath.x")) {
-                ftpManager.renameRemoteFile("$remotePath.x", extractFileNameFromFullPath(remotePath))
-                mediaFile.serverID = ftpCredentials.serverID
-                Log.d("uploadMediaFile", "File $remotePath sent successfully")
+                ftpManager.renameRemoteFile("$remotePath.x", remotePath)
+                Log.d("uploadMediaFile", "File $remotePath uploaded successfully")
                 return true
             }
         }
@@ -39,16 +38,16 @@ class InterserverCloudStorage(val user: User) {
      * @return Flag: The file was restored successfully
      */
     suspend fun downloadMediaFile(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential) : Boolean {
-        if (ftpManager.login(ftpCredentials.ipAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
-            val result = ftpManager.downloadFile(remotePath(user, mediaFile), File(outputFilePath))
+        if (ftpManager.login(ftpCredentials.hostAddress, 21, ftpCredentials.username, ftpCredentials.password)) {
+            val result = ftpManager.downloadFile(remotePath(mediaFile), File(outputFilePath))
             ftpManager.close()
             return result  //TODO
         }
         return false
     }
 
-    private fun remotePath(user: User, mediaFile: MediaFile) : String {
-        return "/${user.idGuid}/${mediaFile.fullPath}"  //TODO Trim base of URI that is always the same
+    private fun remotePath(mediaFile: MediaFile) : String {
+        return mediaFile.fullPath
     }
 
     private fun extractFileNameFromFullPath(fullPath: String) : String {

@@ -64,7 +64,7 @@ class MediaStoreUtil {
     ): Boolean {
         val contentResolver = context.contentResolver
 
-        val mediaStoreUri = getMediaStoreUri(contentResolver, mediaFile.id)
+        val mediaStoreUri = getMediaStoreUri(contentResolver, mediaFile.mediaStoreID)
             ?: return false // File not found in MediaStore
         return try {
             replaceFile(contentResolver, mediaStoreUri, File(newFilePath))

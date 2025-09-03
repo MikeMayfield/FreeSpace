@@ -33,10 +33,7 @@ class ServerIO() {
         var ftpCredential: FtpCredential? = null
 
         try {
-            //TODO Get FTP credentials from server
-            val ftpCredentialsFromServer = "1:1:66.45.241.246:st60470:9N2mxY@V"  //TODO
-
-            ftpCredential = decodeFtpToken(ftpCredentialsFromServer)
+            ftpCredential = getFtpCredentials(userIDGuid, fileID)  //TODO Get FTP credentials from server
         }
         catch (_: Exception) {
             //TODO Handle error getting credentials from server
@@ -47,7 +44,7 @@ class ServerIO() {
 
     fun getFtpCredentials(userIDGuid: UUID, fileID: Long) : FtpCredential? {
         //TODO Get FTP credentials from server
-        val ftpCredentialsFromServer = "1:1:66.45.241.246:st60470:9N2mxY@V"  //TODO
+        val ftpCredentialsFromServer = "1:1:st60470.ispot.cc:19e64a21-2276-49e2-a44f-de381afb150d@st60470.ispot.cc:9N2mxY@V"  //TODO
 
         return decodeFtpToken(ftpCredentialsFromServer)
     }
@@ -69,7 +66,7 @@ class ServerIO() {
      * Decode FTP credentials from server
      *
      * Format of FTP credentials token is:
-     *  versionNumber ("1") + ":" serverID ":" + IP.address.of.server + ":" + username + ":" + password
+     *  versionNumber ("1") + ":" serverID ":" + host.address.of.server + ":" + username + ":" + password
      *  Converted to a byte array, XORed with -1, converted to URL-encoded Base64
      *  ("*ERROR*_message" if error)     */
     private fun decodeFtpToken(token: String) : FtpCredential {
@@ -113,7 +110,7 @@ class ServerIO() {
         // 5. Update fields. Assign parts based on defined order
         return FtpCredential(
             serverID = parts[1].toLong(),
-            ipAddress = parts[2],
+            hostAddress = parts[2],
             username = parts[3],
             password = parts[4],
         )

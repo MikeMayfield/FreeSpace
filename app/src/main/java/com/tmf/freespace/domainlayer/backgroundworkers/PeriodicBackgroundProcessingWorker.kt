@@ -3,6 +3,7 @@ package com.tmf.freespace.domainlayer.backgroundworkers
 import android.content.Context
 import android.os.Environment
 import android.os.StatFs
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -63,14 +64,19 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         val mediaFileRepository = MediaFileRepository(appContext)
 
         //Send heartbeat to server
-        UserRepository(appContext).sendHeartbeat()  //TODO()
+        UserRepository(appContext).sendHeartbeat()
 
         val bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0) {
-            addAllNewMediaFilesToDB(mediaFileRepository)  //Add all new media files to DB
+            //TODO Handle case where file existed and was added to db, but is now deleted from device
+            //TODO Optimize to only add new media files to db unless MediaStore was rebuilt
+            addAllMediaFilesToDB(mediaFileRepository)  //Add all new media files to DB
             updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
             queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
+        }
+        else {
+            Log.d("PeriodicBackgroundProcessingWorker.doWork", "No space needs to be recovered: $bytesToRecover")
         }
 
         return Result.success()
@@ -94,7 +100,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     /**
      * Find all new media files on disk and add them to the database for possible future processing
      */
-    private fun addAllNewMediaFilesToDB(mediaFileRepository: MediaFileRepository) {
+    private fun addAllMediaFilesToDB(mediaFileRepository: MediaFileRepository) {
         MediaReader(appContext).forNewMediaFiles { mediaFile ->
             mediaFileRepository.addMediaFile(mediaFile)
         }
@@ -103,35 +109,20 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     /**
      * Set or update desired compression level for all files in database based on their creation date
      */
-    private suspend fun updateDesiredCompressionLevelsInDB(mediaFileRepository: MediaFileRepository) {
-        val nowSecs = System.currentTimeMillis() / 1_000L
-        val secondsPerDay: Long = 60 * 60 * 24
+    private fun updateDesiredCompressionLevelsInDB(mediaFileRepository: MediaFileRepository) {
         for (compressionLevel in CompressionLevels().compressionLevels) {
-            mediaFileRepository.setCompressionLevel(
-                minAgeDays = nowSecs - compressionLevel.minDays * secondsPerDay,
-                maxAgeDays = nowSecs - compressionLevel.maxDays * secondsPerDay,
-                compressionLevel = compressionLevel.imageCompressionLevel,
-                mediaType = MediaType.IMAGE.ordinal)
-            mediaFileRepository.setCompressionLevel(nowSecs - compressionLevel.minDays * secondsPerDay, nowSecs - compressionLevel.maxDays * secondsPerDay,
-                compressionLevel.videoCompressionLevel, MediaType.VIDEO.ordinal)
+            mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.imageCompressionLevel, MediaType.IMAGE)
+            mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.videoCompressionLevel, MediaType.VIDEO)
         }
     }
 
     /**
-     * Queue SelectFileToCompress + UploadDownloadFileWorker + CompressionWorker worker chain for first file to be processed.
-     * The chain will requeue itself for each additional file needed.
-     * NOTE: Chain is not added if chain is already queued/running, in case chain is being requeued from next scheduled compression processing
+     * Queue SelectFileToCompress worker for first file to be processed.
+     * The worker's chain will requeue itself for each additional file needed.
      */
     private fun queueWorkerToProcessFirstFile() {
         WorkManager.getInstance(appContext)
-            .beginUniqueWork(  //Task 1: Select next file to compress
-                SelectFileToCompressWorker::class.java.simpleName + "_chain",
-                ExistingWorkPolicy.KEEP,
-                OneTimeWorkRequestBuilder<SelectFileToCompressWorker>().build()
-            )
-            .then(UploadDownloadFileWorker.buildWorkRequest())  //Task 2: Upload/download file to/from file server
-            .then(CompressionWorker.buildWorkRequest())  //Task 3: Compress file and update MediaStore
-            .then(SelectFileToCompressWorker.buildWorkRequest())  //Task 4: Start over on next file to compress (exits when finished compressing)
+            .beginWith(SelectFileToCompressWorker.buildWorkRequest())
             .enqueue()
     }
 

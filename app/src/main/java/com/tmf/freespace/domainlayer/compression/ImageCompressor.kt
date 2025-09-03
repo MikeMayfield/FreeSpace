@@ -27,6 +27,14 @@ class ImageCompressor(context: Context) : ICompressor(context) {
     )
 
     //Compress an image file to JPEG
+    /**
+     * Compresses an image file to JPEG.
+     *
+     * @param mediaFile The MediaFile object representing the current media file
+     * @param inputFilePath The full path of the source file to compress
+     * @param outputFilePath The full path of the compressed file to create
+     * @return True if compression was successful, false otherwise
+     */
     override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String): Boolean {
         val ffmpegCommand = super.ffmpegCommand(mediaFile, inputFilePath, outputFilePath)
         if (ffmpegCommand.isNotEmpty()) {
@@ -39,7 +47,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
             return compressToJpeg(tokens[0], tokens[1], compressedWidth, compressedHeight, compressionQuality)
         }
 
-        return true  //No compression needed
+        return false  //No compression needed
     }
 
     @Suppress("DEPRECATION")

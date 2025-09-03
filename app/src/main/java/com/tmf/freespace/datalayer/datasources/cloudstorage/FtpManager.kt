@@ -2,9 +2,9 @@ package com.tmf.freespace.datalayer.datasources.cloudstorage
 
 import android.util.Log
 import org.apache.commons.net.ftp.FTP
-import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPFile
 import org.apache.commons.net.ftp.FTPReply
+import org.apache.commons.net.ftp.FTPSClient
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -13,7 +13,7 @@ import java.io.OutputStream
 
 class FtpManager {
 
-    private val ftpClient = FTPClient()
+    private val ftpClient = FTPSClient()
     private var currentServer = ""
 
 

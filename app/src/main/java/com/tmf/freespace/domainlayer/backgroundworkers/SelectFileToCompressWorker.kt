@@ -1,13 +1,17 @@
 package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
+import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.Data
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import java.io.File
 
 
 /**
@@ -31,18 +35,48 @@ class SelectFileToCompressWorker(val appContext: Context, params: WorkerParamete
      * . Pass file to next worker in chain
      */
     override suspend fun doWork(): Result {
+        var fileHasBeenDeleted = true
+        var fileToCompress: MediaFile? = null
+
         mediaFileRepository = MediaFileRepository(appContext)
 
-        val fileToCompress = mediaFileRepository.getFileToCompress()
-        if (fileToCompress == null) {
-            return Result.failure()  //No more files to compress, abort chain until next scheduled processing time
+        while (fileHasBeenDeleted) {
+            fileToCompress = mediaFileRepository.getFileToCompress()
+            if (fileToCompress == null) {
+                Log.d("SelectFileToCompressWorker.doWork", "No more files to compress")
+                return Result.failure()  //No more files to compress, abort chain until next scheduled processing time
+            }
+
+            /**
+             * If media file has been deleted, remove it from the database
+             */
+            fileHasBeenDeleted = hasFileBeenDeleted(fileToCompress)
+            if (fileHasBeenDeleted) {
+                Log.d("SelectFileToCompressWorker.doWork", "File ${fileToCompress.id} has been deleted, removing from database")
+                mediaFileRepository.deleteFile(fileToCompress)
+            }
         }
 
-        //Continue on to next worker in chain (UploadDownloadFileWorker), passing it the file ID of the file to compress
-        val resultData = Data.Builder()
-            .putLong(PARAM_FILE_ID, fileToCompress.id)
-            .build()
-        return Result.success(resultData)
+//        WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
+
+        //Start work chain to process this file and then come back to this worker to select next file to process, if any
+        //  NOTE: Chain is not added if chain is already queued/running, in case chain is being requeued from next scheduled compression processing
+        WorkManager.getInstance(appContext)
+            .beginUniqueWork(  //Task 1: Download/upload file to/from file server
+                UploadDownloadFileWorker::class.java.simpleName + "_chain",
+                ExistingWorkPolicy.KEEP,
+                UploadDownloadFileWorker.buildWorkRequest(fileToCompress!!.id)
+            )
+            .then(CompressionWorker.buildWorkRequest())  //Task 2: Compress file and update MediaStore
+            .then(buildWorkRequest())  //Task 3: Start over, selecting next file to compress (exits when finished all pending files)
+            .enqueue()
+
+        //Continue on to first worker in new chain (UploadDownloadFileWorker), passing it the file ID of the file to compress
+        return Result.success()
+    }
+
+    private fun hasFileBeenDeleted(fileToCompress: MediaFile): Boolean {
+        return !File(fileToCompress.fullPath).exists()
     }
 
     companion object {
