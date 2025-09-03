@@ -5,6 +5,7 @@ import com.tmf.freespace.datalayer.datasources.cloudstorage.InterserverCloudStor
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.FtpCredential
 import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.datalayer.models.MediaType
 
 class MediaFileRepository(val context: Context) {
     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
@@ -34,8 +35,13 @@ class MediaFileRepository(val context: Context) {
     /**
      * Set or update desired compression level for all image files in database based on their creation date
      */
-    fun setCompressionLevel(minAgeDays: Long, maxAgeDays: Long, compressionLevel: Int, mediaType: Int) {
-        mediaFileDao.setCompressionLevel(minAgeDays, maxAgeDays, compressionLevel, mediaType)
+    fun setCompressionLevel(minAgeRangeDays: Int, maxAgeRangeDays: Int, compressionLevel: Int, mediaType: MediaType) {
+        val nowSecs = System.currentTimeMillis() / 1_000L
+        val secsPerDay: Long = 60L * 60L * 24L
+        val mostRecentCreationDtm = nowSecs - minAgeRangeDays * secsPerDay
+        val oldestCreationDtm = nowSecs - maxAgeRangeDays * secsPerDay
+
+        mediaFileDao.setCompressionLevel(mostRecentCreationDtm, oldestCreationDtm, compressionLevel, mediaType)
     }
 
     /**
@@ -65,5 +71,9 @@ class MediaFileRepository(val context: Context) {
     suspend fun downloadMediaFromCloud(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential): Boolean {
         val interserverCloudStorage = InterserverCloudStorage(UserRepository(context).getUser())
         return interserverCloudStorage.downloadMediaFile(mediaFile, outputFilePath, ftpCredentials)
+    }
+
+    fun deleteFile(fileToCompress: MediaFile) {
+        mediaFileDao.deleteMediaFile(fileToCompress)
     }
 }
