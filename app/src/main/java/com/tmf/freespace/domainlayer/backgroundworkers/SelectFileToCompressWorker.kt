@@ -35,29 +35,16 @@ class SelectFileToCompressWorker(val appContext: Context, params: WorkerParamete
      * . Pass file to next worker in chain
      */
     override suspend fun doWork(): Result {
-        var fileHasBeenDeleted = true
         var fileToCompress: MediaFile? = null
 
         mediaFileRepository = MediaFileRepository(appContext)
-
-        while (fileHasBeenDeleted) {
-            fileToCompress = mediaFileRepository.getFileToCompress()
-            if (fileToCompress == null) {
-                Log.d("SelectFileToCompressWorker.doWork", "No more files to compress")
-                return Result.failure()  //No more files to compress, abort chain until next scheduled processing time
-            }
-
-            /**
-             * If media file has been deleted, remove it from the database
-             */
-            fileHasBeenDeleted = hasFileBeenDeleted(fileToCompress)
-            if (fileHasBeenDeleted) {
-                Log.d("SelectFileToCompressWorker.doWork", "File ${fileToCompress.id} has been deleted, removing from database")
-                mediaFileRepository.deleteFile(fileToCompress)
-            }
+        fileToCompress = mediaFileRepository.getFileToCompress()
+        if (fileToCompress == null) {
+            Log.d("SelectFileToCompressWorker.doWork", "No more files to compress")
+            return Result.failure()  //No more files to compress, abort chain until next scheduled processing time
         }
 
-//        WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
+        WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
 
         //Start work chain to process this file and then come back to this worker to select next file to process, if any
         //  NOTE: Chain is not added if chain is already queued/running, in case chain is being requeued from next scheduled compression processing
@@ -65,7 +52,7 @@ class SelectFileToCompressWorker(val appContext: Context, params: WorkerParamete
             .beginUniqueWork(  //Task 1: Download/upload file to/from file server
                 UploadDownloadFileWorker::class.java.simpleName + "_chain",
                 ExistingWorkPolicy.KEEP,
-                UploadDownloadFileWorker.buildWorkRequest(fileToCompress!!.id)
+                UploadDownloadFileWorker.buildWorkRequest(fileToCompress!!.mediaFileID)
             )
             .then(CompressionWorker.buildWorkRequest())  //Task 2: Compress file and update MediaStore
             .then(buildWorkRequest())  //Task 3: Start over, selecting next file to compress (exits when finished all pending files)
@@ -80,7 +67,8 @@ class SelectFileToCompressWorker(val appContext: Context, params: WorkerParamete
     }
 
     companion object {
-        const val PARAM_FILE_ID = "FileID"
+        const val PARAM_FILE_ID_MSB = "FileIDMsb"
+        const val PARAM_FILE_ID_LSB = "FileIDLsb"
 
         fun buildWorkRequest(): OneTimeWorkRequest {
             val constraints = Constraints.Builder()

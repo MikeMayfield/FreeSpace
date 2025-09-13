@@ -20,6 +20,7 @@ import com.tmf.freespace.datalayer.repositories.UserRepository
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.UUID
 
 
 /**
@@ -41,13 +42,14 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
      * . . Download existing file from file server
      */
     override suspend fun doWork(): Result {
+        val emptyUUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
         val mediaFileRepository = MediaFileRepository(applicationContext)
         val serverIO = ServerIO()
-        var fileID = inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID, 0)
+        var fileID = UUID(inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID_MSB, 0L), inputData.getLong(SelectFileToCompressWorker.PARAM_FILE_ID_LSB, 0L))
         val user = UserRepository(applicationContext).getUser()
         var uncompressedFilePath: String? = null
 
-        if (fileID != 0L) {
+        if (fileID != emptyUUID) {
             //Get file info from DB
             val mediaFile = mediaFileRepository.getMediaFileByID(fileID)
             if (mediaFile != null) {
@@ -63,7 +65,7 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
                     Log.d("UploadDownloadFileWorker.doWork", "Unable to upload/download file")
                     mediaFile.desiredCompressionLevel = 0
                     mediaFileRepository.updateMediaFile(mediaFile)
-                    fileID = 0L
+                    fileID = emptyUUID
                 }
             }
         }
@@ -71,7 +73,8 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
 
         //Continue on to next worker in chain, passing it the file ID of the file to compress and the path to the source file to be compressed (if any)
         val resultData = Data.Builder()
-            .putLong(PARAM_FILE_ID, fileID)
+            .putLong(PARAM_FILE_ID_MSB, fileID.mostSignificantBits)
+            .putLong(PARAM_FILE_ID_LSB, fileID.leastSignificantBits)
             .putString(PARAM_UNCOMPRESSED_FILE_PATH, uncompressedFilePath ?: "")
             .build()
         return Result.success(resultData)
@@ -84,7 +87,7 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
             return null
         }
 
-        val ftpCredentials = serverIO.allocateFileInCloud(user.idGuid, mediaFile.id, mediaFile.fullPath, mediaFile.originalSize)
+        val ftpCredentials = serverIO.allocateFileInCloud(user.idGuid, mediaFile.mediaFileID, mediaFile.fullPath, mediaFile.originalSize)
         if (ftpCredentials != null) {
             transferredSuccessfully = mediaFileRepository.uploadMediaToCloud(mediaFile, uncompressedFilePath, ftpCredentials)
             if (transferredSuccessfully) {
@@ -101,9 +104,9 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
 
     private suspend fun downloadFile(mediaFile: MediaFile, user: User, mediaFileRepository: MediaFileRepository, serverIO: ServerIO) : String? {
         var uncompressedFilePath : String? = null
-        val ftpCredentials = serverIO.getFtpCredentials(user.idGuid, mediaFile.id)
+        val ftpCredentials = serverIO.getFtpCredentials(user.idGuid, mediaFile.mediaFileID)
         if (ftpCredentials != null) {
-            uncompressedFilePath = uncompressedFilePath(mediaFile.id)
+            uncompressedFilePath = uncompressedFilePath(mediaFile.mediaFileID)
             if (!mediaFileRepository.downloadMediaFromCloud(mediaFile, uncompressedFilePath, ftpCredentials)) {
                 uncompressedFilePath = null
             }
@@ -217,22 +220,23 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
 
     }
 
-    private fun uncompressedFilePath(id: Long): String {
+    private fun uncompressedFilePath(mediaFileID: UUID): String {
         val cacheSubDir = File(appContext.cacheDir, "freespace_uncompressed")
         if (!cacheSubDir.exists()) {
             cacheSubDir.mkdirs()
         }
-        return "${cacheSubDir.absolutePath}/${id}.uncompressed"
+        return "${cacheSubDir.absolutePath}/${mediaFileID}.uncompressed"
     }
 
     companion object {
-        const val PARAM_FILE_ID = "FileID"
+        const val PARAM_FILE_ID_MSB = "FileIDMsb"
+        const val PARAM_FILE_ID_LSB = "FileIDLsb"
         const val PARAM_UNCOMPRESSED_FILE_PATH = "UncompressedFilePath"
 
         /**
          * Create request to queue this worker
          */
-        fun buildWorkRequest(fileToDownloadID: Long): OneTimeWorkRequest {
+        fun buildWorkRequest(fileToDownloadID: UUID): OneTimeWorkRequest {
             val constraints = Constraints.Builder()
 //                .setRequiresDeviceIdle(true)  //TODO
 //                .setRequiresStorageNotLow(true)  //TODO
@@ -240,7 +244,8 @@ class UploadDownloadFileWorker(val appContext: Context, params: WorkerParameters
 //                .setRequiredNetworkType(NetworkType.CONNECTED)  //TODO
                 .build()
             val data = Data.Builder()
-                .putLong(PARAM_FILE_ID, fileToDownloadID)
+                .putLong(PARAM_FILE_ID_MSB, fileToDownloadID.mostSignificantBits)
+                .putLong(PARAM_FILE_ID_LSB, fileToDownloadID.leastSignificantBits)
                 .build()
 
             val workRequest = OneTimeWorkRequestBuilder<UploadDownloadFileWorker>()

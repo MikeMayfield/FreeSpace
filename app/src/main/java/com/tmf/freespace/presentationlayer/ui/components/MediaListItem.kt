@@ -28,7 +28,7 @@ fun MediaListItem(
         when (file.mediaType) {
             MediaType.IMAGE -> {
                 AsyncImage(
-                    model = file.id,
+                    model = file.mediaFileID,
                     contentDescription = null,
                     modifier = Modifier
                         .width(100.dp)

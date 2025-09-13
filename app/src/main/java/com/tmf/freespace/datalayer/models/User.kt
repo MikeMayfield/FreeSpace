@@ -3,7 +3,9 @@ import androidx.room.PrimaryKey
 import com.tmf.freespace.datalayer.datasources.cloudstorage.CloudStorageType
 import java.util.UUID
 
-@Entity
+@Entity(
+    tableName = "User"
+)
 data class User(
     val idGuid: UUID,
     val phoneNumber: String,

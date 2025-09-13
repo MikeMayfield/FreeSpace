@@ -24,16 +24,16 @@ class ServerIO() {
      * Allocate file space and return FTP access information for a file upload request in preparation for uploading the file to one of the FTP servers
      *
      * @param userIDGuid The user's unique identifier
-     * @param fileID Local file ID (GUID); used to ID files by user on FTP servers for removal of orphaned files later
+     * @param mediaFileID Local file ID (GUID); used to ID files by user on FTP servers for removal of orphaned files later
      * @param filename The name (full path) of the file being uploaded
      * @param fileSizeBytes The size of the file being uploaded, in bytes.
      * @return File upload credentials, formatted as follows:
      */
-    fun allocateFileInCloud(userIDGuid: UUID, fileID: Long, filename: String, fileSizeBytes: Int) : FtpCredential? {
+    fun allocateFileInCloud(userIDGuid: UUID, mediaFileID: UUID, filename: String, fileSizeBytes: Int) : FtpCredential? {
         var ftpCredential: FtpCredential? = null
 
         try {
-            ftpCredential = getFtpCredentials(userIDGuid, fileID)  //TODO Get FTP credentials from server
+            ftpCredential = getFtpCredentials(userIDGuid, mediaFileID)  //TODO Get FTP credentials from server
         }
         catch (_: Exception) {
             //TODO Handle error getting credentials from server
@@ -42,7 +42,7 @@ class ServerIO() {
         return ftpCredential
     }
 
-    fun getFtpCredentials(userIDGuid: UUID, fileID: Long) : FtpCredential? {
+    fun getFtpCredentials(userIDGuid: UUID, mediaFileID: UUID) : FtpCredential? {
         //TODO Get FTP credentials from server
         val ftpCredentialsFromServer = "1:1:st60470.ispot.cc:19e64a21-2276-49e2-a44f-de381afb150d@st60470.ispot.cc:9N2mxY@V"  //TODO
 

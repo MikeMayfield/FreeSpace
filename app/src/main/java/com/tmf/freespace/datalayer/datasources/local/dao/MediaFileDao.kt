@@ -2,21 +2,15 @@ package com.tmf.freespace.datalayer.datasources.local.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
+import java.util.UUID
 
 @Dao
 interface MediaFileDao {
-    /**
-     * Insert record if it doesn't already exist (based on MediaStoreID). Call with Async.Wait if new record ID is needed
-     */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertIfNew(mediaFile: MediaFile)
-
     /**
      * Set desired compression level for media files in database based on their creation date range
      *
@@ -29,7 +23,7 @@ interface MediaFileDao {
         "UPDATE MediaFile SET desiredCompressionLevel = :compressionLevel" +
                 " WHERE creationDtm > :oldestDtm AND creationDtm <= :mostRecentDtm AND mediaType = :mediaType AND currentCompressionLevel < :compressionLevel"
     )
-    fun setCompressionLevel(mostRecentDtm: Long, oldestDtm: Long, compressionLevel: Int, mediaType: MediaType)
+    suspend fun setCompressionLevel(mostRecentDtm: Long, oldestDtm: Long, compressionLevel: Int, mediaType: MediaType)
 
     /**
      * Select the next file to compress. The file will have the highest desired compression level and the largest current (possibly compressed) size
@@ -40,7 +34,7 @@ interface MediaFileDao {
                 " ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC" +
                 " LIMIT 1"
     )
-    fun getFileToCompress(): MediaFile?
+    suspend fun getFileToCompress(): MediaFile?
 
     /**
      * Get media file by ID
@@ -48,18 +42,45 @@ interface MediaFileDao {
      * <param>id</param> - ID of media file to get
      */
     @Query("SELECT * FROM MediaFile" +
-            " WHERE id = :id")
-    fun getMediaFileByID(id: Long): MediaFile?
+            " WHERE mediaFileID = :mediaFileID")
+    suspend fun getMediaFileByID(mediaFileID: UUID): MediaFile?
 
     /**
      * Update existing MediaFile record in database
      */
     @Update
-    fun updateMediaFile(mediaFile: MediaFile)
+    suspend fun updateMediaFile(mediaFile: MediaFile)
 
     /**
      * Delete media file from database
      */
-    @Delete()
-    fun deleteMediaFile(mediaFile: MediaFile)
+    @Delete
+    suspend fun deleteMediaFile(mediaFile: MediaFile)
+
+    /**
+     * Mark all media files as not updated yet (before processing all known media files in MediaStore)
+     */
+    @Query("UPDATE MediaFile SET mediaHasBeenUpdated = 0")
+    suspend fun markAllMediaAsNotUpdated()
+
+    /**
+     * Add new media file to database or update MediaStoreID if it already exists
+     */
+    @Upsert
+    suspend fun upsertMediaStoreID(mediaFile: MediaFile)
+
+    /**
+     * Delete all media files that were not been updated while processing all media files in MediaStore
+     */
+    @Query("DELETE FROM MediaFile WHERE mediaHasBeenUpdated = 0")
+    suspend fun deleteMediaFilesMarkedAsNotUpdated()
+
+    /**
+     * Get media file by full path
+     *
+     * <param>fullPath</param> - Full path of media file to get
+     */
+    @Query("SELECT * FROM MediaFile" +
+            " WHERE fullPath = :fullPath")
+    suspend fun getMediaFileByFullPath(fullPath: String) : MediaFile?
 }

@@ -1,26 +1,20 @@
 package com.tmf.freespace.datalayer.repositories
 
 import android.content.Context
+import android.util.Log
 import com.tmf.freespace.datalayer.datasources.cloudstorage.InterserverCloudStorage
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.FtpCredential
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
+import java.io.File
+import java.util.UUID
 
 class MediaFileRepository(val context: Context) {
     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
 
-    fun getMediaFileByID(mediaID: Long): MediaFile? {
+    suspend fun getMediaFileByID(mediaID: UUID): MediaFile? {
         return mediaFileDao.getMediaFileByID(mediaID)
-    }
-
-    /**
-     * Add media file to database
-     *
-     * @param mediaFile Media file to add
-     */
-    fun addMediaFile(mediaFile: MediaFile) {
-        mediaFileDao.insertIfNew(mediaFile)
     }
 
     /**
@@ -28,14 +22,14 @@ class MediaFileRepository(val context: Context) {
      *
      * @param mediaFile Media file to update
      */
-    fun updateMediaFile(mediaFile: MediaFile) {
+    suspend fun updateMediaFile(mediaFile: MediaFile) {
         mediaFileDao.updateMediaFile(mediaFile)
     }
 
     /**
      * Set or update desired compression level for all image files in database based on their creation date
      */
-    fun setCompressionLevel(minAgeRangeDays: Int, maxAgeRangeDays: Int, compressionLevel: Int, mediaType: MediaType) {
+    suspend fun setCompressionLevel(minAgeRangeDays: Int, maxAgeRangeDays: Int, compressionLevel: Int, mediaType: MediaType) {
         val nowSecs = System.currentTimeMillis() / 1_000L
         val secsPerDay: Long = 60L * 60L * 24L
         val mostRecentCreationDtm = nowSecs - minAgeRangeDays * secsPerDay
@@ -46,9 +40,28 @@ class MediaFileRepository(val context: Context) {
 
     /**
      * Find next file that needs to be compressed, select by highest compression level (desc), file size (desc)
+     * If file no longer exists, remove from DB and try next file(s)
      */
-    fun getFileToCompress(): MediaFile? {
-        return mediaFileDao.getFileToCompress()
+    suspend fun getFileToCompress(): MediaFile? {
+        var fileHasBeenDeleted = true
+        var fileToCompress = mediaFileDao.getFileToCompress()
+
+        while (fileHasBeenDeleted) {
+            if (fileToCompress == null) {
+                return null
+            }
+
+            /**
+             * If media file has been deleted, remove it from the database
+             */
+            fileHasBeenDeleted = hasFileBeenDeleted(fileToCompress)
+            if (fileHasBeenDeleted) {
+                Log.d("SelectFileToCompressWorker.doWork", "File ${fileToCompress.fullPath} has been deleted, removing from database")
+                deleteFile(fileToCompress)
+            }
+        }
+
+        return fileToCompress
     }
 
     /**
@@ -73,7 +86,48 @@ class MediaFileRepository(val context: Context) {
         return interserverCloudStorage.downloadMediaFile(mediaFile, outputFilePath, ftpCredentials)
     }
 
-    fun deleteFile(fileToCompress: MediaFile) {
+    /**
+     * Delete media file from database
+     */
+    suspend fun deleteFile(fileToCompress: MediaFile) {
         mediaFileDao.deleteMediaFile(fileToCompress)
     }
+
+    /**
+     * Mark all media files as not updated yet
+     */
+    suspend fun markAllMediaAsNotUpdated() {
+        mediaFileDao.markAllMediaAsNotUpdated()
+    }
+
+    /**
+     * Insert or update media file in database
+     *
+     * @param mediaFile Media file to update
+     */
+    suspend fun upsertMediaFile(mediaFile: MediaFile) {
+        mediaFileDao.upsertMediaStoreID(mediaFile)
+    }
+
+    /**
+     *
+     */
+    suspend fun deleteFilesDeletedFromMediaStore() {
+        mediaFileDao.deleteMediaFilesMarkedAsNotUpdated()
+    }
+
+    suspend fun getMediaFileByFullPath(fullPath: String) : MediaFile? {
+        return mediaFileDao.getMediaFileByFullPath(fullPath)
+    }
+
+
+    /**
+     * Check if media file has been deleted from MediaStore (and disk)
+     *
+     * @param fileToCompress Media file to check
+     */
+    private fun hasFileBeenDeleted(fileToCompress: MediaFile): Boolean {
+        return !File(fileToCompress.fullPath).exists()
+    }
+
 }

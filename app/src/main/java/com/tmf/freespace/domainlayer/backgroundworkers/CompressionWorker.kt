@@ -12,6 +12,7 @@ import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.Compressor
 import java.io.File
+import java.util.UUID
 
 /**
  * WorkManager task to compress (or re-compress) a file (Task #4)
@@ -34,13 +35,14 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
      * . Delete temporary files (if any)
      */
     override suspend fun doWork(): Result {
-        val fileID = inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID, 0)
-        if (fileID == 0L) {
-            Log.w("compressSelectedFiles.doWork", "No file ID provided. File not being compressed")
-            return Result.success()  //If no file was processed, nothing left to do but continue to possible next file
-        }
+        val emptyUUI = UUID(0L, 0L)
+        val fileID = UUID(inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID_MSB, 0L), inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID_LSB, 0L))
+            if (fileID == emptyUUI) {
+                Log.w("compressSelectedFiles.doWork", "No file ID provided. File not being compressed")
+                return Result.success()  //If no file was processed, nothing left to do but continue to possible next file
+            }
 
-        val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
+            val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
         val mediaFileRepository = MediaFileRepository(applicationContext)
 
 
@@ -79,8 +81,8 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
         }
     }
 
-    private fun compressedFilePath(id: Long): String {
-        return "${appContext.cacheDir.absolutePath}/freespace/${id}.compressed"
+    private fun compressedFilePath(mediaFileID: UUID): String {
+        return "${appContext.cacheDir.absolutePath}/freespace/${mediaFileID}.compressed"
     }
 
     private fun updateMediaStoreWithCompressedFile(mediaFile: MediaFile, compressedFilePath: String) : Boolean {

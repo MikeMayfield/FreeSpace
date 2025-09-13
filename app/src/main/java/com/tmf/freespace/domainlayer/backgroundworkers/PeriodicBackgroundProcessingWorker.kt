@@ -3,6 +3,7 @@ package com.tmf.freespace.domainlayer.backgroundworkers
 import android.content.Context
 import android.os.Environment
 import android.os.StatFs
+import android.provider.MediaStore
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
@@ -10,8 +11,11 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tmf.freespace.MediaReader
+import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
+import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
 import com.tmf.freespace.datalayer.repositories.UserRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
 
@@ -66,11 +70,18 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //Send heartbeat to server
         UserRepository(appContext).sendHeartbeat()
 
+        //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
+        //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
+        updateMediaStoreIDsInDB(mediaFileRepository)
+
         val bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0) {
-            //TODO Handle case where file existed and was added to db, but is now deleted from device
-            //TODO Optimize to only add new media files to db unless MediaStore was rebuilt
-            addAllMediaFilesToDB(mediaFileRepository)  //Add all new media files to DB
+            val maxDateAddedFound = PropertyBagRepository(appContext).get(PropertyBagEntry.MAX_DATE_ADDED, "0").toLong()
+            val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository)  //Add all new media files to DB
+            if (newMaxDateAddedFound > maxDateAddedFound) {
+                PropertyBagRepository(appContext).set(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound.toString())
+            }
+
             updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
             queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
@@ -83,6 +94,82 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     }
 
     //region Private Methods
+
+    /*
+     * If the real MediaStore IDs may have changed, update the MediaStore ID GUIDs in the database, based on the full path to the media
+     */
+    private suspend fun updateMediaStoreIDsInDB(mediaFileRepository: MediaFileRepository) {
+        val propertyBagRepository = PropertyBagRepository(appContext)
+        val mediaStoreVersionInDB = propertyBagRepository.get(PropertyBagEntry.MEDIA_STORE_VERSION, "")
+        val newMediaStoreVersion = MediaStore.getVersion(appContext)
+
+        if (mediaStoreVersionInDB != newMediaStoreVersion) {
+            val maxDateAddedFound = rebuildMediaStore(mediaFileRepository)
+            propertyBagRepository.set(PropertyBagEntry.MEDIA_STORE_VERSION, newMediaStoreVersion)
+            propertyBagRepository.set(PropertyBagEntry.MAX_DATE_ADDED, maxDateAddedFound.toString())
+        }
+    }
+
+    /**
+     * Rebuild all MediaStore IDs in the database and delete files that were deleted from the device
+     */
+    private suspend fun rebuildMediaStore(mediaFileRepository: MediaFileRepository) : Long {
+        //Mark all existing media files as not updated from MediaStore yet
+        mediaFileRepository.markAllMediaAsNotUpdated()
+
+        //Rebuild all MediaStore IDs in the database
+        val maxDateAddedFound = updateMediaFilesFromMediaStore(0L, mediaFileRepository)
+
+        //Delete files that were deleted from the device (i.e. they are no longer in the database)
+        mediaFileRepository.deleteFilesDeletedFromMediaStore()
+
+        return maxDateAddedFound
+    }
+
+
+    /**
+     * Fetches media files from MediaStore (all or new) and upserts them into the local database.
+     * It also updates existing entries with the latest MediaStore ID if matched by full path.
+     *
+     * @param oldestDateAddedToSelect The minimum date_added timestamp (seconds) to select files from MediaStore.
+     *                             Use 0L to process all files (e.g., during a full rebuild).
+     * @param mediaFileRepository Repository to interact with the media file database.
+     * @return The maximum date_added timestamp found among the processed MediaStore files.
+     */
+    private suspend fun updateMediaFilesFromMediaStore(oldestDateAddedToSelect: Long, mediaFileRepository: MediaFileRepository) : Long {
+        var maxDateAddedFound = oldestDateAddedToSelect // Initialize with the input, in case no new files are found
+        val mediaReader = MediaReader(appContext)
+
+        mediaReader.getMediaFilesAddedSinceDate(oldestDateAddedToSelect)
+            .collect { mediaStoreMediaFile -> // Use collect to consume the Flow
+                // Try to find an existing file by fullPath to update its MediaStore ID if it changed
+                val existingMediaFile = mediaFileRepository.getMediaFileByFullPath(mediaStoreMediaFile.fullPath)
+
+                val fileToUpsert: MediaFile
+                if (existingMediaFile != null) {
+                    // File exists, update it with potentially new MediaStore ID and latest info
+                    // Preserve existing DB data like compression level, serverID, etc.
+                    fileToUpsert = mediaStoreMediaFile.copy(
+                        mediaFileID = existingMediaFile.mediaFileID,
+                        originalSize = existingMediaFile.originalSize,
+                        compressedSize = existingMediaFile.compressedSize,
+                        currentCompressionLevel = existingMediaFile.currentCompressionLevel,
+                        desiredCompressionLevel = existingMediaFile.desiredCompressionLevel,
+                        serverID = existingMediaFile.serverID,
+                    )
+                } else {
+                    // New file, use it as is
+                    fileToUpsert = mediaStoreMediaFile.copy()
+                }
+
+                mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
+
+                if (fileToUpsert.dateInMediaStore > maxDateAddedFound) {
+                    maxDateAddedFound = fileToUpsert.dateInMediaStore
+                }
+            }
+        return maxDateAddedFound
+    }
 
     /**
      * Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
@@ -98,18 +185,9 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     }
 
     /**
-     * Find all new media files on disk and add them to the database for possible future processing
-     */
-    private fun addAllMediaFilesToDB(mediaFileRepository: MediaFileRepository) {
-        MediaReader(appContext).forNewMediaFiles { mediaFile ->
-            mediaFileRepository.addMediaFile(mediaFile)
-        }
-    }
-
-    /**
      * Set or update desired compression level for all files in database based on their creation date
      */
-    private fun updateDesiredCompressionLevelsInDB(mediaFileRepository: MediaFileRepository) {
+    private suspend fun updateDesiredCompressionLevelsInDB(mediaFileRepository: MediaFileRepository) {
         for (compressionLevel in CompressionLevels().compressionLevels) {
             mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.imageCompressionLevel, MediaType.IMAGE)
             mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.videoCompressionLevel, MediaType.VIDEO)
@@ -121,6 +199,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * The worker's chain will requeue itself for each additional file needed.
      */
     private fun queueWorkerToProcessFirstFile() {
+        WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
+
         WorkManager.getInstance(appContext)
             .beginWith(SelectFileToCompressWorker.buildWorkRequest())
             .enqueue()

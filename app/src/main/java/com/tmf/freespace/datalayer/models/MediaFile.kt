@@ -1,23 +1,30 @@
 package com.tmf.freespace.datalayer.models
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.util.UUID
 
-@Entity
+@Entity(
+    tableName = "MediaFile",
+    indices = [ Index(value = ["mediaFileID"], unique = true) ]
+)
 data class MediaFile(
+    var mediaFileID: UUID = UUID.randomUUID(),
     val mediaStoreID: Long,  //TODO BUG: **** MediaStore ID can change between reboots. Fix this!!
-    val fullPath: String,
+    @PrimaryKey val fullPath: String,
     val originalSize: Int,
     var compressedSize: Int = originalSize,
     val width: Int,
     val height: Int,
-    val mediaType: MediaType,
+    var mediaType: MediaType,
     var currentCompressionLevel: Int = 0,
     var desiredCompressionLevel: Int = currentCompressionLevel,
-    val creationDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
+    val creationDtm: Long,  //milliseconds since 1970-01-01T00:00:00Z (Note: Not seconds like other DTMs)
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     var serverID: Long = -1,
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val dateInMediaStore: Long = 0L,  //Date/time added to MediaStore, in seconds since 1970-01-01T00:00:00Z
+    var mediaHasBeenUpdated: Boolean = true,
 )
 {
     /**
