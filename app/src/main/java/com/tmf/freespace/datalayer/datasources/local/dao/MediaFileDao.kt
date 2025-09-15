@@ -73,14 +73,16 @@ interface MediaFileDao {
      * Delete all media files that were not been updated while processing all media files in MediaStore
      */
     @Query("DELETE FROM MediaFile WHERE mediaHasBeenUpdated = 0")
-    suspend fun deleteMediaFilesMarkedAsNotUpdated()
+    suspend fun deleteMediaFilesMarkedAsNotUpdated() : Int
 
     /**
      * Get media file by full path
      *
      * <param>fullPath</param> - Full path of media file to get
      */
-    @Query("SELECT * FROM MediaFile" +
-            " WHERE fullPath = :fullPath")
+    @Query("SELECT * FROM MediaFile WHERE fullPath = :fullPath")
     suspend fun getMediaFileByFullPath(fullPath: String) : MediaFile?
+
+    @Query("SELECT SUM(originalSize - compressedSize) FROM MediaFile")
+    suspend fun getBytesRecovered(): Long
 }

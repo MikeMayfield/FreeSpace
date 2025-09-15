@@ -120,6 +120,10 @@ class MediaFileRepository(val context: Context) {
         return mediaFileDao.getMediaFileByFullPath(fullPath)
     }
 
+    suspend fun getBytesRecovered(): Long {
+        return 0L  //TODO return mediaFileDao.getBytesRecovered()
+    }
+
 
     /**
      * Check if media file has been deleted from MediaStore (and disk)

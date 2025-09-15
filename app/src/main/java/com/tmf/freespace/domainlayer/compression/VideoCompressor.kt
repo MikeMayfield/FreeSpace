@@ -6,11 +6,11 @@ import com.tmf.freespace.datalayer.models.MediaFile
 class VideoCompressor(context: Context) : ICompressor(context) {
     override val ffmpegCompressionCommands = listOf(
         "",  //0: No compression
-        "-y -i {{inputFilePath}} {{outputFilePath}}",  //1: Compression low  //TODO Define real command
-        "-y -i {{inputFilePath}} {{outputFilePath}}",  //2: Compression medium  //TODO Define real command
-        "-y -i {{inputFilePath}} {{outputFilePath}}",  //3: Compression high  //TODO Define real command
-        "-y -i {{inputFilePath}} {{outputFilePath}}",  //4: Compression very high  //TODO Define real command
-        "-y -i {{inputFilePath}} {{outputFilePath}}",  //5: Compression ultra high  //TODO Define real command
+        "-y -i {{INPUT_FILE_PATH}} {{OUTPUT_FILE_PATH}}.mp4",  //1: Compression low  //TODO Define real command
+        "-y -i {{INPUT_FILE_PATH}} {{OUTPUT_FILE_PATH}}.mp4",  //2: Compression medium  //TODO Define real command
+        "-y -i {{INPUT_FILE_PATH}} {{OUTPUT_FILE_PATH}}.mp4",  //3: Compression high  //TODO Define real command
+        "-y -i {{INPUT_FILE_PATH}} {{OUTPUT_FILE_PATH}}.mp4",  //4: Compression very high  //TODO Define real command
+        "-y -i {{INPUT_FILE_PATH}} {{OUTPUT_FILE_PATH}}.mp4",  //5: Compression ultra high  //TODO Define real command
     )
 
     //Compress media file using FFmpeg. Returns the compressed file size

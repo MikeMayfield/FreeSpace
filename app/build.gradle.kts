@@ -53,7 +53,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.coil.compose)
-    implementation(libs.arthenica.smart.exception.java)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
     implementation(libs.commons.net)
     implementation(libs.retrofit) // Or latest
@@ -66,6 +65,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation("com.moizhassan.ffmpeg:ffmpeg-kit-16kb:6.0.0")
 
 
 //    implementation(libs.firebase.crashlytics.buildtools)

@@ -57,6 +57,8 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
  */
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
+    private val TAG = PeriodicBackgroundProcessingWorker::class.simpleName
+
     /**
      * Worker: Start of periodic processing of background compression tasks
      *
@@ -65,6 +67,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain to process first pending file
      */
     override suspend fun doWork(): Result {
+        Log.d(TAG, "Starting periodic background processing")
         val mediaFileRepository = MediaFileRepository(appContext)
 
         //Send heartbeat to server
@@ -74,7 +77,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsInDB(mediaFileRepository)
 
-        val bytesToRecover = calculateBytesToRecover()  //Determine amount of disk space to recover, based on user’s stated free space goal
+        val bytesToRecover = calculateBytesToRecover()  //TODO Not needed in periodic processing? //Determine amount of disk space to recover, based on user’s stated free space goal
         if (bytesToRecover > 0) {
             val maxDateAddedFound = PropertyBagRepository(appContext).get(PropertyBagEntry.MAX_DATE_ADDED, "0").toLong()
             val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository)  //Add all new media files to DB
@@ -90,6 +93,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             Log.d("PeriodicBackgroundProcessingWorker.doWork", "No space needs to be recovered: $bytesToRecover")
         }
 
+        Log.d(TAG, "Finished periodic background processing")
         return Result.success()
     }
 
@@ -157,9 +161,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                         desiredCompressionLevel = existingMediaFile.desiredCompressionLevel,
                         serverID = existingMediaFile.serverID,
                     )
+                    Log.v(TAG, "Updating existing file: ${fileToUpsert.fullPath}")
                 } else {
                     // New file, use it as is
                     fileToUpsert = mediaStoreMediaFile.copy()
+                    Log.v(TAG, "Adding new file: ${fileToUpsert.fullPath}")
                 }
 
                 mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
@@ -201,8 +207,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     private fun queueWorkerToProcessFirstFile() {
         WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
 
+//        WorkManager.getInstance(appContext)  //TODO Not needed if using FileOptimizationWorker
+//            .beginWith(SelectFileToCompressWorker.buildWorkRequest())
+//            .enqueue()
         WorkManager.getInstance(appContext)
-            .beginWith(SelectFileToCompressWorker.buildWorkRequest())
+            .beginWith(FileOptimizationWorker.buildWorkRequest())
             .enqueue()
     }
 

@@ -35,6 +35,7 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
      * . Delete temporary files (if any)
      */
     override suspend fun doWork(): Result {
+        val compressor = Compressor(applicationContext)
         val emptyUUI = UUID(0L, 0L)
         val fileID = UUID(inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID_MSB, 0L), inputData.getLong(UploadDownloadFileWorker.PARAM_FILE_ID_LSB, 0L))
             if (fileID == emptyUUI) {
@@ -42,7 +43,7 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
                 return Result.success()  //If no file was processed, nothing left to do but continue to possible next file
             }
 
-            val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
+        val uncompressedFilePath = inputData.getString(UploadDownloadFileWorker.PARAM_UNCOMPRESSED_FILE_PATH)
         val mediaFileRepository = MediaFileRepository(applicationContext)
 
 
@@ -51,7 +52,7 @@ class CompressionWorker(val appContext: Context, params: WorkerParameters): Coro
             //Compress the uncompressed (original or recovered) media file
             val priorCompressedSize = mediaFile.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
             val compressedFilePath = compressedFilePath(fileID)
-            if (Compressor(applicationContext).compress(mediaFile, uncompressedFilePath!!, compressedFilePath)) {
+            if (compressor.compress(mediaFile, uncompressedFilePath!!, compressedFilePath)) {
                 val compressedFileSize = File(compressedFilePath).length().toInt()
                 if (compressedFileSize < priorCompressedSize) {
                     deleteFile(uncompressedFilePath)  //Delete temporary uncompressed file to provide more space for creating file in MediaStore
