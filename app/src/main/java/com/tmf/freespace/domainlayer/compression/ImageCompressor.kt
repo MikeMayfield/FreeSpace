@@ -1,22 +1,20 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
-import android.os.Build
 import android.util.Log
-import android.view.WindowManager
 import com.tmf.freespace.datalayer.models.MediaFile
 
 class ImageCompressor(context: Context) : ICompressor(context) {
     //TODO Test ImageMagick vs ffmpeg for compression. ImageMagick is probably better for images, while ffmpeg is better for videos
     private val TAG = ImageCompressor::class.simpleName
 
-    override val ffmpegCompressionCommands = listOf(
+    override val compressionCommands = listOf(
+        //InputFilePath|OutputFilePath|ScreenWidth|CompressionRatio(originalSize/n)
         "",  //0: No compression
-        "-y -i {{INPUT_FILE_PATH}} -q:v 2 {{OUTPUT_FILE_PATH}}.jpg",  //1: Compression low  //TODO Define real command
-        "-y -i {{INPUT_FILE_PATH}} -q:v 2 {{OUTPUT_FILE_PATH}}",  //2: Compression medium  //TODO Define real command
-        "-y -i {{INPUT_FILE_PATH}} -q:v 20 {{OUTPUT_FILE_PATH}}",  //3: Compression high  //TODO Define real command
-        "-y -i {{INPUT_FILE_PATH}} -q:v 20 {{OUTPUT_FILE_PATH}}",  //4: Compression very high  //TODO Define real command
-        "-y -i {{INPUT_FILE_PATH}} -q:v 31 {{OUTPUT_FILE_PATH}}",  //5: Compression ultra high  //TODO Define real command
+        "{{INPUT_FILE_PATH}}|{{OUTPUT_FILE_PATH}}|{{SCREEN_WIDTH}}|2",  //1: Compression low (31-60 days)  //TODO Define real command
+        "{{INPUT_FILE_PATH}}|{{OUTPUT_FILE_PATH}}|{{SCREEN_WIDTH}}|3",  //2: Compression medium (61-180)  //TODO Define real command
+        "{{INPUT_FILE_PATH}}|{{OUTPUT_FILE_PATH}}|{{SCREEN_WIDTH_33PCT}}|5",  //3: Compression high (181-365)  //TODO Define real command
+        "{{INPUT_FILE_PATH}}|{{OUTPUT_FILE_PATH}}|{{SCREEN_WIDTH_33PCT}}|10",  //4: Compression very high (365+)  //TODO Define real command
     )
 
     //Compress an image file to JPEG
@@ -29,48 +27,20 @@ class ImageCompressor(context: Context) : ICompressor(context) {
      * @return True if compression was successful, false otherwise
      */
     override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String): Boolean {
-        var ffmpegCommand = ffmpegCommand(mediaFile, inputFilePath, outputFilePath)
-        if (ffmpegCommand.isNotEmpty()) {
-            if (ffmpegCommand.contains("{{SCREEN_WIDTH}}")) {
-                ffmpegCommand = ffmpegCommand.replace("{{SCREEN_WIDTH}}", screenWidthPixels(context).toString())
+        val compressionCommand = getDesiredCompressionCommand(mediaFile, inputFilePath, outputFilePath)
+        if (compressionCommand.isNotEmpty()) {
+            val tokens = compressionCommand.split("|")
+            if (tokens.size == 4) {
+                Log.v(TAG, "Image compression command: $compressionCommand")
+                val maxCompressedSize = mediaFile.originalSize / tokens[3].toInt()
+                return CompressImageUtil().compressImage(tokens[0], tokens[1], tokens[2].toInt(), maxCompressedSize)
+            } else {
+                Log.e(TAG, "Invalid compression command; expected 4 tokens, got: $compressionCommand")
+                return false
             }
-            if (ffmpegCommand.contains("{{SCREEN_HEIGHT}}")) {
-                ffmpegCommand = ffmpegCommand.replace("{{SCREEN_HEIGHT}}", screenHeightPixels(context).toString())
-            }
-            if (ffmpegCommand.contains("{{SCREEN_WIDTH_33PCT}}")) {
-                ffmpegCommand = ffmpegCommand.replace("{{SCREEN_WIDTH_33PCT}}", (screenWidthPixels(context) * 0.33).toInt().toString())
-            }
-            if (ffmpegCommand.contains("{{SCREEN_HEIGHT_33PCT}}")) {
-                ffmpegCommand = ffmpegCommand.replace("{{SCREEN_HEIGHT_33PCT}}", (screenHeightPixels(context) * 0.33).toInt().toString())
-            }
-            Log.v(TAG, "FFmpeg command: $ffmpegCommand")
-            return ffmpeg.runCommand(ffmpegCommand)
         }
 
         return false  //No compression needed
     }
 
-    @Suppress("DEPRECATION")
-    private fun screenWidthPixels(context: Context): Int {
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = windowManager.currentWindowMetrics
-            windowMetrics.bounds.width()
-        } else {
-            windowManager.defaultDisplay.width
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun screenHeightPixels(context: Context): Int {
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val windowMetrics = windowManager.currentWindowMetrics
-            windowMetrics.bounds.height()
-        } else {
-            windowManager.defaultDisplay.height
-        }
-    }
 }

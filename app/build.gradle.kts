@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation(libs.room.runtime)
+    implementation(libs.androidx.exifinterface)
     ksp(libs.room.compiler)
     implementation(libs.kotlinx.coroutines.android) // If using Android
     implementation(libs.androidx.lifecycle.runtime.ktx)

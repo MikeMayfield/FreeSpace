@@ -33,7 +33,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
     override suspend fun doWork(): Result {
         Log.d(TAG, "Processing files to optimize storage space")
         val timeToReschedule = System.currentTimeMillis() + (5 * 60_000)  //5 minutes from now)
-        val compressionLevelThatCanExceedOptimalByteCount = 4  //TODO: Preferences.getInt("ALWAYS_OPTIMIZE_LEVEL", 4)  //Desired compression level(s) that can exceed optimal byte count
+        val compressionLevelThatCanExceedOptimalByteCount = 3  //TODO: Preferences.getInt("ALWAYS_OPTIMIZE_LEVEL", 3)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)
         var optimalBytesToRecover = calculateOptimalBytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 10GB), but not limited when processing older files
 

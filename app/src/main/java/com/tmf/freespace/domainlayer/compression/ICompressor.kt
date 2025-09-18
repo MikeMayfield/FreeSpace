@@ -1,10 +1,12 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
+import android.os.Build
+import android.view.WindowManager
 import com.tmf.freespace.datalayer.models.MediaFile
 
 abstract class ICompressor(val context: Context) {
-    abstract val ffmpegCompressionCommands : List<String>
+    abstract val compressionCommands : List<String>
 
     /**
      * Compress media file using FFmpeg. Returns the compressed file size
@@ -76,10 +78,42 @@ abstract class ICompressor(val context: Context) {
 //        }
 //    }
 
-    fun ffmpegCommand(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String) : String {
-        return ffmpegCompressionCommands[if (ffmpegCompressionCommands.size > mediaFile.desiredCompressionLevel) mediaFile.desiredCompressionLevel else 0]
-            .replace("{{INPUT_FILE_PATH}}", inputFilePath)
-            .replace("{{OUTPUT_FILE_PATH}}", outputFilePath)
+    fun getDesiredCompressionCommand(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String) : String {
+        val screenWidthPixels = screenWidthPixels(context)
+        var command = compressionCommands[if (compressionCommands.size > mediaFile.desiredCompressionLevel) mediaFile.desiredCompressionLevel else 0]
+        if (command.isNotEmpty()) {
+            if (command.contains("{{INPUT_FILE_PATH}}")) {
+                command = command.replace("{{INPUT_FILE_PATH}}", inputFilePath)
+            }
+            if (command.contains("{{OUTPUT_FILE_PATH}}")) {
+                command = command.replace("{{OUTPUT_FILE_PATH}}", outputFilePath)
+            }
+            if (command.contains("{{ORIGINAL_WIDTH}}")) {
+                command = command.replace("{{ORIGINAL_WIDTH}}", mediaFile.width.toString())
+            }
+            if (command.contains("{{SCREEN_WIDTH}}")) {
+                command = command.replace("{{SCREEN_WIDTH}}", screenWidthPixels.toString())
+            }
+            if (command.contains("{{SCREEN_WIDTH_33PCT}}")) {
+                command = command.replace("{{SCREEN_WIDTH_33PCT}}", (screenWidthPixels * 0.33).toInt().toString())
+            }
+            if (command.contains("{{SCREEN_WIDTH_25PCT}}")) {
+                command = command.replace("{{SCREEN_WIDTH_25PCT}}", (screenWidthPixels * 0.25).toInt().toString())
+            }
+        }
+
+        return command
+    }
+
+    @Suppress("DEPRECATION")
+    private fun screenWidthPixels(context: Context): Int {
+        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val windowMetrics = windowManager.currentWindowMetrics
+            windowMetrics.bounds.width()
+        } else {
+            windowManager.defaultDisplay.width
+        }
     }
 
     companion object {

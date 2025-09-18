@@ -58,6 +58,7 @@ class MediaFileRepository(val context: Context) {
             if (fileHasBeenDeleted) {
                 Log.d("SelectFileToCompressWorker.doWork", "File ${fileToCompress.fullPath} has been deleted, removing from database")
                 deleteFile(fileToCompress)
+                fileToCompress = mediaFileDao.getFileToCompress()
             }
         }
 
