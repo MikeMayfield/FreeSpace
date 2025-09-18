@@ -14,41 +14,6 @@ import java.io.IOException
 class MediaStoreUtil {
     //region Public methods
 
-//    /**
-//     * Extracts a file from the MediaStore given its MediaStore ID.
-//     *
-//     * @param context The application context.
-//     * @param mediaFile Media that you want to replace in the MediaStore.
-//     * @param outputFilePath The full path to where the extracted file should be saved.
-//     * @return The File object representing the extracted file, or null if the extraction failed.
-//     */
-//    fun extractFileFromMediaStore(
-//        context: Context,
-//        mediaFile: MediaFile,
-//        outputFilePath: String
-//    ): Boolean {
-//        val contentResolver = context.contentResolver
-//
-//        //Get the MediaStore URI for the file
-//        val mediaStoreUri = getMediaStoreUri(contentResolver, mediaFile.id)
-//            ?: return false // File not found in MediaStore
-//
-//        //Extract the file
-//        return try {
-//            contentResolver.openInputStream(mediaStoreUri)?.use { inputStream ->
-//                FileOutputStream(File(outputFilePath)).use { outputStream ->
-//                    inputStream.copyTo(outputStream)
-//                }
-//            }
-//            true
-//
-//        } catch (e: IOException) {
-//            Log.e("extractFileFromMediaStore", "Error extracting file: ${e.message}")
-//            e.printStackTrace()
-//            false
-//        }
-//    }
-
     /**
      * Overwrite (i.e. replace) a file in the MediaStore with a different file.
      *
@@ -64,7 +29,7 @@ class MediaStoreUtil {
     ): Boolean {
         val contentResolver = context.contentResolver
 
-        val mediaStoreUri = getMediaStoreUri(contentResolver, mediaFile.mediaStoreID)
+        val mediaStoreUri = getMediaStoreUriByID(contentResolver, mediaFile.mediaStoreID)
             ?: return false // File not found in MediaStore
         return try {
             replaceFile(contentResolver, mediaStoreUri, File(newFilePath))
@@ -86,7 +51,7 @@ class MediaStoreUtil {
      * @param mediaStoreId The MediaStore ID.
      * @return The MediaStore URI if found, null otherwise.
      */
-    private fun getMediaStoreUri(contentResolver: ContentResolver, mediaStoreId: Long): Uri? {
+    private fun getMediaStoreUriByID(contentResolver: ContentResolver, mediaStoreId: Long): Uri? {
         val projection = arrayOf(MediaStore.MediaColumns._ID)
         val selection = "${MediaStore.MediaColumns._ID} = ?"
         val selectionArgs = arrayOf(mediaStoreId.toString())
@@ -111,31 +76,6 @@ class MediaStoreUtil {
         return null
     }
 
-    /**
-     * Gets the display name of a file from its MediaStore URI.
-     *
-     * @param contentResolver The ContentResolver.
-     * @param mediaStoreUri The MediaStore URI.
-     * @return The display name if found, null otherwise.
-     */
-//    private fun getFileDisplayName(contentResolver: ContentResolver, mediaStoreUri: Uri): String? {
-//        val projection = arrayOf(MediaStore.MediaColumns.DISPLAY_NAME)
-//
-//        contentResolver.query(
-//            mediaStoreUri,
-//            projection,
-//            null,
-//            null,
-//            null
-//        )?.use { cursor ->
-//            if (cursor.moveToFirst()) {
-//                val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
-//                return cursor.getString(displayNameColumn)
-//            }
-//        }
-//        Log.e("getFileDisplayName", "Display name not found for URI: $mediaStoreUri")
-//        return null
-//    }
 
     /**
      * Replaces a file in the MediaStore (supports API 29 (Android 10) and above only)

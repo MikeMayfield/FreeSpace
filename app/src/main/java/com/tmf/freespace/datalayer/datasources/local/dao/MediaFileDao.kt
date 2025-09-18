@@ -20,8 +20,8 @@ interface MediaFileDao {
      * <param>mediaType</param> - Media type to set compression level for
      */
     @Query(
-        "UPDATE MediaFile SET desiredCompressionLevel = :compressionLevel" +
-                " WHERE creationDtm > :oldestDtm AND creationDtm <= :mostRecentDtm AND mediaType = :mediaType AND currentCompressionLevel < :compressionLevel"
+        "UPDATE MediaFile SET desiredCompressionRatio = :compressionLevel" +
+                " WHERE creationDtm > :oldestDtm AND creationDtm <= :mostRecentDtm AND mediaType = :mediaType AND currentCompressionRatio < :compressionLevel"
     )
     suspend fun setCompressionLevel(mostRecentDtm: Long, oldestDtm: Long, compressionLevel: Int, mediaType: MediaType)
 
@@ -30,8 +30,8 @@ interface MediaFileDao {
      */
     @Query(
         "SELECT * FROM MediaFile" +
-                " WHERE currentCompressionLevel != desiredCompressionLevel AND desiredCompressionLevel > 0" +
-                " ORDER BY desiredCompressionLevel DESC, compressedSize DESC, creationDtm DESC" +
+                " WHERE currentCompressionRatio != desiredCompressionRatio AND desiredCompressionRatio > 0" +
+                " ORDER BY desiredCompressionRatio DESC, compressedSize DESC, creationDtm DESC" +
                 " LIMIT 1"
     )
     suspend fun getFileToCompress(): MediaFile?

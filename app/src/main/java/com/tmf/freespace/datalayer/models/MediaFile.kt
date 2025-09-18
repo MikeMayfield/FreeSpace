@@ -18,18 +18,11 @@ data class MediaFile(
     val width: Int,
     val height: Int,
     var mediaType: MediaType,
-    var currentCompressionLevel: Int = 0,
-    var desiredCompressionLevel: Int = currentCompressionLevel,
+    var currentCompressionRatio: Int,
+    var desiredCompressionRatio: Int,
     val creationDtm: Long,  //milliseconds since 1970-01-01T00:00:00Z (Note: Not seconds like other DTMs)
     val modifiedDtm: Long,  //Seconds since 1970-01-01T00:00:00Z
     var serverID: Long = -1,
     val dateInMediaStore: Long = 0L,  //Date/time added to MediaStore, in seconds since 1970-01-01T00:00:00Z
     var mediaHasBeenUpdated: Boolean = true,
 )
-{
-    /**
-     * Flag: The file is on the cloud server
-     */
-    val isOnServer: Boolean
-        get() = (serverID > 0)
-}

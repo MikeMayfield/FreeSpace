@@ -12,9 +12,7 @@ import java.io.IOException
 import kotlin.math.roundToInt
 
 class CompressImageUtil {
-    companion object {
-        private const val TAG = "ImageProcessor"
-    }
+    private val tag = CompressImageUtil::class.simpleName
 
     /**
      * Resizes and compresses an image file.
@@ -30,11 +28,11 @@ class CompressImageUtil {
         inputPath: String,
         outputPath: String,
         desiredWidth: Int,
-        maxCompressedSizeBytes: Int,
+        quality: Int,
     ): Boolean {
         val inputFile = File(inputPath)
         if (!inputFile.exists()) {
-            Log.e(TAG, "Input file does not exist: $inputPath")
+            Log.e(tag, "Input file does not exist: $inputPath")
             return false
         }
 
@@ -46,7 +44,7 @@ class CompressImageUtil {
         val uncompressedWidth = options.outWidth
         val uncompressedHeight = options.outHeight
         if (uncompressedWidth <= 0 || uncompressedHeight <= 0) {  //Validate reasonable image dimensions
-            Log.e(TAG, "Invalid uncompressed image dimensions: ${uncompressedWidth}x${uncompressedHeight} for $inputPath")
+            Log.e(tag, "Invalid uncompressed image dimensions: ${uncompressedWidth}x${uncompressedHeight} for $inputPath")
             return false // Don't process if dimensions are invalid
         }
 
@@ -57,13 +55,13 @@ class CompressImageUtil {
             // Desired width is greater or equal, use original dimensions (or just compress if no resize needed)
             targetWidth = uncompressedWidth
             targetHeight = uncompressedHeight
-            Log.d(TAG, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
+            Log.d(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
         } else {
             // Resize needed, maintain aspect ratio
             targetWidth = desiredWidth
             val aspectRatio = uncompressedHeight.toFloat() / uncompressedWidth.toFloat()
             targetHeight = (targetWidth * aspectRatio).roundToInt()
-            Log.d(TAG, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
+            Log.d(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
         }
 
         // 3. Decode the bitmap with appropriate sampling options to save memory
@@ -73,22 +71,22 @@ class CompressImageUtil {
         try {
             inputBitmap = BitmapFactory.decodeFile(inputPath, options)
         } catch (e: OutOfMemoryError) {
-            Log.e(TAG, "OutOfMemoryError while decoding bitmap with inSampleSize: ${options.inSampleSize}", e)
+            Log.e(tag, "OutOfMemoryError while decoding bitmap with inSampleSize: ${options.inSampleSize}", e)
             // Optionally, try with a larger inSampleSize if the first attempt fails
             options.inSampleSize *= 2
             try {
                 inputBitmap = BitmapFactory.decodeFile(inputPath, options)
             } catch (e2: OutOfMemoryError) {
-                Log.e(TAG, "OutOfMemoryError on second attempt to decode bitmap for $inputPath", e2)
+                Log.e(tag, "OutOfMemoryError on second attempt to decode bitmap for $inputPath", e2)
                 return false
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error decoding bitmap for $inputPath", e)
+            Log.e(tag, "Error decoding bitmap for $inputPath", e)
             return false
         }
 
         if (inputBitmap == null) {
-            Log.e(TAG, "BitmapFactory.decodeFile returned null for $inputPath")
+            Log.e(tag, "BitmapFactory.decodeFile returned null for $inputPath")
             return false
         }
 
@@ -99,17 +97,17 @@ class CompressImageUtil {
             // doesn't bring it exactly to targetWidth/targetHeight but to the nearest power of 2.
             // Or if we decided not to resize earlier (desiredWidth >= originalWidth) but still want to ensure it's not accidentally larger.
             try {
-                Log.d(TAG, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
+                Log.d(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
                 processedBitmap = inputBitmap.scale(targetWidth, targetHeight)
                 if (processedBitmap != inputBitmap) { // Only recycle if createScaledBitmap created a new one
                     inputBitmap.recycle()
                 }
             } catch (e: OutOfMemoryError) {
-                Log.e(TAG, "OutOfMemoryError during Bitmap.createScaledBitmap for $inputPath", e)
+                Log.e(tag, "OutOfMemoryError during Bitmap.createScaledBitmap for $inputPath", e)
                 inputBitmap.recycle() // Recycle the original bitmap
                 return false
             }  catch (e: Exception) {
-                Log.e(TAG, "Error during Bitmap.createScaledBitmap for $inputPath", e)
+                Log.e(tag, "Error during Bitmap.createScaledBitmap for $inputPath", e)
                 inputBitmap.recycle()
                 return false
             }
@@ -143,55 +141,51 @@ class CompressImageUtil {
                 processedBitmap = orientedBitmap
             }
         } catch (e: IOException) {
-            Log.w(TAG, "Could not read EXIF orientation for $inputPath", e)
+            Log.w(tag, "Could not read EXIF orientation for $inputPath", e)
         } catch (e: OutOfMemoryError) {
-            Log.e(TAG, "OutOfMemoryError while applying EXIF orientation for $inputPath", e)
+            Log.e(tag, "OutOfMemoryError while applying EXIF orientation for $inputPath", e)
             processedBitmap.recycle()
             return false
         } catch (e: Exception) {
-            Log.e(TAG, "Error while applying EXIF orientation for $inputPath", e)
+            Log.e(tag, "Error while applying EXIF orientation for $inputPath", e)
             processedBitmap.recycle()
             return false
         }
 
 
         // 6. Compress and save the bitmap
-        var quality = 160  //Init to start quality at 80
-        do {
-            quality /= 2
-            val outputFile = File(outputPath)
-            if (File(outputPath).exists()) {
-                File(outputPath).delete()
-            }
-            try {
-                FileOutputStream(outputFile).use { fos ->
-                    // Ensure compressionQuality is within 0-100 range
-                    if (!processedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos)) {
-                        Log.e(TAG, "Bitmap.compress returned false for $outputPath")
-                        processedBitmap.recycle()
-                        return false
-                    }
-                    fos.flush()
+        val outputFile = File(outputPath)
+        if (File(outputPath).exists()) {
+            File(outputPath).delete()
+        }
+        try {
+            FileOutputStream(outputFile).use { fos ->
+                // Ensure compressionQuality is within 0-100 range
+                if (!processedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos)) {
+                    Log.e(tag, "Bitmap.compress returned false for $outputPath")
+                    processedBitmap.recycle()
+                    return false
                 }
-                Log.d(TAG, "Successfully processed and saved image to $outputPath")
+                fos.flush()
             }
-            catch (e: IOException) {
-                Log.e(TAG, "IOException while saving processed image to $outputPath", e)
-                if (outputFile.exists()) {
-                    outputFile.delete() // Clean up partially created file
-                }
-                processedBitmap.recycle()
-                return false
+            Log.d(tag, "Successfully processed and saved image to $outputPath")
+        }
+        catch (e: IOException) {
+            Log.e(tag, "IOException while saving processed image to $outputPath", e)
+            if (outputFile.exists()) {
+                outputFile.delete() // Clean up partially created file
             }
-            catch (e: Exception) {
-                Log.e(TAG, "Error saving processed image to $outputPath", e)
-                if (outputFile.exists()) {
-                    outputFile.delete()
-                }
-                processedBitmap.recycle()
-                return false
+            processedBitmap.recycle()
+            return false
+        }
+        catch (e: Exception) {
+            Log.e(tag, "Error saving processed image to $outputPath", e)
+            if (outputFile.exists()) {
+                outputFile.delete()
             }
-        } while (quality > 0 && File(outputPath).length() > maxCompressedSizeBytes)
+            processedBitmap.recycle()
+            return false
+        }
 
         // 7. Copy EXIF from original to processed image
         //TODO
@@ -223,7 +217,7 @@ class CompressImageUtil {
                 inSampleSize *= 2
             }
         }
-        Log.d(TAG, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${reqWidth}x${reqHeight}")
+        Log.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${reqWidth}x${reqHeight}")
         return inSampleSize
     }
 }

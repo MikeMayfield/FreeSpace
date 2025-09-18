@@ -11,6 +11,8 @@ import java.io.File
 import java.util.UUID
 
 class MediaFileRepository(val context: Context) {
+    private val tag = MediaFileRepository::class.simpleName
+
     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
 
     suspend fun getMediaFileByID(mediaID: UUID): MediaFile? {
@@ -56,7 +58,7 @@ class MediaFileRepository(val context: Context) {
              */
             fileHasBeenDeleted = hasFileBeenDeleted(fileToCompress)
             if (fileHasBeenDeleted) {
-                Log.d("SelectFileToCompressWorker.doWork", "File ${fileToCompress.fullPath} has been deleted, removing from database")
+                Log.d(tag, "File ${fileToCompress.fullPath} has been deleted, removing from database")
                 deleteFile(fileToCompress)
                 fileToCompress = mediaFileDao.getFileToCompress()
             }
@@ -122,7 +124,7 @@ class MediaFileRepository(val context: Context) {
     }
 
     suspend fun getBytesRecovered(): Long {
-        return 0L  //TODO return mediaFileDao.getBytesRecovered()
+        return mediaFileDao.getBytesRecovered()
     }
 
 

@@ -7,12 +7,12 @@ import com.tmf.freespace.datalayer.models.MediaType
 import java.io.File
 
 class Compressor(val context: Context) {
-    private val TAG = Compressor::class.simpleName
+    private val tag = Compressor::class.simpleName
     private val imageCompressor: ImageCompressor = ImageCompressor(context)
     private val videoCompressor: VideoCompressor = VideoCompressor(context)
     private val audioCompressor: AudioCompressor = AudioCompressor(context)
     private val outputDirectoryPath = "${context.cacheDir.absolutePath}/freespace/"
-    private val minFileSizeToCompress = 4 * 1024 * 2  //Don't compress if barely larger than disk cluster size. It won't actually save much/any physical space
+    private val minFileSizeToCompress = 4 * 1024 * 2  //Don't compress if only slightly larger than disk cluster size. It won't actually save much/any physical space
 
     init {
         val outputDirectory = File(outputDirectoryPath)
@@ -29,24 +29,24 @@ class Compressor(val context: Context) {
      * @param destinationFile The full path of the compressed file to create
      * @return The full path of the compressed file, or null if compression failed
      */
-    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String): Boolean {
+    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String, maxCompressedSize: Int): Boolean {
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
             val mediaFileInfo = File(sourceFilePath)
             if (mediaFileInfo.exists() && mediaFileInfo.length() > minFileSizeToCompress) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
-                        Log.v(TAG, "Compressing image file: $sourceFilePath")
-                        imageCompressor.compress(mediaFile, sourceFilePath, destinationFile)
+                        Log.v(tag, "Compressing image file: $sourceFilePath")
+                        imageCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
                     }
 
                     MediaType.VIDEO -> {
-                        Log.v(TAG, "Compressing video file: $sourceFilePath")
-                        videoCompressor.compress(mediaFile, sourceFilePath, destinationFile)
+                        Log.v(tag, "Compressing video file: $sourceFilePath")
+                        videoCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
                     }
 
                     MediaType.AUDIO -> {
-                        Log.v(TAG, "Compressing audio file: $sourceFilePath")
-                        audioCompressor.compress(mediaFile, sourceFilePath, destinationFile)
+                        Log.v(tag, "Compressing audio file: $sourceFilePath")
+                        audioCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
                     }
                 }
             }

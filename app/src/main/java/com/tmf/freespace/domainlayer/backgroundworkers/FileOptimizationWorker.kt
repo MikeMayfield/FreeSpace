@@ -17,7 +17,7 @@ import com.tmf.freespace.domainlayer.compression.Compressor
 import java.io.File
 
 class FileOptimizationWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private val TAG = FileOptimizationWorker::class.simpleName
+    private val tag = FileOptimizationWorker::class.simpleName
     private val mediaFileRepository = MediaFileRepository(appContext)
 
     /**
@@ -31,18 +31,18 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
      * . . Replace file in MediaStore with compressed file
      */
     override suspend fun doWork(): Result {
-        Log.d(TAG, "Processing files to optimize storage space")
-        val timeToReschedule = System.currentTimeMillis() + (5 * 60_000)  //5 minutes from now)
-        val compressionLevelThatCanExceedOptimalByteCount = 3  //TODO: Preferences.getInt("ALWAYS_OPTIMIZE_LEVEL", 3)  //Desired compression level(s) that can exceed optimal byte count
+        Log.d(tag, "Processing files to optimize storage space")
+        val timeToReschedule = System.currentTimeMillis() + (8 * 60_000)  //8 minutes from now)
+        val compressionRatioThatCanExceedOptimalByteCount = 5  //TODO: Preferences.getInt("ALWAYS_OPTIMIZE_LEVEL", 5)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)
         var optimalBytesToRecover = calculateOptimalBytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 10GB), but not limited when processing older files
 
         var fileToCompress = getFileToCompress()
-        //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available
-        while (fileToCompress != null && maxBytesToRecover > 0 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionLevel >= compressionLevelThatCanExceedOptimalByteCount)) {
+        //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available  //TODO Use entire schedule time for video or audio files that might take a long time
+        while (fileToCompress != null && maxBytesToRecover > 0 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)) {
             //If processing too long, start at new worker to continue processing files
             if (System.currentTimeMillis() >= timeToReschedule) {
-                Log.d(TAG, "Scheduling new worker for next slice of processing")
+                Log.d(tag, "Scheduling new worker for next slice of processing")
                 scheduleFileOptimizationWorker()
                 return Result.success()  //Exit this work and start next slice of work
             }
@@ -55,7 +55,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
                 optimalBytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
             } else {
                 //If problem processing file, exclude it from processing until next pass assigning desired compression levels
-                fileToCompress.desiredCompressionLevel = 0
+                fileToCompress.desiredCompressionRatio = 0
                 updateFileToCompressInDB(fileToCompress)
             }
 
@@ -63,7 +63,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
             fileToCompress = getFileToCompress()
         }
 
-        Log.d(TAG, "Finished processing files to optimize storage space")
+        Log.d(tag, "Finished processing files to optimize storage space")
         return Result.success()
     }
 
@@ -77,7 +77,14 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
         return mediaFileRepository.getBytesRecovered()
     }
 
-    private fun calculateOptimalBytesToRecover(): Long {
+    private suspend fun calculateOptimalBytesToRecover(): Long {
+        //If trial, always try to recover full trial amount remaining to emphasize value of product during trial
+        val trialFreeBytesToRecover = 1_000_000_000L - getBytesRecovered()  //TODO Preferences.getInt("TRIAL_GB_FREE", 10) ...
+        if (trialFreeBytesToRecover > 0) {
+            return trialFreeBytesToRecover
+        }
+
+        //Get goal of space to leave free at all times
         val minGBFreeGoal = 1  //TODO Preferences.getInt("MIN_GB_FREE_GOAL", 10)
         val statFs = StatFs(Environment.getExternalStorageDirectory().path)
         val bytesAvailable = statFs.blockSizeLong * statFs.availableBlocksLong
@@ -93,7 +100,8 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
         val priorCompressedSize = fileToCompress.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
         val uncompressedFilePath = fileToCompress.fullPath
         val compressedFilePath = compressedFilePath()
-        if (Compressor(applicationContext).compress(fileToCompress, uncompressedFilePath, compressedFilePath)) {
+        val maxCompressedSize = fileToCompress.originalSize / fileToCompress.desiredCompressionRatio
+        if (Compressor(applicationContext).compress(fileToCompress, uncompressedFilePath, compressedFilePath, maxCompressedSize)) {
             val compressedFileSize = File(compressedFilePath).length().toInt()
             if (compressedFileSize < priorCompressedSize) {
                 if (!updateMediaStoreWithCompressedFile(fileToCompress, compressedFilePath)) {
@@ -102,12 +110,12 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
             }
             deleteFile(compressedFilePath)
         } else {
-            Log.d(TAG, "Error compressing file ${fileToCompress.fullPath}")
+            Log.d(tag, "Error compressing file ${fileToCompress.fullPath}")
             return false
         }
 
         //Update DB to show compression processed (or not needed)
-        fileToCompress.currentCompressionLevel = fileToCompress.desiredCompressionLevel  //Consider file compressed if compression was optimized out
+        fileToCompress.currentCompressionRatio = fileToCompress.desiredCompressionRatio  //Consider file compressed if compression was optimized out
         mediaFileRepository.updateMediaFile(fileToCompress)
 
         return true
@@ -120,7 +128,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
             try {
                 if (MediaStoreUtil().overwriteMediaStoreFile(applicationContext, fileToCompress, compressedFilePath)) {
                     fileToCompress.compressedSize = compressedFile.length().toInt()
-                    fileToCompress.currentCompressionLevel = fileToCompress.desiredCompressionLevel
+                    fileToCompress.currentCompressionRatio = fileToCompress.desiredCompressionRatio
                     Log.d("updateMediaStoreWithCompressedFile", "Updated media store for ${fileToCompress.fullPath} from $priorCompressedSize to ${fileToCompress.compressedSize} bytes")
                     return true
                 }

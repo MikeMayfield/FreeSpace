@@ -37,7 +37,7 @@ class MediaReader(
         val selectionArgs = if (oldestDateAddedToSelect > 0) arrayOf(oldestDateAddedToSelect.toString()) else null
 
         // Query for Images
-        val cursor = context.contentResolver.query(
+        context.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             projection,
             selection,
@@ -60,6 +60,20 @@ class MediaReader(
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.VIDEO)
+                emit(mediaFile)
+            }
+        }
+
+        // Query for Audios (similar logic to images)
+        context.contentResolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            "${MediaStore.MediaColumns.DATE_ADDED} ASC"
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val mediaFile = createMediaFile(cursor, MediaType.AUDIO)
                 emit(mediaFile)
             }
         }
@@ -89,8 +103,8 @@ class MediaReader(
             width = width,
             height = height,
             mediaType = mediaType,
-            currentCompressionLevel = 0,
-            desiredCompressionLevel = 0,
+            currentCompressionRatio = 0,
+            desiredCompressionRatio = 0,
             creationDtm = dateAdded, // Assuming creationDtm maps to dateAdded
             modifiedDtm = dateModified,
             serverID = -1, // Default serverID
