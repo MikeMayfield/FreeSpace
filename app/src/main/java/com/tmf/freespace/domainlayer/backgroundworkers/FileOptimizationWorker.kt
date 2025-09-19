@@ -100,7 +100,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
         val priorCompressedSize = fileToCompress.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
         val uncompressedFilePath = fileToCompress.fullPath
         val compressedFilePath = compressedFilePath()
-        val maxCompressedSize = fileToCompress.originalSize / fileToCompress.desiredCompressionRatio
+        var maxCompressedSize = fileToCompress.originalSize / fileToCompress.desiredCompressionRatio
         if (Compressor(applicationContext).compress(fileToCompress, uncompressedFilePath, compressedFilePath, maxCompressedSize)) {
             val compressedFileSize = File(compressedFilePath).length().toInt()
             if (compressedFileSize < priorCompressedSize) {

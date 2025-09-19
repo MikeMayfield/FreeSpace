@@ -3,6 +3,7 @@ package com.tmf.freespace.domainlayer.compression
 import android.content.Context
 import android.util.Log
 import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.domainlayer.compression.ExifCopier.ExifCopier
 import java.io.File
 
 class ImageCompressor(context: Context) : ICompressor(context) {
@@ -11,11 +12,13 @@ class ImageCompressor(context: Context) : ICompressor(context) {
     override val compressionCommands = listOf(
         //InputFilePath|OutputFilePath|ScreenWidth|CompressionQuality(1..100, 1 lowest)
         "{{SCREEN_WIDTH}}|80",  //Compression low
-        "{{SCREEN_WIDTH}}|50",  //Compression medium
+        "{{SCREEN_WIDTH}}|60",  //Compression medium low
+        "{{SCREEN_WIDTH}}|40",  //Compression medium
+        "{{SCREEN_WIDTH}}|30",  //Compression medium high
+        "{{SCREEN_WIDTH_33PCT}}|50",  //Compression high
         "{{SCREEN_WIDTH_33PCT}}|40",  //Compression high
-        "{{SCREEN_WIDTH_25PCT}}|20",  //Compression very high
+        "{{SCREEN_WIDTH_25PCT}}|25",  //Compression very high
         "{{SCREEN_WIDTH_25PCT}}|10",  //Compression very very high
-        "{{SCREEN_WIDTH_25PCT}}|5",  //Compression extremely high
     )
 
     //Compress an image file to JPEG
@@ -37,7 +40,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
                 val quality = tokens[1].toInt()
                 if (CompressImageUtil().compressImage(inputFilePath, outputFilePath, desiredWidth, quality)) {
                     if (File(outputFilePath).length() <= maxCompressedSize) {
-                        return true
+                        return ExifCopier.copyExifData(inputFilePath, outputFilePath)
                     }
                 } else {
                     Log.e(tag, "Image compression failed for $inputFilePath")

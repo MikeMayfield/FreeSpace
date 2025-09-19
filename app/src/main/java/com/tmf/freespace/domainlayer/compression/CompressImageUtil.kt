@@ -188,7 +188,7 @@ class CompressImageUtil {
         }
 
         // 7. Copy EXIF from original to processed image
-        //TODO
+        //  The caller should use ExitCopier to copy EXIF from original to processed image if compressed image is accepted
 
         if (!processedBitmap.isRecycled) {
             processedBitmap.recycle()
