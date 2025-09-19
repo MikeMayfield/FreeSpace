@@ -107,7 +107,6 @@ class MediaReader(
             desiredCompressionRatio = 0,
             creationDtm = dateAdded, // Assuming creationDtm maps to dateAdded
             modifiedDtm = dateModified,
-            serverID = -1, // Default serverID
             dateInMediaStore = dateAdded,
             mediaHasBeenUpdated = true // Default for new files from MediaStore
         )

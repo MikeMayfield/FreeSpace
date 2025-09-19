@@ -52,7 +52,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
             }
         }
 
-        return true  //Using maximum compression level
+        return ExifCopier.copyExifData(inputFilePath, outputFilePath)  //Using maximum compression level
     }
 
 }

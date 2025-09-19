@@ -2,9 +2,7 @@ package com.tmf.freespace.datalayer.repositories
 
 import android.content.Context
 import android.util.Log
-import com.tmf.freespace.datalayer.datasources.cloudstorage.InterserverCloudStorage
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
-import com.tmf.freespace.datalayer.models.FtpCredential
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import java.io.File
@@ -65,28 +63,6 @@ class MediaFileRepository(val context: Context) {
         }
 
         return fileToCompress
-    }
-
-    /**
-     *Upload MediaStore file to cloud storage
-     *
-     * @param mediaFile Media file to upload
-     * @param inputFilePath Path to file to upload
-     */
-    suspend fun uploadMediaToCloud(mediaFile: MediaFile, inputFilePath: String, ftpCredentials: FtpCredential): Boolean {
-        val interserverCloudStorage = InterserverCloudStorage(UserRepository(context).getUser())
-        return interserverCloudStorage.uploadMediaFile(mediaFile, inputFilePath, ftpCredentials)
-    }
-
-    /**
-     * Download uncompressed media file from cloud storage
-     *
-     * @param mediaFile Media file to download
-     * @param outputFilePath Path to file to download to
-     */
-    suspend fun downloadMediaFromCloud(mediaFile: MediaFile, outputFilePath: String, ftpCredentials: FtpCredential): Boolean {
-        val interserverCloudStorage = InterserverCloudStorage(UserRepository(context).getUser())
-        return interserverCloudStorage.downloadMediaFile(mediaFile, outputFilePath, ftpCredentials)
     }
 
     /**
