@@ -8,11 +8,11 @@ class PropertyBagRepository(val context: Context) {
     private val propertyBagEntryDao = AppDatabase.create(context).propertyBagEntryDao
 
     suspend fun allEntries() : List<PropertyBagEntry> {
-        return AppDatabase.create(context).propertyBagEntryDao.getAll()
+        return propertyBagEntryDao.getAll()
     }
 
     suspend fun saveBagEntry(propertyBagEntry: PropertyBagEntry) {
-        AppDatabase.create(context).propertyBagEntryDao.upsert(propertyBagEntry)
+        propertyBagEntryDao.upsert(propertyBagEntry)
     }
 
 

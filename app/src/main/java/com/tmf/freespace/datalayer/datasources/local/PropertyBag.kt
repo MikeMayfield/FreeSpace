@@ -1,18 +1,32 @@
 package com.tmf.freespace.datalayer.datasources.local
 
-import android.app.Application
+import android.content.Context
 import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 
-class PropertyBag(val application: Application) {
-    var propertyBagRepository = PropertyBagRepository(application)
+class PropertyBag(val context: Context) {
+    var propertyBagRepository = PropertyBagRepository(context)
+
 
     /**
      * Returns the value associated with the given key. If the key is not found, returns null.
      */
-    suspend fun get(key: String): String? {
+    fun get(key: String, defaultValue: String = ""): String {
         loadBag()
-        return bag[key]
+        return bag[key] ?: defaultValue
+    }
+
+    fun getInt(key: String, defaultValue: Int = 0): Int {
+        return get(key, defaultValue.toString()).toInt()
+    }
+
+    fun getLong(key: String, defaultValue: Long = 0): Long {
+        return get(key, defaultValue.toString()).toLong()
     }
 
     /**
@@ -21,25 +35,41 @@ class PropertyBag(val application: Application) {
      * @param key The key to associate with the value.
      * @param value The value to set.
      */
-    suspend fun set(key: String, value: String) {
+    fun set(key: String, value: String) {
         bag[key] = value
-        saveBagEntry(PropertyBagEntry(key, value))
+        CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
+            saveBagEntry(PropertyBagEntry(key, value))
+        }
+    }
+
+    fun setInt(key: String, value: Int) {
+        set(key, value.toString())
+    }
+
+    fun setLong(key: String, value: Long) {
+        set(key, value.toString())
     }
 
 
     /**
      * Load property bag from database if it is empty.
      */
-    private suspend fun loadBag() {
+    private fun loadBag() {
         if (bag.isEmpty()) {
-            for (property in propertyBagRepository.allEntries()) {
-                bag[property.key] = property.value
+            runBlocking {
+                for (property in propertyBagRepository.allEntries()) {
+                    bag[property.key] = property.value
+                }
+
+                if (bag.isEmpty()) {
+                    bag["__~EMPTY__"] = ""
+                }
             }
         }
     }
 
     /**
-     *
+     * Save new/changed property bag entry to database
      */
     private suspend fun saveBagEntry(bagEntry: PropertyBagEntry) {
         propertyBagRepository.saveBagEntry(bagEntry)
@@ -47,6 +77,6 @@ class PropertyBag(val application: Application) {
 
 
     companion object {
-        private val bag = mutableMapOf<String, String>()
+        private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory
     }
 }

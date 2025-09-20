@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tmf.freespace.MediaReader
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.models.PropertyBagEntry
@@ -20,6 +21,7 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
+    val propertyBag = PropertyBag(appContext)
     private val tag = PeriodicBackgroundProcessingWorker::class.simpleName
 
     /**
@@ -31,16 +33,17 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      */
     override suspend fun doWork(): Result {
         Log.d(tag, "Starting periodic background processing")
+        val propertyBag = PropertyBag(appContext)
         val mediaFileRepository = MediaFileRepository(appContext)
 
         //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-        val maxDateAddedFound = PropertyBagRepository(appContext).get(PropertyBagEntry.MAX_DATE_ADDED, "0").toLong()
+        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
         val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
         if (newMaxDateAddedFound > maxDateAddedFound) {
-            PropertyBagRepository(appContext).set(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound.toString())
+            propertyBag.setLong(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound)
         }
 
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
@@ -63,8 +66,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         if (mediaStoreVersionInDB != newMediaStoreVersion) {
             val maxDateAddedFound = rebuildMediaStore(mediaFileRepository)
-            propertyBagRepository.set(PropertyBagEntry.MEDIA_STORE_VERSION, newMediaStoreVersion)
-            propertyBagRepository.set(PropertyBagEntry.MAX_DATE_ADDED, maxDateAddedFound.toString())
+            propertyBag.set(PropertyBagEntry.MEDIA_STORE_VERSION, newMediaStoreVersion)
+            propertyBag.setLong(PropertyBagEntry.MAX_DATE_ADDED, maxDateAddedFound)
         }
     }
 

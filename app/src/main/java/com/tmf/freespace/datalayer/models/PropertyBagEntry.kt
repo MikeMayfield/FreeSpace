@@ -22,12 +22,9 @@ data class PropertyBagEntry(
         const val SHOULD_COMPRESS_AUDIO = "ShouldCompressAudio"
         const val SHOULD_COMPRESS_DOCUMENTS = "ShouldCompressDocuments"
         const val SHOULD_COMPRESS_OTHER_FILES = "ShouldCompressOtherFiles"
-        const val BACKUP_ALL_FILES = "BackupAllFiles"
         const val REQUIRE_WIFI = "RequireWifi"
         const val SCREEN_MUST_BE_OFF = "ScreenMustBeOff"
-        const val EMAIL_ADDRESS = "EmailAddress"
-        const val PASSWORD = "Password"
         const val MEDIA_STORE_VERSION = "MediaStoreVersion"  //Version of MediaStore when database was last updated
-        const val MAX_DATE_ADDED = "MinDateAdded"  //Earliest date to search in MediaStore
+        const val MAX_DATE_ADDED = "MaxDateAdded"  //Earliest date to search in MediaStore
     }
 }
