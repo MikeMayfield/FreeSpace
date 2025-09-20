@@ -15,3 +15,4 @@
 local.properties
 /FreeSpace.db
 /.kotlin/sessions/kotlin-compiler-13009934309595270351.salive
+/app/schemas/com.tmf.freespace.datalayer.datasources.local.database.AppDatabase/1.json
