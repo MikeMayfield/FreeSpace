@@ -42,35 +42,39 @@ android {
 }
 
 dependencies {
-    implementation(libs.room.runtime)
-    implementation(libs.androidx.exifinterface)
-    ksp(libs.room.compiler)
-    implementation(libs.kotlinx.coroutines.android) // If using Android
-    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.appcompat)
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.media3.effect)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.transformer)
+    implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.coil.compose)
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
-    implementation(libs.commons.net)
-    implementation(libs.retrofit) // Or latest
-    implementation(libs.kotlinx.serialization.json) // Or latest
-    implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
-    implementation(libs.kotlinx.serialization.json) // Or latest
-    implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
-    implementation(libs.logging.interceptor) // Optional: For logging requests/responses
-    implementation(platform(libs.okhttp.bom))
-    implementation(libs.okhttp)
-    implementation(libs.logging.interceptor)
     implementation(libs.androidx.work.runtime.ktx)
-    implementation("com.moizhassan.ffmpeg:ffmpeg-kit-16kb:6.0.0")
+    implementation(libs.checker.qual)
+    implementation(libs.coil.compose)
+    implementation(libs.commons.net)
+    implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.kotlinx.coroutines.android) // If using Android
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.logging.interceptor) // Optional: For logging requests/responses
+    implementation(libs.okhttp)
+    implementation(platform(libs.okhttp.bom))
+    implementation(libs.retrofit) // Or latest
+    implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
+    implementation(libs.room.runtime)
+    implementation(libs.firebase.crashlytics.buildtools)
 
+    ksp(libs.room.compiler)
 
-//    implementation(libs.firebase.crashlytics.buildtools)
-
+    //region Tests
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
@@ -85,4 +89,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     debugImplementation(libs.kotlinx.coroutines.test)
+    //endregion
 }

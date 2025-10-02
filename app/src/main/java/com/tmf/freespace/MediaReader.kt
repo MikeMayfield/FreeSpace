@@ -33,7 +33,7 @@ class MediaReader(
         )
 
         // Selection for date filtering
-        val selection = if (oldestDateAddedToSelect > 0) "${MediaStore.MediaColumns.DATE_ADDED} >= ?" else null
+        val selection = if (oldestDateAddedToSelect > 0) "${MediaStore.MediaColumns.DATE_ADDED} > ?" else null
         val selectionArgs = if (oldestDateAddedToSelect > 0) arrayOf(oldestDateAddedToSelect.toString()) else null
 
         // Query for Images

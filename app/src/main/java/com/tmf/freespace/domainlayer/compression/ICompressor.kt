@@ -14,10 +14,10 @@ abstract class ICompressor(val context: Context) {
      * @param mediaFile The MediaFile object representing the current media file
      * @param inputFilePath The full path of the source file to compress
      * @param outputFilePath The full path of the compressed file to create
-     * @param maxCompressedSize The maximum size of the compressed file
+     * @param compressionRatio Compression ratio (n:1)
      * @return Flag: File was compresses successfully
      */
-    abstract fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String, maxCompressedSize: Int) : Boolean
+    abstract fun compress(mediaFile: MediaFile, outputFilePath: String, compressionRatio: Int): Boolean
 
 
     fun xlateDesiredCompressionCommand(command: String, inputFilePath: String, outputFilePath: String) : String {
@@ -49,13 +49,13 @@ abstract class ICompressor(val context: Context) {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val windowMetrics = windowManager.currentWindowMetrics
-            windowMetrics.bounds.width()
+            val width = windowMetrics.bounds.width()
+            val height = windowMetrics.bounds.height()
+            if (width > height) width else height
         } else {
-            windowManager.defaultDisplay.width
+            val width = windowManager.defaultDisplay.width
+            val height = windowManager.defaultDisplay.height
+            if (width > height) width else height
         }
-    }
-
-    companion object {
-        val ffmpeg = FFmpeg()  //Shared FFmpeg instance for all compressors
     }
 }

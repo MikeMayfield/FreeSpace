@@ -10,7 +10,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
     private val tag = ImageCompressor::class.simpleName
 
     override val compressionCommands = listOf(
-        //InputFilePath|OutputFilePath|ScreenWidth|CompressionQuality(1..100, 1 lowest)
+        //ScreenWidth|Quality(1..100, 1 lowest)
         "{{SCREEN_WIDTH}}|80",  //Compression low
         "{{SCREEN_WIDTH}}|60",  //Compression medium low
         "{{SCREEN_WIDTH}}|40",  //Compression medium
@@ -28,10 +28,13 @@ class ImageCompressor(context: Context) : ICompressor(context) {
      * @param mediaFile The MediaFile object representing the current media file
      * @param inputFilePath The full path of the source file to compress
      * @param outputFilePath The full path of the compressed file to create
-     * @param maxCompressedSize The maximum size of the compressed file
+     * @param compressionRatio Compression ratio (n:1)
      * @return True if compression was successful, false otherwise
      */
-    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String, maxCompressedSize: Int): Boolean {
+    override fun compress(mediaFile: MediaFile, outputFilePath: String, compressionRatio: Int): Boolean {
+        val inputFilePath = mediaFile.fullPath
+        val maxCompressedSize = mediaFile.originalSize / compressionRatio
+
         for (compressionCommand in compressionCommands) {
             val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath).split("|")
             if (tokens.size == 2) {

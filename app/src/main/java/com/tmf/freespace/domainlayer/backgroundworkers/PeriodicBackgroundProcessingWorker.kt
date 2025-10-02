@@ -33,8 +33,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      */
     override suspend fun doWork(): Result {
         Log.d(tag, "Starting periodic background processing")
+
         val propertyBag = PropertyBag(appContext)
         val mediaFileRepository = MediaFileRepository(appContext)
+
+        abortFileOptimizationWorker()  //Cancel any previous FileOptimizationWorker that might be running so we can't have two in parallel
 
         //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
@@ -48,7 +51,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-        queueWorkerToProcessFirstFile()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
+        queueFileOptimizationWorker()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
 
         Log.d(tag, "Finished $tag worker processing")
         return Result.success()
@@ -79,7 +82,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val maxDateAddedFound = updateMediaFilesFromMediaStore(0L, mediaFileRepository, true)
+        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
+        val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)
         mediaFileRepository.deleteFilesDeletedFromMediaStore()
@@ -155,18 +159,20 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     }
 
     /**
+     * Cancel any previous FileOptimizationWorker that might be running
+     */
+    private fun abortFileOptimizationWorker() {
+        WorkManager.getInstance(appContext)
+            .cancelUniqueWork(FileOptimizationWorker::class.java.simpleName)  //Cancel any previous work that might be running
+    }
+
+    /**
      * Queue SelectFileToCompress worker for first file to be processed.
      * The worker's chain will requeue itself for each additional file needed.
      */
-    private fun queueWorkerToProcessFirstFile() {
-        WorkManager.getInstance(appContext).cancelAllWork()  //TODO Remove
-
-//        WorkManager.getInstance(appContext)  //TODO Not needed if using FileOptimizationWorker
-//            .beginWith(SelectFileToCompressWorker.buildWorkRequest())
-//            .enqueue()
+    private fun queueFileOptimizationWorker() {
         WorkManager.getInstance(appContext)
-            .beginWith(FileOptimizationWorker.buildWorkRequest())
-            .enqueue()
+            .enqueueUniqueWork("FileOptimizationWorker", ExistingWorkPolicy.REPLACE, FileOptimizationWorker.buildWorkRequest())  //Queue file optimization worker
     }
 
     //endregion

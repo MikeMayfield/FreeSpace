@@ -15,7 +15,7 @@ class AudioCompressor(context: Context) : ICompressor(context) {
         "-y -i {{inputFilePath}} {{outputFilePath}}",  //5: Compression ultra high  //TODO Define real command
     )
 
-    override fun compress(mediaFile: MediaFile, inputFilePath: String, outputFilePath: String, maxCompressedSize: Int): Boolean {
+    override fun compress(mediaFile: MediaFile, outputFilePath: String, compressionRatio: Int): Boolean {
         TODO("Implement this")
     }
 }

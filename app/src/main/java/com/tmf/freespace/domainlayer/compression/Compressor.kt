@@ -27,29 +27,34 @@ class Compressor(val context: Context) {
      * @param mediaFile The MediaFile object representing the current media file
      * @param sourceFilePath The full path of the source file to compress
      * @param destinationFile The full path of the compressed file to create
+     * @param compressionRatio Compression ratio (n:1)
      * @return The full path of the compressed file, or null if compression failed
      */
-    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String, maxCompressedSize: Int): Boolean {
+    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String, compressionRatio: Int): Boolean {
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
-            val mediaFileInfo = File(sourceFilePath)
-            if (mediaFileInfo.exists() && mediaFileInfo.length() > minFileSizeToCompress) {
+            val mediaFileInfo = File(sourceFilePath)  //TODO why do we need sourceFilePath instead of using mediaFile.fullPath?
+            if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
                         Log.v(tag, "Compressing image file: $sourceFilePath")
-                        imageCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
+                        imageCompressor.compress(mediaFile, destinationFile, compressionRatio)
                     }
 
                     MediaType.VIDEO -> {
                         Log.v(tag, "Compressing video file: $sourceFilePath")
-                        videoCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
+                        videoCompressor.compress(mediaFile, destinationFile, compressionRatio)
                     }
 
                     MediaType.AUDIO -> {
                         Log.v(tag, "Compressing audio file: $sourceFilePath")
-                        audioCompressor.compress(mediaFile, sourceFilePath, destinationFile, maxCompressedSize)
+                        audioCompressor.compress(mediaFile, destinationFile, compressionRatio)
                     }
                 }
             }
+            Log.w(tag, "File not found: $sourceFilePath")
+        }
+        else {
+            Log.d(tag, "File too small to compress: $sourceFilePath")
         }
 
         return false  //No compression occurred

@@ -6,16 +6,11 @@ import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import java.io.File
-import java.util.UUID
 
 class MediaFileRepository(val context: Context) {
     private val tag = MediaFileRepository::class.simpleName
 
     private val mediaFileDao = AppDatabase.create(context).mediaFileDao
-
-    suspend fun getMediaFileByID(mediaID: UUID): MediaFile? {
-        return mediaFileDao.getMediaFileByID(mediaID)
-    }
 
     /**
      * Update media file in database

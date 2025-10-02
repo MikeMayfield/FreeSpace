@@ -5,9 +5,18 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
+import com.tmf.freespace.presentationlayer.ui.components.SetSystemBarColors
+import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
 import com.tmf.freespace.presentationlayer.viewmodels.MainViewModel
 
 
@@ -29,10 +38,10 @@ class MainActivity : ComponentActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         viewModel.mediaReader = mediaReader
-//        enableEdgeToEdge()
 
         val permissions = if (Build.VERSION.SDK_INT >= 33) {
             arrayOf(
@@ -57,27 +66,18 @@ class MainActivity : ComponentActivity() {
         //TODO Test simulated background compression service
         queuePeriodicBackgroundWorkers(this.applicationContext)
 
-        //
-//        setContent {
-//            ReadExternalMediaFilesAPI35Theme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    LazyColumn(
-//                        modifier = Modifier
-//                            .fillMaxSize()
-//                            .padding(innerPadding)
-//                    ) {
-//                        items(viewModel.files.value.size) {
-//                            MediaListItem(
-//                                file = viewModel.files.value[it],
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                            )
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        //I have already built ARR file for your project.
+
+        setContent {
+            FreeSpaceTheme() {
+                SetSystemBarColors()   // For changing system bar's colors
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Text("Main UI placeholder", modifier = Modifier
+                        .padding(innerPadding)
+                    )
+                }
+            }
+        }
+
     }
 
     private fun queuePeriodicBackgroundWorkers(context: Context) {
