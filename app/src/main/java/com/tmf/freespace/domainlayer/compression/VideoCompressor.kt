@@ -38,13 +38,68 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 
     override val compressionCommands = listOf(
         //ResizeWidth|FramerateFps|VideoBitrateKbps|AudioBitrateKbps
-        "0|0|0|0",  //Compression low (just conversion to H.265)
-        "{{SCREEN_WIDTH}}|0|0|0",  //Compression medium low (screen width, unchanged fps, unchanged video bitrate (and no VBR), unchanged bitrates)
-        "{{SCREEN_WIDTH}}|0|2000|128",  //Compression medium (screen width, unchanged fps, 2mbps video, 128kbps audio)
-        "{{SCREEN_WIDTH}}|24|1500|128",  //Compression medium high (screen width, 24fps, 1.5mbps video, 128kbps audio)
-        "{{SCREEN_WIDTH_33PCT}}|24|1500|128",  //Compression high (33% screen width, 24fps, 1.5mbps video, 128kbps audio)
-        "{{SCREEN_WIDTH_25PCT}}|20|750|24",  //Compression very high (25% screen width, 20fps, 750kbps video, 24kbps audio)
-        "176|12|500|24",  //Compression very very high (176x144px, 12fps, 500kbps video, 24kbps audio)
+        "{{SCREEN_00}}|0|0|0",  //Screen width (2.3007243)
+        "{{VIDEO_75}}|0|0|0",  //75% of video width (2.968316)
+        "{{SCREEN_75}}|0|0|0",  //75% of screen width (4.029935)
+        "{{VIDEO_50}}|0|0|0",  //50% of video width (6.4749637)
+        "{{SCREEN_50}}|0|0|0",  //50% of screen width (8.694984)
+        "{{VIDEO_50}}|20|0|0",  //50% of video width (8.694984)
+        "{{SCREEN_50}}|20|0|0",  //50% of screen width (8.694984)
+        "{{SCREEN_40}}|0|0|0",  //40% of video width (12.959882)
+        "{{SCREEN_40}}|20|0|0",  //40% of video width (12.959882)
+        "{{VIDEO_25}}|0|0|0",  //25% of video width (21.979757)
+        "{{SCREEN_25}}|0|0|0",  //25% of screen width (28.050495)
+        "{{VIDEO_25}}|20|0|0",  //25% of video width (21.979757)
+        "{{SCREEN_25}}|20|0|0",  //25% of screen width (28.050495)
+        "{{VIDEO_20}}|20|0|0",  //20% of screen width (37.987946)
+        "{{SCREEN_20}}|20|0|0",  //10% of screen width (50.804916)
+        "{{SCREEN_10}}|0|0|0",  //20% of screen width (37.987946)
+        "{{SCREEN_10}}|20|0|0",  //10% of screen width (50.804916)
+
+
+//        "1440|0|0|0",  //75% of video width  2.968316
+//        "1230|0|0|0",  //75% scn  4.029935
+//        "960|0|0|0",  //50% of video width  6.4749637
+//        "820|0|0|0",  //50% scn  8.694984
+//        "480|0|0|0",  //25% of video width  21.979757
+//        "410|0|0|0",  //25% scn  28.050495
+//        "328|0|0|0",  //20% scn  37.987946
+//        "164|0|0|0",  //10% scn  50.804916
+//        "{{SCREEN_WIDTH}}|0|10000|0",  //1.4738137
+//        "{{SCREEN_WIDTH}}|0|8000|0",  //1.8360887
+//        "{{SCREEN_WIDTH}}|0|6000|0",  //2.4373815
+//        "{{SCREEN_WIDTH}}|0|4000|0",  //3.6194954
+//        "1476|0|0|0",  //90% of screen:  2.831581
+//        "1312|0|0|0",  //80%  3.5616448
+//        "1148|0|0|0",  //70%  4.6162305
+//        "984|0|0|0",  //60%  6.170071
+//        "656|0|0|0",  //40%  12.959882
+//        "492|0|0|0",  //30%  21.019232
+//        "{{SCREEN_WIDTH}}|24|0|0",  //2.3019884
+//        "{{SCREEN_WIDTH}}|20|0|0",  //4.5170946
+//        "{{SCREEN_WIDTH}}|24|8000|0",  //1.8382974
+//        "{{SCREEN_WIDTH}}|20|8000|0",  //3.626378
+//        "{{SCREEN_WIDTH}}|24|4000|0",  //3.62301
+//        "{{SCREEN_WIDTH}}|20|4000|0",  //7.0554466
+//        "{{SCREEN_WIDTH_33PCT}}|24|0|0",  //18.126818
+//        "{{SCREEN_WIDTH_33PCT}}|24|8000|0",  //1.8354675
+//        "{{SCREEN_WIDTH_33PCT}}|24|4000|0",  //3.613952
+//        "{{SCREEN_WIDTH_33PCT}}|20|8000|0",  //3.6197987
+//        "{{SCREEN_WIDTH_33PCT}}|24|4000|0",  //3.613952
+//        "{{SCREEN_WIDTH_25PCT}}|24|0|0",  //28.106115
+//        "{{SCREEN_WIDTH_25PCT}}|24|8000|0",  //1.8740822
+//        "{{SCREEN_WIDTH_25PCT}}|24|4000|0",  //3.615093
+//        "{{SCREEN_WIDTH_25PCT}}|20|8000|0",  //3.6188896
+//        "{{SCREEN_WIDTH_25PCT}}|24|4000|0",  //3.615093
+//        "{{SCREEN_WIDTH_25PCT}}|24|2000|0",  //7.004705
+//        "{{SCREEN_WIDTH_25PCT}}|20|2000|0",  //13.166404
+//        "0|0|0|0",  //Compression low (just conversion to H.265)
+//        "{{SCREEN_WIDTH}}|0|0|0",  //Compression medium low (screen width, unchanged fps, unchanged video bitrate (and no VBR), unchanged bitrates)
+//        "{{SCREEN_WIDTH}}|0|2000|128",  //Compression medium (screen width, unchanged fps, 2mbps video, 128kbps audio)
+//        "{{SCREEN_WIDTH}}|24|1500|128",  //Compression medium high (screen width, 24fps, 1.5mbps video, 128kbps audio)
+//        "{{SCREEN_WIDTH_33PCT}}|24|1500|128",  //Compression high (33% screen width, 24fps, 1.5mbps video, 128kbps audio)
+//        "{{SCREEN_WIDTH_25PCT}}|20|750|24",  //Compression very high (25% screen width, 20fps, 750kbps video, 24kbps audio)
+//        "176|12|500|24",  //Compression very very high (176x144px, 12fps, 500kbps video, 24kbps audio)
     )
 
     /**
@@ -78,17 +133,17 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     }
 
     private suspend fun getCompressionCommandForDesiredCompressionRatio(inputFilePath: String, outputFilePath: String, compressionRatio: Int): String? {
-//        val clipDurationSecs = 5
         val videoInfo = videoInfo(inputFilePath)
         val mediaDurationMs = videoInfo[MediaMetadataRetriever.METADATA_KEY_DURATION]?.toFloat() ?: 0f
         val clipDurationSecs = if (mediaDurationMs >= 5000f) 5 else ceil(mediaDurationMs / 1000f).toInt()  //Clip duration up to 5 seconds (less for videos longer than 5 seconds)
         val clippedVideoPctOfFullDuration = (clipDurationSecs * 1000).toFloat() / (if (mediaDurationMs > 0f) mediaDurationMs else 1f)
-        val maxCompressedSizeForClippedFile = (File(inputFilePath).length() * clippedVideoPctOfFullDuration / compressionRatio).toInt()
+        val maxCompressedSizeForClippedFile = (File(inputFilePath).length() * clippedVideoPctOfFullDuration / 8/*compressionRatio*/).toInt()  //TODO
         Log.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile, full size: ${File(inputFilePath).length()}")
 
         for (compressionCommand in compressionCommands) {
             if (compressInBackground(inputFilePath, outputFilePath, compressionCommand, clipDurationSecs * 1024L)) {
-                Log.d(tag, "Image compression for $inputFilePath, output file size: ${File(outputFilePath).length()}, command: $compressionCommand")
+                val newSize = File(outputFilePath).length()
+                Log.d(tag, "Video compression for $inputFilePath, output file size: $newSize, command: $compressionCommand, compression: ${File(inputFilePath).length() / compressionRatio / newSize.toFloat()}")
                 if (File(outputFilePath).length() <= maxCompressedSizeForClippedFile) {
                     return compressionCommand
                 }
@@ -107,9 +162,8 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         withContext(Dispatchers.Main) { // Transformer requires Dispatchers.Main
             suspendCancellableCoroutine { continuation ->
                 try {
-                    val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath).split("|")
-                    Log.v(tag, "Image compression command: $compressionCommand")
                     val videoInfo = videoInfo(inputFilePath)
+                    val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath, videoInfo).split("|")
                     val videoWidth = videoInfo[MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH]?.toIntOrNull() ?: 0
                     val videoHeight = videoInfo[MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT]?.toIntOrNull() ?: 0
                     val videoSizeScale = tokens[0].toFloat() / if (videoWidth > videoHeight) videoWidth.toFloat() else videoHeight.toFloat()
@@ -118,7 +172,6 @@ class VideoCompressor(context: Context) : ICompressor(context) {
                     var videoBitrateKbps = tokens[2].toInt()
                     if (videoBitrateKbps > actualVideoBitrateKbps) videoBitrateKbps = actualVideoBitrateKbps
                     val audioBitrateKbps = tokens[3].toInt()
-//                    initOutputFile(outputFilePath)  //Delete existing output file //TODO Probably not needed
                     val editedMediaItem = createEditedMediaItem(inputFilePath, clipDurationMs, videoSizeScale, frameRateFps)  //Input transformations
                     val encoderFactory = createEncoderFactory(videoBitrateKbps, audioBitrateKbps)  //Output transformations
 
@@ -232,17 +285,17 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     private fun createEncoderFactory(videoBitrateKbps: Int = 0, audioBitrateKbps: Int = 0) : Codec.EncoderFactory {
         //Set video bitrate and VBR
         val videoEncoderSettingsBuilder = VideoEncoderSettings.Builder()
-        if (videoBitrateKbps > 0) {  //Optional: Change video bitrate
-            videoEncoderSettingsBuilder.setBitrate(videoBitrateKbps * 1000)
+//        if (videoBitrateKbps > 0) {  //Optional: Change video bitrate
+//            videoEncoderSettingsBuilder.setBitrate(videoBitrateKbps * 1000)
             videoEncoderSettingsBuilder.setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
-        }
+//        }
         val videoEncoderSettings = videoEncoderSettingsBuilder.build()
 
         //Set audio bitrate
         val audioEncoderSettingsBuilder = AudioEncoderSettings.Builder()
-        if (audioBitrateKbps > 0) {  //Optional: Change audio bitrate
-            audioEncoderSettingsBuilder.setBitrate(audioBitrateKbps * 1000)
-        }
+//        if (audioBitrateKbps > 0) {  //Optional: Change audio bitrate
+//            audioEncoderSettingsBuilder.setBitrate(audioBitrateKbps * 1000)
+//        }
         val audioEncoderSettings = audioEncoderSettingsBuilder.build()
 
         //Create an encoder factory with desired settings
