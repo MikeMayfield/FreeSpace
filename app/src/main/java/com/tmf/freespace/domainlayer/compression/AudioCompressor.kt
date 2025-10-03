@@ -4,9 +4,8 @@ import android.content.Context
 import com.tmf.freespace.datalayer.models.MediaFile
 
 class AudioCompressor(context: Context) : ICompressor(context) {
-    private val tag = AudioCompressor::class.simpleName
 
-    override val compressionCommands = listOf(
+    override val compressionTemplates = listOf(
         "",  //0: No compression
         "-y -i {{inputFilePath}} {{outputFilePath}}",  //1: Compression low  //TODO Define real command
         "-y -i {{inputFilePath}} {{outputFilePath}}",  //2: Compression medium  //TODO Define real command

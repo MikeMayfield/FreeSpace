@@ -9,7 +9,7 @@ import java.io.File
 class ImageCompressor(context: Context) : ICompressor(context) {
     private val tag = ImageCompressor::class.simpleName
 
-    override val compressionCommands = listOf(
+    override val compressionTemplates = listOf(
         //ScreenWidth|Quality(1..100, 1 lowest)
         "{{SCREEN_00}}|80",  //Compression low
         "{{SCREEN_00}}|60",  //Compression medium low
@@ -26,7 +26,6 @@ class ImageCompressor(context: Context) : ICompressor(context) {
      * Compresses an image file to JPEG.
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param inputFilePath The full path of the source file to compress
      * @param outputFilePath The full path of the compressed file to create
      * @param compressionRatio Compression ratio (n:1)
      * @return True if compression was successful, false otherwise
@@ -35,7 +34,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         val inputFilePath = mediaFile.fullPath
         val maxCompressedSize = mediaFile.originalSize / compressionRatio
 
-        for (compressionCommand in compressionCommands) {
+        for (compressionCommand in compressionTemplates) {
             val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath).split("|")
             if (tokens.size == 2) {
                 Log.v(tag, "Image compression command: $compressionCommand")

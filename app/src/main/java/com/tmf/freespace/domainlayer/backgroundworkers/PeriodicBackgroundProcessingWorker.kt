@@ -1,8 +1,6 @@
 package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
-import android.os.Environment
-import android.os.StatFs
 import android.provider.MediaStore
 import android.util.Log
 import androidx.work.CoroutineWorker
@@ -43,7 +41,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - (60 * 60 * 24)
+        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - 60
         val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
         if (newMaxDateAddedFound > maxDateAddedFound) {
             propertyBag.setLong(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound)
@@ -82,7 +80,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - (60 * 60 * 24)
+        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - 60
         val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)
@@ -134,18 +132,18 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         return maxDateAddedFound
     }
 
-    /**
-     * Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
-     */
-    private fun calculateBytesToRecover(): Long {
-        //Get current free space on primary disk
-        val currentFreeSpace = StatFs(Environment.getExternalStorageDirectory().absolutePath).availableBytes
-
-        //Get desired free space from user preferences
-        val desiredFreeSpace = currentFreeSpace + 1000_000_000L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
-
-        return desiredFreeSpace - currentFreeSpace
-    }
+//    /**
+//     * Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
+//     */
+//    private fun calculateBytesToRecover(): Long {
+//        //Get current free space on primary disk
+//        val currentFreeSpace = StatFs(Environment.getExternalStorageDirectory().absolutePath).availableBytes
+//
+//        //Get desired free space from user preferences
+//        val desiredFreeSpace = currentFreeSpace + 1000_000_000L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
+//
+//        return desiredFreeSpace - currentFreeSpace
+//    }
 
     /**
      * Set or update desired compression level for all files in database based on their creation date
@@ -181,7 +179,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         /**
          * Queue this worker to process periodically (even across reboots)
          */
-        fun queuePeriodicProcessing(context: Context, periodHours: Long) {
+        fun queuePeriodicProcessing(context: Context /*, periodHours: Long*/) {
             //TODO Code below allows immediate execution of PeriodicBackgroundProcessingWorker for testing. REMOVE IT
             val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>()
                 // You can add input data here if needed using .setInputData(workDataOf(...))

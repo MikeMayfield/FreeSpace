@@ -7,13 +7,12 @@ import android.view.WindowManager
 import com.tmf.freespace.datalayer.models.MediaFile
 
 abstract class ICompressor(val context: Context) {
-    abstract val compressionCommands : List<String>
+    abstract val compressionTemplates : List<String>
 
     /**
      * Compress media file using FFmpeg. Returns the compressed file size
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param inputFilePath The full path of the source file to compress
      * @param outputFilePath The full path of the compressed file to create
      * @param compressionRatio Compression ratio (n:1)
      * @return Flag: File was compresses successfully
