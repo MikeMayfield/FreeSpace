@@ -11,6 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
@@ -56,7 +57,7 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
 //            return Result.failure() // Or handle as appropriate
 //        }
 
-//        val timeToReschedule = System.currentTimeMillis() + (8 * 60_000)  //8 minutes from now)
+        val timeToReschedule = System.currentTimeMillis() + (1 * 60_000)  //8 minutes from now)  //TODO
         val compressionRatioThatCanExceedOptimalByteCount = propertyBag.getInt("ALWAYS_OPTIMIZE_LEVEL", 5)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)
         var optimalBytesToRecover = calculateOptimalBytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 10GB), but not limited when processing older files
@@ -64,12 +65,13 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
         var fileToCompress = getFileToCompress()
         //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available  //TODO Use entire schedule time for video or audio files that might take a long time
         while (fileToCompress != null && maxBytesToRecover > 0 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)) {
-//            //If processing too long, start at new worker to continue processing files
-//            if (System.currentTimeMillis() >= timeToReschedule) {
-//                Log.d(tag, "Scheduling new worker for next slice of processing")
-//                scheduleFileOptimizationWorker()
-//                return Result.success()  //Exit this work and start next slice of work
-//            }
+            //TODO
+            //If processing too long, start at new worker to continue processing files
+            if (System.currentTimeMillis() >= timeToReschedule) {
+                Log.d(tag, "Scheduling new worker for next slice of processing")
+                queueFileOptimizationWorker()
+                return Result.success()  //Exit this work and start next slice of work
+            }
 
             //Compress file and replace existing file in MediaStore
             val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
@@ -238,6 +240,14 @@ class FileOptimizationWorker(val appContext: Context, params: WorkerParameters):
             val uncompressedFile = File(filePath)
             if (uncompressedFile.exists()) uncompressedFile.delete()
         }
+    }
+
+    /**
+     * Queue queueFileOptimizationWorker task for processing all pending compressions
+     */
+    private fun queueFileOptimizationWorker() {
+        WorkManager.getInstance(appContext)
+            .enqueueUniqueWork("FileOptimizationWorker", ExistingWorkPolicy.APPEND, FileOptimizationWorker.buildWorkRequest())  //Queue file optimization worker after this one
     }
 
 

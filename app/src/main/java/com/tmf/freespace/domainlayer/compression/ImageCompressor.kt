@@ -11,14 +11,14 @@ class ImageCompressor(context: Context) : ICompressor(context) {
 
     override val compressionCommands = listOf(
         //ScreenWidth|Quality(1..100, 1 lowest)
-        "{{SCREEN_WIDTH}}|80",  //Compression low
-        "{{SCREEN_WIDTH}}|60",  //Compression medium low
-        "{{SCREEN_WIDTH}}|40",  //Compression medium
-        "{{SCREEN_WIDTH}}|30",  //Compression medium high
-        "{{SCREEN_WIDTH_33PCT}}|50",  //Compression high
-        "{{SCREEN_WIDTH_33PCT}}|40",  //Compression high
-        "{{SCREEN_WIDTH_25PCT}}|25",  //Compression very high
-        "{{SCREEN_WIDTH_25PCT}}|10",  //Compression very very high
+        "{{SCREEN_00}}|80",  //Compression low
+        "{{SCREEN_00}}|60",  //Compression medium low
+        "{{SCREEN_00}}|40",  //Compression medium
+        "{{SCREEN_00}}|30",  //Compression medium high
+        "{{SCREEN_00}}|50",  //Compression high
+        "{{SCREEN_00}}|40",  //Compression high
+        "{{SCREEN_00}}|25",  //Compression very high
+        "{{SCREEN_00}}|10",  //Compression very very high
     )
 
     //Compress an image file to JPEG

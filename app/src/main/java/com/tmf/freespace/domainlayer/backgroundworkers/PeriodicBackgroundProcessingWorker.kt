@@ -43,7 +43,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
+        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - (60 * 60 * 24)
         val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
         if (newMaxDateAddedFound > maxDateAddedFound) {
             propertyBag.setLong(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound)
@@ -82,7 +82,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
+        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - (60 * 60 * 24)
         val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)
@@ -167,8 +167,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     }
 
     /**
-     * Queue SelectFileToCompress worker for first file to be processed.
-     * The worker's chain will requeue itself for each additional file needed.
+     * Queue queueFileOptimizationWorker task for processing all pending compressions
      */
     private fun queueFileOptimizationWorker() {
         WorkManager.getInstance(appContext)
@@ -189,7 +188,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
                 PeriodicBackgroundProcessingWorker::class.java.simpleName,
-                ExistingWorkPolicy.REPLACE,  //Don't queue if already running or queued  //TODO Change to KEEP
+                ExistingWorkPolicy.KEEP,  //Don't queue if already running
                 request
             )
 //TODO Replace above with this            val constraints = Constraints.Builder()
