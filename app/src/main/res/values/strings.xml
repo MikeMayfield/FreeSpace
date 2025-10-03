@@ -2,6 +2,6 @@
     <string name="app_name">FreeSpace</string>
     <string name="file_optimization_notification_title">Optimizing Storage</string>
     <string name="file_optimization_notification_cancel">Cancel</string>
-    <string name="file_optimization_channel_name">File Optimization</string>
-    <string name="file_optimization_channel_description">Notification for ongoing file optimization process.</string>
+    <string name="file_optimization_channel_name">Storage Optimization</string>
+    <string name="file_optimization_channel_description">Ongoing storage optimization notification</string>
 </resources>

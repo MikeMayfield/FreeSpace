@@ -81,6 +81,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun queuePeriodicBackgroundWorkers(context: Context) {
-        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context, 1)
+        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
     }
 }

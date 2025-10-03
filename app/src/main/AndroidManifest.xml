@@ -7,20 +7,20 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="36" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
-    <!-- Need MANAGE_EXTERNAL_STORAGE to allow us to backup and optimize media for all apps.
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:ignore="PhotoAndVideoPolicy" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="PhotoAndVideoPolicy" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!-- Need MANAGE_EXTERNAL_STORAGE to allow us to backup and optimize media for all apps (e.g. photos/videos)
         This requires approval from Google as a backup/file maintenance app.
         See https://developer.android.com/training/data-storage/manage-all-files
-        After installing app, execute: adb shell appops set dash-dash uid com.tmf.freespace MANAGE_EXTERNAL_STORAGE allow  (replace dash-dash-space with two dashes)
+        After installing app for debugging, execute: adb shell appops set dash-dash uid com.tmf.freespace MANAGE_EXTERNAL_STORAGE allow  (replace dash-dash-space with two dashes)
     -->
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- For Android 12 (API 31) and above, if your work involves data transfer/sync -->
-    <!-- For Android 14 (API 34) and above, this is mandatory if targeting 34+ -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
 
     <application
         android:allowBackup="true"
@@ -43,8 +43,10 @@
         </activity>
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:foregroundServiceType="mediaProcessing"
-            tools:node="merge" />
+            android:exported="false"
+            android:foregroundServiceType="mediaProcessing|dataSync"
+            tools:targetApi="35"
+            tools:ignore="ForegroundServicePermission" />
     </application>
 
 </manifest>
