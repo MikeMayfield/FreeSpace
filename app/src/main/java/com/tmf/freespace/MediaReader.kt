@@ -46,7 +46,9 @@ class MediaReader(
         )?.use { cursor -> // Use 'use' to ensure the cursor is closed
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.IMAGE)
-                emit(mediaFile)
+                if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
+                    emit(mediaFile)
+                }
             }
         }
 
@@ -60,7 +62,9 @@ class MediaReader(
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.VIDEO)
-                emit(mediaFile)
+                if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
+                    emit(mediaFile)
+                }
             }
         }
 
@@ -74,7 +78,9 @@ class MediaReader(
         )?.use { cursor ->
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.AUDIO)
-                emit(mediaFile)
+                if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
+                    emit(mediaFile)
+                }
             }
         }
     }

@@ -27,7 +27,7 @@ class FileOptimizationWorker(val appContext: Context) {
      * . . Replace file in MediaStore with compressed file
      */
     suspend fun compressAllPendingMedia(): Boolean {
-        Log.d(tag, "Processing files to optimize storage space as a long running process")
+        Log.d(tag, "Processing files to optimize storage space")
 
         val compressionRatioThatCanExceedOptimalByteCount = propertyBag.getInt("ALWAYS_OPTIMIZE_LEVEL", 5)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)

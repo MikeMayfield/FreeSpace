@@ -30,7 +30,7 @@ interface MediaFileDao {
      */
     @Query(
         "SELECT * FROM MediaFile" +
-                " WHERE currentCompressionRatio != desiredCompressionRatio AND desiredCompressionRatio > 0" +
+                " WHERE currentCompressionRatio != desiredCompressionRatio AND desiredCompressionRatio > 0 AND originalSize > 0" +
                 " ORDER BY desiredCompressionRatio DESC, compressedSize DESC, creationDtm DESC" +
                 " LIMIT 1"
     )

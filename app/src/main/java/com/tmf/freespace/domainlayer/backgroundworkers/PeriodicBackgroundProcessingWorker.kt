@@ -46,7 +46,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - 60
+        val maxDateAddedFound = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
         val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
         if (newMaxDateAddedFound > maxDateAddedFound) {
             propertyBag.setLong(PropertyBagEntry.MAX_DATE_ADDED, newMaxDateAddedFound)
@@ -54,7 +54,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-//        queueFileOptimizationWorker()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
         val success = FileOptimizationWorker(appContext).compressAllPendingMedia()
 
         Log.d(tag, "Finished $tag worker processing")
@@ -86,7 +85,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L) - 60
+        val oldestDateAddedToSelect = propertyBag.getLong(PropertyBagEntry.MAX_DATE_ADDED, 0L)
         val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)

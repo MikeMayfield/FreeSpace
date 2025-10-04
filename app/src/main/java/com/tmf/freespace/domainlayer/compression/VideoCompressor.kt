@@ -56,39 +56,45 @@ class VideoCompressor(context: Context) : ICompressor(context) {
      */
     @OptIn(UnstableApi::class)
     override fun compress(mediaFile: MediaFile, outputFilePath: String, compressionRatio: Int): Boolean {
-        // WARNING: runBlocking will block the current thread.
-        // This is acceptable because 'compress' is already called from a background worker thread.
-        // If 'compress' can be called from the main thread, this will cause ANR.
-        // The ideal solution would be to make 'ICompressor.compress' a suspend function.
-        return runBlocking {
-            try {
-                val inputFilePath = mediaFile.fullPath
+        if (compressionRatio > 0) {
+            // WARNING: runBlocking will block the current thread.
+            // This is acceptable because 'compress' is already called from a background worker thread.
+            // If 'compress' can be called from the main thread, this will cause ANR.
+            // The ideal solution would be to make 'ICompressor.compress' a suspend function.
+            return runBlocking {
+                try {
+                    val inputFilePath = mediaFile.fullPath
 
-                //Find compression level based on compression of 5 second clip to allow finding probable compression level more quickly than using full size file for each test
-                val compressionTemplate = getCompressionTemplateForDesiredCompressionRatio(inputFilePath, outputFilePath, compressionRatio)
+                    //Find compression level based on compression of 5 second clip to allow finding probable compression level more quickly than using full size file for each test
+                    val compressionTemplate = getCompressionTemplateForDesiredCompressionRatio(inputFilePath, outputFilePath, compressionRatio)
 
-                //Compress full size file using appropriate compression level
-                if (compressionTemplate != null) {
-                    val success = compressInBackground(inputFilePath, outputFilePath, compressionTemplate)
-                    return@runBlocking success
-                } else {
-                    Log.e(tag, "Error during video compression of $inputFilePath with compressionTemplate: $compressionTemplate")
-                    return@runBlocking false
+                    //Compress full size file using appropriate compression level
+                    if (compressionTemplate != null) {
+                        val success = compressInBackground(inputFilePath, outputFilePath, compressionTemplate)
+                        return@runBlocking success
+                    } else {
+                        Log.e(tag, "Error during video compression of $inputFilePath with compressionTemplate: $compressionTemplate")
+                        return@runBlocking false
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(tag, "Error during video compression in coroutine: ${e.message}", e)
-                return@runBlocking false // Return false on exception
+                catch (e: Exception) {
+                    Log.e(tag, "Error during video compression in coroutine: ${e.message}", e)
+                    return@runBlocking false // Return false on exception
+                }
             }
         }
+
+        return true
     }
 
     private suspend fun getCompressionTemplateForDesiredCompressionRatio(inputFilePath: String, outputFilePath: String, compressionRatio: Int): String? {
+        val clipDuration = 10
         val videoInfo = videoInfo(inputFilePath)
         val mediaDurationMs = videoInfo[MediaMetadataRetriever.METADATA_KEY_DURATION]?.toFloat() ?: 0f
-        val clipDurationSecs = if (mediaDurationMs >= 5000f) 5 else ceil(mediaDurationMs / 1000f).toInt()  //Clip duration up to 5 seconds (less for videos longer than 5 seconds)
+        val clipDurationSecs = if (mediaDurationMs >= clipDuration * 1000f) clipDuration else ceil(mediaDurationMs / 1000f).toInt()  //Clip duration up to clipDuration seconds (less for videos longer than clipDuration seconds)
         val clippedVideoPctOfFullDuration = (clipDurationSecs * 1000).toFloat() / (if (mediaDurationMs > 0f) mediaDurationMs else 1f)
         val maxCompressedSizeForClippedFile = (File(inputFilePath).length() * clippedVideoPctOfFullDuration / compressionRatio).toInt()
-        Log.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile, full size: ${File(inputFilePath).length()}")
+        Log.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile at compression ratio $compressionRatio, full size: ${File(inputFilePath).length()}")
 
         var minTemplateIdx = 0
         var maxTemplateIdx = compressionTemplates.size - 1
