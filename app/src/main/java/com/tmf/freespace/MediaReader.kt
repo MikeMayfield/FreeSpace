@@ -19,7 +19,7 @@ class MediaReader(
      *                             on or after this date will be emitted. Use 0L to get all files.
      * @return A Flow that emits MediaFile objects.
      */
-    suspend fun getMediaFilesAddedSinceDate(oldestDateAddedToSelect: Long): Flow<MediaFile> = flow {
+    fun getMediaFilesAddedSinceDate(oldestDateAddedToSelect: Long): Flow<MediaFile> = flow {
         val projection = arrayOf(
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.DISPLAY_NAME,
