@@ -16,6 +16,7 @@ import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
+import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
@@ -32,10 +33,14 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     override suspend fun doWork(): Result {
         Log.d(tag, "Starting periodic background processing")
 
+        //Run worker in foreground service to allow to run for up to 6 hours
+        if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
+            Log.e(tag, "Failed to start periodic background processing as foreground service")
+            return Result.failure()
+        }
+
         val propertyBag = PropertyBag(appContext)
         val mediaFileRepository = MediaFileRepository(appContext)
-
-        abortFileOptimizationWorker()  //Cancel any previous FileOptimizationWorker that might be running so we can't have two in parallel
 
         //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
@@ -49,10 +54,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-        queueFileOptimizationWorker()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
+//        queueFileOptimizationWorker()  //Queue SelectFileToCompress worker chain for first file to be processed (will requeue itself for each additional file needed)
+        val success = FileOptimizationWorker(appContext).compressAllPendingMedia()
 
         Log.d(tag, "Finished $tag worker processing")
-        return Result.success()
+        return if (success) Result.success() else Result.failure()
     }
 
     //region Private Methods
@@ -156,22 +162,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         }
     }
 
-    /**
-     * Cancel any previous FileOptimizationWorker that might be running
-     */
-    private fun abortFileOptimizationWorker() {
-        WorkManager.getInstance(appContext)
-            .cancelUniqueWork(FileOptimizationWorker::class.java.simpleName)  //Cancel any previous work that might be running
-    }
-
-    /**
-     * Queue queueFileOptimizationWorker task for processing all pending compressions
-     */
-    private fun queueFileOptimizationWorker() {
-        WorkManager.getInstance(appContext)
-            .enqueueUniqueWork("FileOptimizationWorker", ExistingWorkPolicy.REPLACE, FileOptimizationWorker.buildWorkRequest())  //Queue file optimization worker
-    }
-
     //endregion
 
 
@@ -185,7 +175,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 // You can add input data here if needed using .setInputData(workDataOf(...))
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
-                PeriodicBackgroundProcessingWorker::class.java.simpleName,
+                "FreeSpace_PeriodicBackgroundProcessingWorker",
                 ExistingWorkPolicy.KEEP,  //Don't queue if already running
                 request
             )

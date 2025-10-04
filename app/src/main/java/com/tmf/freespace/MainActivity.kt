@@ -67,6 +67,14 @@ class MainActivity : ComponentActivity() {
         queuePeriodicBackgroundWorkers(this.applicationContext)
 
 
+        defineScreenLayout()
+    }
+
+    private fun queuePeriodicBackgroundWorkers(context: Context) {
+        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
+    }
+
+    private fun defineScreenLayout() {
         setContent {
             FreeSpaceTheme() {
                 SetSystemBarColors()   // For changing system bar's colors
@@ -77,10 +85,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-    }
-
-    private fun queuePeriodicBackgroundWorkers(context: Context) {
-        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
     }
 }
