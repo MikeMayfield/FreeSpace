@@ -32,6 +32,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 
     override val compressionTemplates = listOf(
         //ResizeWidth|FramerateFps
+        "0|0",  //Just convert to H265
         "{{SCREEN_00}}|0",  //Screen width (2.3007243)
         "{{VIDEO_75}}|0",  //75% of video width (2.968316)
         "{{SCREEN_75}}|0",  //75% of screen width (4.029935)
@@ -67,6 +68,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 
                     //Find compression level based on compression of 5 second clip to allow finding probable compression level more quickly than using full size file for each test
                     val compressionTemplate = getCompressionTemplateForDesiredCompressionRatio(inputFilePath, outputFilePath, compressionRatio)
+                    Log.d(tag, "Optimal template: $compressionTemplate")
 
                     //Compress full size file using appropriate compression level
                     if (compressionTemplate != null) {
@@ -88,6 +90,13 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     }
 
     private suspend fun getCompressionTemplateForDesiredCompressionRatio(inputFilePath: String, outputFilePath: String, compressionRatio: Int): String? {
+        //Optimization for low compression ratios
+        when (compressionRatio) {
+            0 -> return null  //No compression (shouldn't be allowed)
+            1 -> return compressionTemplates[0]  //Just convert to H265
+            2 -> return compressionTemplates[1]  //Screen width (2.3007243)
+        }
+
         val clipDuration = 10
         val videoInfo = videoInfo(inputFilePath)
         val mediaDurationMs = videoInfo[MediaMetadataRetriever.METADATA_KEY_DURATION]?.toFloat() ?: 0f
@@ -113,7 +122,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
             templateIdx = (minTemplateIdx + maxTemplateIdx) / 2
             compressedClipSize = compressClipByTemplate(inputFilePath, outputFilePath, compressionRatio, compressionTemplates[templateIdx], clipDurationSecs)
         } while (true)
-        Log.d(tag, "Optimal template: ${compressionTemplates[templateIdxForLargestCompressedSizeLEGoal]}")
+
         return compressionTemplates[templateIdxForLargestCompressedSizeLEGoal]
     }
 
