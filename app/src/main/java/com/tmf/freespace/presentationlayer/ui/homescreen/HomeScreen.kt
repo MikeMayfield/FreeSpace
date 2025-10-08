@@ -50,14 +50,19 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tmf.freespace.R
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenVM
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FreeSpaceHomeScreen() {
+fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -123,11 +128,23 @@ fun FreeSpaceHomeScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            StorageBar(31500, 12100, 20100, 8000, 720000)
+            StorageBar(
+                uiState.photosMB,
+                uiState.videosMB,
+                uiState.appsMB,
+                uiState.addedMB,
+                uiState.maxMB
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            StorageInfoSection(31500, 12100, 20100, 8000, 720000)
+            StorageInfoSection(
+                uiState.photosMB,
+                uiState.videosMB,
+                uiState.appsMB,
+                uiState.addedMB,
+                uiState.maxMB
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -153,12 +170,14 @@ fun FreeSpaceHomeScreen() {
             }
 
             //TODO Exclude if a subscriber
-            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
-            Spacer(modifier = Modifier.height(24.dp))
+            if (uiState.subscriptionStatus == HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) {
+                Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
+                Spacer(modifier = Modifier.height(24.dp))
 
-            SubscribeButton() {
-                val todo = true
-                //TODO Handle button click
+                SubscribeButton() {
+                    val todo = true
+                    //TODO Handle button click
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
@@ -168,7 +187,7 @@ fun FreeSpaceHomeScreen() {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageBar(photosMB: Int, videosMB: Int, appsMB: Int, addedMB: Int, maxMB: Int) {
+fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxMB: Long) {
     val totalGB = maxMB / 1024f
     val futureMB = maxMB - (photosMB + videosMB + appsMB + addedMB)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
@@ -216,13 +235,13 @@ fun StorageBar(photosMB: Int, videosMB: Int, appsMB: Int, addedMB: Int, maxMB: I
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageInfoSection(photosMB: Int = 0, videosMB: Int = 0, appsMB: Int = 0, addedMB: Int = 0, maxMB: Int = 720000) {
+fun StorageInfoSection(photosMB: Long = 0, videosMB: Long = 0, appsMB: Long = 0, addedMB: Long = 0, maxMB: Long = 720000) {
     val totalUsedMb = photosMB + videosMB + appsMB + addedMB
     val futureKB = (maxMB - totalUsedMb) * 1000
     val avgPhotoKB = 500
     val avgVideoKB = 1000
-    val gbFormatter = DecimalFormat("###,###,###.0", DecimalFormatSymbols(Locale.getDefault()))
-    val formatter = DecimalFormat("###,###,###", DecimalFormatSymbols(Locale.getDefault()))
+    val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
+    val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         StorageDetailItem(
@@ -284,10 +303,10 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
 }
 
 @Composable
-fun KeepStorageFreeSection(onClick: (selectedOption: String) -> Unit) {
+fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionIdx: Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("2 GB", "5 GB", "10 GB", "5%", "10%")
-    var selectedOptionText by remember { mutableStateOf(options[0]) }
+    var selectedOptionText by remember { mutableStateOf(options[selectedOptionIdx]) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -313,13 +332,13 @@ fun KeepStorageFreeSection(onClick: (selectedOption: String) -> Unit) {
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                options.forEach { selectionOption ->
+                options.forEachIndexed { idx, selectionOption ->
                     DropdownMenuItem(
                         text = { Text(selectionOption) },
                         onClick = {
                             selectedOptionText = selectionOption
                             expanded = false
-                            onClick(selectionOption)
+                            onClick(idx)
                         }
                     )
                 }
