@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.components.SetSystemBarColors
+import com.tmf.freespace.presentationlayer.ui.homescreen.FreeSpaceHomeScreen
 import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
 import com.tmf.freespace.presentationlayer.viewmodels.MainViewModel
 
@@ -66,14 +68,19 @@ class MainActivity : ComponentActivity() {
         //TODO Test simulated background compression service
         queuePeriodicBackgroundWorkers(this.applicationContext)
 
-
-        defineScreenLayout()
+        //Display the AppSummary screen
+        setContent {
+            FreeSpaceHomeScreen()
+        }
+//        FreeSpaceHomeScreen()
+//        defineScreenLayout()
     }
 
     private fun queuePeriodicBackgroundWorkers(context: Context) {
         PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
     }
 
+    @Composable
     private fun defineScreenLayout() {
         setContent {
             FreeSpaceTheme() {
