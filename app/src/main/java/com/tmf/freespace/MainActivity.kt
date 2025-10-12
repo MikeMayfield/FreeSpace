@@ -8,25 +8,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
-import com.tmf.freespace.presentationlayer.ui.components.SetSystemBarColors
-import com.tmf.freespace.presentationlayer.ui.homescreen.FreeSpaceHomeScreen
-import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
-import com.tmf.freespace.presentationlayer.viewmodels.MainViewModel
+import com.tmf.freespace.presentationlayer.ui.homescreen.AppSummaryScreen
+import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
 
 class MainActivity : ComponentActivity() {
-    private val mediaReader by lazy {
-        MediaReader(applicationContext)
-    }
-    private val viewModel: MainViewModel by viewModels<MainViewModel>(
+    private val viewModel: AppSummaryScreenVM by viewModels()
+
+//    private val viewModel: MainViewModel by viewModels<MainViewModel>(
 //        factoryProducer = {
 //            object : ViewModelProvider.Factory {
 //                override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -37,13 +28,11 @@ class MainActivity : ComponentActivity() {
 //                }
 //            }
 //        }
-    )
+//    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-
-        viewModel.mediaReader = mediaReader
 
         val permissions = if (Build.VERSION.SDK_INT >= 33) {
             arrayOf(
@@ -65,32 +54,16 @@ class MainActivity : ComponentActivity() {
             0
         )
 
-        //TODO Test simulated background compression service
-        queuePeriodicBackgroundWorkers(this.applicationContext)
-
-        //Display the AppSummary screen
+        //Display the AppSummary screen  //TODO Determine true starting screen
         setContent {
-            FreeSpaceHomeScreen()
+            AppSummaryScreen(viewModel)
         }
-//        FreeSpaceHomeScreen()
-//        defineScreenLayout()
+
+        //Start background compression processing, if needed
+//        queuePeriodicBackgroundWorkers(this.applicationContext)  //TODO enable this
     }
 
     private fun queuePeriodicBackgroundWorkers(context: Context) {
         PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
-    }
-
-    @Composable
-    private fun defineScreenLayout() {
-        setContent {
-            FreeSpaceTheme() {
-                SetSystemBarColors()   // For changing system bar's colors
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Text("Main UI placeholder", modifier = Modifier
-                        .padding(innerPadding)
-                    )
-                }
-            }
-        }
     }
 }

@@ -98,6 +98,9 @@ class MediaFileRepository(val context: Context) {
         return mediaFileDao.getBytesRecovered()
     }
 
+    suspend fun getTotalSizeByMediaType(mediaType: MediaType): Long {
+        return mediaFileDao.getTotalSizeByMediaType(mediaType.toString())
+    }
 
     /**
      * Check if media file has been deleted from MediaStore (and disk)

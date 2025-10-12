@@ -1,6 +1,7 @@
 package com.tmf.freespace.presentationlayer.ui.homescreen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -52,15 +54,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tmf.freespace.R
+import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
-import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenVM
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
+fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
+    val tag = "FreeSpaceHomeScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -100,7 +103,7 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Nearly unlimited space for all your photos and videos",
+                text = "Tons of space for all your treasured photos and videos",
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 color = Color.DarkGray
@@ -108,17 +111,18 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
 
             Spacer(modifier = Modifier.height(48.dp))
 
+            //Lite summary and bar
+            val trialAvailableMB = (uiState.physicalMB + 8_000 - uiState.addedMB)
+            val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val availableMB = 648000  //TODO Compute actual value
-                val formatter = DecimalFormat("###,###,###", DecimalFormatSymbols(Locale.getDefault()))
 
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("${formatter.format(availableMB / 1000)}GB More Storage Available with Max")  //TODO Remove "with Max" if a subscriber
+                            append("${formatter.format(trialAvailableMB / 1000f)}GB Storage Available with Lite")  //TODO Remove "with Max" if a subscriber
                         }
                     },
                     fontSize = 18.sp,
@@ -133,9 +137,34 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
                 uiState.videosMB,
                 uiState.appsMB,
                 uiState.addedMB,
-                uiState.maxMB
+                trialAvailableMB
             )
 
+            //Max summary and bar
+            Spacer(modifier = Modifier.height(24.dp))
+
+            val availableGB = (uiState.maxExpansionMB - uiState.photosMB - uiState.videosMB - uiState.appsMB - uiState.addedMB) / 1000f
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("${formatter.format(availableGB)}GB Storage Available with Max")  //TODO Remove "with Max" if a subscriber
+                    }
+                },
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            StorageBar(
+                uiState.photosMB,
+                uiState.videosMB,
+                uiState.appsMB,
+                uiState.addedMB,
+                uiState.maxExpansionMB
+            )
+
+            //Storage info section
             Spacer(modifier = Modifier.height(24.dp))
 
             StorageInfoSection(
@@ -143,7 +172,7 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
                 uiState.videosMB,
                 uiState.appsMB,
                 uiState.addedMB,
-                uiState.maxMB
+                uiState.maxExpansionMB
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -156,8 +185,9 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
                     fontSize = 16.sp
                 )
                 Text(
-                    text = "Expanded to 8GB Lite version limit",
+                    text = uiState.status,
                     color = Color.DarkGray,
+                    fontStyle = FontStyle.Italic,
                     fontSize = 16.sp
                 )
 
@@ -165,8 +195,19 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            KeepStorageFreeSection() { selectedOption ->
+            KeepStorageFreeSection() { selectedOptionIdx ->
                 //TODO Handle dropdown selection
+                val minFreeSpaceMB: Long = when (selectedOptionIdx) {
+                    0 -> 2000  //2GB
+                    1 -> 5000  //5GB
+                    2 -> 10000  //10GB
+                    3 -> (uiState.physicalMB * 0.05f).toLong()  //5%
+                    4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
+                    else -> 0
+                }
+
+                viewModel.updateMinFreeSpaceMB(minFreeSpaceMB)
+                viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
             }
 
             //TODO Exclude if a subscriber
@@ -175,7 +216,7 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 SubscribeButton() {
-                    val todo = true
+                    Log.d(tag, "Subscribe button clicked")
                     //TODO Handle button click
                 }
             }
@@ -188,7 +229,6 @@ fun FreeSpaceHomeScreen(viewModel: HomeScreenVM = HomeScreenVM()) {
 @SuppressLint("DefaultLocale")
 @Composable
 fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxMB: Long) {
-    val totalGB = maxMB / 1024f
     val futureMB = maxMB - (photosMB + videosMB + appsMB + addedMB)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         Row(
@@ -199,30 +239,31 @@ fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxM
             verticalAlignment = Alignment.CenterVertically
         ) {
             //.weight of each Box is percentage of total sizes in GB
-            Box(Modifier
-                .weight((photosMB + 1) / totalGB)
+            Box(Modifier  //Photos bar
+                .weight((photosMB + 1f) / maxMB)
                 .fillMaxHeight()
                 .background(Color(0xFFF9770E)))
-            Box(Modifier
-                .weight((videosMB + 1) / totalGB)
+            Box(Modifier  //Videos bar
+                .weight((videosMB + 1f) / maxMB)
                 .fillMaxHeight()
                 .background(Color(0xFF1942FE)))
-            Box(Modifier
-                .weight((appsMB + 1) / totalGB)
+            Box(Modifier  //Apps bar
+                .weight((appsMB + 1f) / maxMB)
                 .fillMaxHeight()
                 .background(Color(0xFFF918F3)))
-            Box(Modifier
-                .weight((addedMB + 1) / totalGB)
+            Box(Modifier  //Memory added bar
+                .weight((addedMB + 1f) / maxMB)
                 .fillMaxHeight()
                 .background(Color(0xFF00C752)))
-            Box(modifier = Modifier
-                    .weight((futureMB + 1) / totalGB)
+            Box(modifier = Modifier  //Future space available bar
+                    .weight((futureMB + 1f) / maxMB)
                     .fillMaxHeight()
                     .background(Color(0xFFB7F9B6)),
                 contentAlignment = Alignment.Center,
             ) {
+                val futureGB = futureMB / 1000f
                 Text(
-                    text = "${String.format("%.0f", futureMB / 1000f)}GB Space Available",
+                    text = if (futureGB < 1000f) "${String.format("%.1f", futureGB)}GB Space Available" else "${String.format("%.1f", futureGB / 1000f)}TB Space Available",
                     color = Color.DarkGray,
                     fontSize = 12.sp
                 )
@@ -239,20 +280,20 @@ fun StorageInfoSection(photosMB: Long = 0, videosMB: Long = 0, appsMB: Long = 0,
     val totalUsedMb = photosMB + videosMB + appsMB + addedMB
     val futureKB = (maxMB - totalUsedMb) * 1000
     val avgPhotoKB = 500
-    val avgVideoKB = 1000
-    val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
+    val avgVideoKB = 2000
+    val gbFormatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         StorageDetailItem(
             color = Color(0xFFF9770E),
-            storageAmount = "${gbFormatter.format(photosMB / 1000f)}GB of Photos",
-            description = "Room for ${formatter.format(futureKB / avgPhotoKB)} more photos"
+            storageAmount = "${gbFormatter.format(photosMB / 1_000f)}GB of Photos",
+            description = "Add ${formatter.format(futureKB / avgPhotoKB)} more photos with Max"
         )
         StorageDetailItem(
             color = Color(0xFF1942FE),
-            storageAmount = "${gbFormatter.format(videosMB / 1000f)}GB of Videos",
-            description = "Room for ${formatter.format(futureKB / avgVideoKB)} more videos"
+            storageAmount = "${gbFormatter.format(videosMB / 1_000f)}GB of Videos",
+            description = "Add ${formatter.format(futureKB / avgVideoKB)} more videos with Max"
         )
         StorageDetailItem(
             color = Color(0xFFF918F3),
@@ -264,9 +305,10 @@ fun StorageInfoSection(photosMB: Long = 0, videosMB: Long = 0, appsMB: Long = 0,
             storageAmount = "${gbFormatter.format(addedMB / 1000f)}GB of Space was Added",
             description = "Lite version limited to 8GB"  //TODO Remove if a subscriber
         )
+        val futureGB = maxMB / 1000f
         StorageDetailItem(
             color = Color(0xFFB7F9B6),
-            storageAmount = "${gbFormatter.format((maxMB - totalUsedMb) / 1000f)}GB Future Expansion",
+            storageAmount = if (futureGB < 1000f) "${String.format("%.1f", futureGB)}GB Space Available" else "${String.format("%.1f", futureGB / 1000f)}TB Space Available",
             description = "Available only with Max subscription"
 
         )
@@ -384,6 +426,6 @@ fun SubscribeButton(onClick: () -> Unit) {
 @Composable
 fun FreeSpaceHomeScreenPreview() {
     MaterialTheme {
-        FreeSpaceHomeScreen()
+        AppSummaryScreen(AppSummaryScreenVM())
     }
 }

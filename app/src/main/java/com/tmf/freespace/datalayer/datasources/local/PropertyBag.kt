@@ -5,6 +5,7 @@ import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
@@ -56,8 +57,11 @@ class PropertyBag(val context: Context) {
      */
     private fun loadBag() {
         if (bag.isEmpty()) {
-            runBlocking {
-                for (property in propertyBagRepository.allEntries()) {
+            runBlocking {  //Stall main thread until bag is loaded the first time. This is not ideal, but works for now since the property bag is only loaded once.
+                val allProperties = CoroutineScope(Dispatchers.IO).async {
+                    propertyBagRepository.allEntries()
+                }.await()
+                for (property in allProperties) {
                     bag[property.key] = property.value
                 }
 
@@ -72,7 +76,9 @@ class PropertyBag(val context: Context) {
      * Save new/changed property bag entry to database
      */
     private suspend fun saveBagEntry(bagEntry: PropertyBagEntry) {
-        propertyBagRepository.saveBagEntry(bagEntry)
+        CoroutineScope(Dispatchers.IO).launch {
+            propertyBagRepository.saveBagEntry(bagEntry)
+        }
     }
 
 
