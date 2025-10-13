@@ -59,6 +59,7 @@ import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,8 +79,9 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
+                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite"
                         Text(
-                            text = "FreeSpace Lite",
+                            text = "FreeSpace $version",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     }
@@ -100,54 +102,29 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+//            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
 
             Text(
-                text = "Tons of space for all your treasured photos and videos",
+                text = "Ever-expanding room for all your treasured photos and videos",
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 color = Color.DarkGray
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+//            Spacer(modifier = Modifier.height(48.dp))
 
-            //Lite summary and bar
-            val trialAvailableMB = (uiState.physicalMB + 8_000 - uiState.addedMB)
-            val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("${formatter.format(trialAvailableMB / 1000f)}GB Storage Available with Lite")  //TODO Remove "with Max" if a subscriber
-                        }
-                    },
-                    fontSize = 18.sp,
-                    color = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            StorageBar(
-                uiState.photosMB,
-                uiState.videosMB,
-                uiState.appsMB,
-                uiState.addedMB,
-                trialAvailableMB
-            )
+            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
 
             //Max summary and bar
-            Spacer(modifier = Modifier.height(24.dp))
+//            Spacer(modifier = Modifier.height(24.dp))
 
-            val availableGB = (uiState.maxExpansionMB - uiState.photosMB - uiState.videosMB - uiState.appsMB - uiState.addedMB) / 1000f
+            val maxAvailableGB = uiState.expansionAvailableMB / 1000f
+            val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${formatter.format(availableGB)}GB Storage Available with Max")  //TODO Remove "with Max" if a subscriber
+                        append("${formatter.format(maxAvailableGB)} GB More Memory with FreeSpace Max")
                     }
                 },
                 fontSize = 18.sp,
@@ -157,25 +134,24 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
             Spacer(modifier = Modifier.height(16.dp))
 
             StorageBar(
-                uiState.photosMB,
-                uiState.videosMB,
-                uiState.appsMB,
-                uiState.addedMB,
-                uiState.maxExpansionMB
+                uiState.usedMB,
+                uiState.availableNowMB,
+                uiState.currentExpansionMB,
+                uiState.expansionAvailableMB,
             )
 
             //Storage info section
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(36.dp))
 
             StorageInfoSection(
-                uiState.photosMB,
-                uiState.videosMB,
-                uiState.appsMB,
-                uiState.addedMB,
-                uiState.maxExpansionMB
+                uiState.usedMB,
+                uiState.availableNowMB,
+                uiState.currentExpansionMB,
+                uiState.expansionAvailableMB,
+                uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -193,7 +169,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
 
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             KeepStorageFreeSection() { selectedOptionIdx ->
                 //TODO Handle dropdown selection
@@ -211,8 +187,9 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
             }
 
             //TODO Exclude if a subscriber
+            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
+
             if (uiState.subscriptionStatus == HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) {
-                Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
                 Spacer(modifier = Modifier.height(24.dp))
 
                 SubscribeButton() {
@@ -228,8 +205,8 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxMB: Long) {
-    val futureMB = maxMB - (photosMB + videosMB + appsMB + addedMB)
+fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, futureExpansionMB: Long) {
+    val totalMemoryMB = max(usedMB + availableNowMB + futureExpansionMB, 1)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
         Row(
             modifier = Modifier
@@ -238,36 +215,35 @@ fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxM
                 .clip(RoundedCornerShape(8.dp)),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            //.weight of each Box is percentage of total sizes in GB
-            Box(Modifier  //Photos bar
-                .weight((photosMB + 1f) / maxMB)
-                .fillMaxHeight()
-                .background(Color(0xFFF9770E)))
-            Box(Modifier  //Videos bar
-                .weight((videosMB + 1f) / maxMB)
-                .fillMaxHeight()
-                .background(Color(0xFF1942FE)))
-            Box(Modifier  //Apps bar
-                .weight((appsMB + 1f) / maxMB)
+            //Weight of each Box is percentage of total sizes in GB
+            Box(Modifier  //Apps, etc. bar
+                .weight((usedMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
                 .background(Color(0xFFF918F3)))
-            Box(Modifier  //Memory added bar
-                .weight((addedMB + 1f) / maxMB)
+            Box(Modifier  //Available now bar
+                .weight((availableNowMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
-                .background(Color(0xFF00C752)))
-            Box(modifier = Modifier  //Future space available bar
-                    .weight((futureMB + 1f) / maxMB)
+                .background(Color(0xFFB7F9B6)))
+            Box(Modifier  //Available now bar
+                .weight((currentExpansionMB + 1f) / totalMemoryMB)
+                .fillMaxHeight()
+                .background(Color(0xFF02EA62)))
+            Box(modifier = Modifier  //Future expansion space available bar
+                    .weight((futureExpansionMB + 1f) / totalMemoryMB)
                     .fillMaxHeight()
-                    .background(Color(0xFFB7F9B6)),
-                contentAlignment = Alignment.Center,
-            ) {
-                val futureGB = futureMB / 1000f
-                Text(
-                    text = if (futureGB < 1000f) "${String.format("%.1f", futureGB)}GB Space Available" else "${String.format("%.1f", futureGB / 1000f)}TB Space Available",
-                    color = Color.DarkGray,
-                    fontSize = 12.sp
-                )
-            }
+                    .background(Color(0xFF00C752)),
+//                contentAlignment = Alignment.Center,
+            )
+//            {
+//                val gbFormatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
+//                val availText = if (futureExpansionMB / totalMemoryMB > 0.1f) " GB Expansion Available" else ""
+//                Text(
+//                    text = "${gbFormatter.format(futureExpansionMB / 1000f)}$availText",
+//                    color = Color.White,
+//                    fontSize = 12.sp,
+//                    fontWeight = FontWeight.Bold
+//                )
+//            }
         }
 
     }
@@ -276,41 +252,34 @@ fun StorageBar(photosMB: Long, videosMB: Long, appsMB: Long, addedMB: Long, maxM
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageInfoSection(photosMB: Long = 0, videosMB: Long = 0, appsMB: Long = 0, addedMB: Long = 0, maxMB: Long = 720000) {
-    val totalUsedMb = photosMB + videosMB + appsMB + addedMB
-    val futureKB = (maxMB - totalUsedMb) * 1000
+fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpansionMB: Long, futureExpansionMB: Long, isSubscribed: Boolean) {
+    val virtualAvailableKB = (availableNowMB + futureExpansionMB) * 1000
     val avgPhotoKB = 500
     val avgVideoKB = 2000
-    val gbFormatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
+    val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        StorageDetailItem(
-            color = Color(0xFFF9770E),
-            storageAmount = "${gbFormatter.format(photosMB / 1_000f)}GB of Photos",
-            description = "Add ${formatter.format(futureKB / avgPhotoKB)} more photos with Max"
-        )
-        StorageDetailItem(
-            color = Color(0xFF1942FE),
-            storageAmount = "${gbFormatter.format(videosMB / 1_000f)}GB of Videos",
-            description = "Add ${formatter.format(futureKB / avgVideoKB)} more videos with Max"
-        )
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         StorageDetailItem(
             color = Color(0xFFF918F3),
-            storageAmount = "${gbFormatter.format(appsMB / 1000f)}GB of Apps, etc.",
-            description = "Remove apps to add storage"
+            storageAmount = "${gbFormatter.format(usedMB / 1_000f)} GB of Photos, Videos and other files",
+            description = "Add ${formatter.format(virtualAvailableKB / avgPhotoKB)} more photos or ${formatter.format(virtualAvailableKB / avgVideoKB)} more videos with FreeSpace Max"
         )
-        StorageDetailItem(
-            color = Color(0xFF00C752),
-            storageAmount = "${gbFormatter.format(addedMB / 1000f)}GB of Space was Added",
-            description = "Lite version limited to 8GB"  //TODO Remove if a subscriber
-        )
-        val futureGB = maxMB / 1000f
         StorageDetailItem(
             color = Color(0xFFB7F9B6),
-            storageAmount = if (futureGB < 1000f) "${String.format("%.1f", futureGB)}GB Space Available" else "${String.format("%.1f", futureGB / 1000f)}TB Space Available",
-            description = "Available only with Max subscription"
-
+            storageAmount = "${gbFormatter.format(availableNowMB / 1000f)} GB free memory currently available",
+            description = "More free memory will be added when needed"
+        )
+        StorageDetailItem(
+            color = Color(0xFF02EA62),
+            storageAmount = "${gbFormatter.format(currentExpansionMB / 1000f)} GB memory already added by FreeSpace",
+            description = "FreeSpace Lite adds up to 8 GB"
+        )
+        StorageDetailItem(
+            color = Color(0xFF01AD48),
+            storageAmount = "${gbFormatter.format(futureExpansionMB / 1000f)} GB more can be added with FreeSpace Max",
+            description = if (isSubscribed) "Relax - With FreeSpace Max you have all the memory you need for all your favorite photos and videos"
+                else "Subscribe now and stop worrying about running out of memory for your treasured photos and videos"
         )
     }
 }
@@ -335,6 +304,7 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
                 fontSize = 16.sp,
                 color = Color.Black
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
                 fontSize = 16.sp,
@@ -354,7 +324,7 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Keep", fontSize = 16.sp, color = Color.Black)
+        Text("Keep at least", fontSize = 16.sp, color = Color.Black)
         Spacer(modifier = Modifier.width(8.dp))
         Box {
             OutlinedButton(
@@ -387,7 +357,7 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
             }
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text("of storage free", fontSize = 16.sp, color = Color.Black)
+        Text("of memory free", fontSize = 16.sp, color = Color.Black)
     }
 }
 
@@ -408,7 +378,7 @@ fun SubscribeButton(onClick: () -> Unit) {
             modifier = Modifier.padding(vertical = 4.dp)
         ) {
             Text(
-                text = "Subscribe to Max Storage",
+                text = "Subscribe to FreeSpace Max",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp

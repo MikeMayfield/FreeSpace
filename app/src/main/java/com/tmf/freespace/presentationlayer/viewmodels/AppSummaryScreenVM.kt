@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
-import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,34 +54,30 @@ class AppSummaryScreenVM() : ViewModel() {
         _uiState.update { it.copy(subscriptionStatus = value) }
     }
 
-    private fun isSubscribed(): Boolean {
-        return _uiState.value.subscriptionStatus == HomeScreenState.SubscriptionStatus.SUBSCRIBED
-    }
-
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
-            val photosSize = mediaFileRepository.getTotalSizeByMediaType(MediaType.IMAGE)
-            val videosSize = mediaFileRepository.getTotalSizeByMediaType(MediaType.VIDEO)
+            val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedSize()
+            val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()  //Bytes used for compressed media
             val physicalMemorySize = physicalMemorySize()
             val freeSpace = physicalFreeSpaceSize()
-            val appsSize = (physicalMemorySize - freeSpace - photosSize - videosSize)
+            val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
+            val addedSize = mediaFileRepository.getBytesRecovered()
             _uiState.value = _uiState.value.copy(
-                photosMB = photosSize / 1_000_000L,
-                videosMB = videosSize / 1_000_000L,
-                appsMB = appsSize / 1_000_000L,
-                addedMB = mediaFileRepository.getBytesRecovered() / 1_000_000L,
-                maxExpansionMB = (physicalMemorySize - appsSize) / 100_000L,  //100_000 is for non-app memory x 10 / 1_000_000
-                minFreeSpaceGoalMB = minFreeSpaceGoalMB(propertyBag.getInt("KEEP_FREE_OPTION_IDX", 0)),
+                usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / 1_000_000L,
+                availableNowMB = freeSpace / 1_000_000L,
+                currentExpansionMB = addedSize / 1_000_000L,
+                expansionAvailableMB = (freeSpace + compressedPhotosAndVideosSize)  / 100_000L,  //100_000 is for nonAppMemory x 10 / 1_000_000
                 status = status(),
                 keepFreeOptionIdx = propertyBag.getInt("KEEP_FREE_OPTION_IDX", 0),
                 subscriptionStatus = HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED,  //TODO  Implement
+                physicalMB = physicalMemorySize / 1_000_000L,
             )
             delay(5_000L)  //Update state every n milli-seconds  //TODO Use longer period
         }
     }
 
     private fun status(): String {
-        return "Limit reached - Upgrade to Max for more"  //TODO: Generate proper status from DB
+        return "Free expansion limit reached - Subscribe now and never run out of memory again"  //TODO: Generate proper status from DB
     }
 
     private fun physicalMemorySize(): Long {
@@ -114,20 +109,21 @@ class AppSummaryScreenVM() : ViewModel() {
 }
 
 data class HomeScreenState(
-    val photosMB: Long = 0L,  //Amount of space used for photos (Megabytes)
-    val videosMB: Long = 0L,  //Amount of space used for videos (Megabytes)
-    val appsMB: Long = 0L,  //Amount of space used for apps, computed as physicalSpace - freeSpace - photosMB - videosMB
+    val usedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)
+    val availableNowMB: Long = 0L,  //Amount of space available now
+    val currentExpansionMB: Long = 0L,  //Amount of space already added by FreeSpace
+    val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion (8GB Lite, 10 x Physical for MAX)
     val addedMB: Long = 0L,  //Amount of space added through optimization/compression
-    val maxExpansionMB: Long = 320_000L,  //Maximum amount of space available for expansion (8GB Lite, 10 x Physical for MAX)
-    val minFreeSpaceGoalMB: Long = 2_000L,  //Minimum amount of space to try to keep available
-    val physicalMB: Long = 64_000L,  //Amount of physical space available
     val status: String = "",  //Status, as display string
     val keepFreeOptionIdx: Int = 0,  //Index of keep free option selected by user
-    val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.NOT_SUBSCRIBED,  //Subscription status
+    val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.SUBSCRIBED,  //Subscription status
+    val physicalMB: Long = 64_000L,  //Amount of physical space available
 )
 {
+
     enum class SubscriptionStatus {
         NOT_SUBSCRIBED,
         SUBSCRIBED,
     }
+
 }

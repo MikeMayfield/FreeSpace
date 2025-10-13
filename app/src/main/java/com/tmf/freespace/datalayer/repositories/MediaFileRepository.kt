@@ -98,8 +98,12 @@ class MediaFileRepository(val context: Context) {
         return mediaFileDao.getBytesRecovered()
     }
 
-    suspend fun getTotalSizeByMediaType(mediaType: MediaType): Long {
-        return mediaFileDao.getTotalSizeByMediaType(mediaType.toString())
+    suspend fun getTotalUncompressedSize(): Long {
+        return mediaFileDao.getTotalUncompressedSize()
+    }
+
+    suspend fun getTotalCompressedMediaSize(): Long {
+        return mediaFileDao.getTotalCompressedMediaSize()
     }
 
     /**

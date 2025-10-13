@@ -86,6 +86,9 @@ interface MediaFileDao {
     @Query("SELECT SUM(originalSize - compressedSize) FROM MediaFile")
     suspend fun getBytesRecovered(): Long
 
-    @Query("SELECT SUM(originalSize) FROM MediaFile WHERE mediaType = :mediaType")
-    suspend fun getTotalSizeByMediaType(mediaType: String): Long
+    @Query("SELECT SUM(originalSize) FROM MediaFile")
+    suspend fun getTotalUncompressedSize(): Long
+
+    @Query("SELECT SUM(compressedSize) FROM MediaFile")
+    suspend fun getTotalCompressedMediaSize(): Long
 }
