@@ -30,6 +30,11 @@ class PropertyBag(val context: Context) {
         return get(key, defaultValue.toString()).toLong()
     }
 
+    fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
+        return get(key, defaultValue.toString()).toBoolean()
+    }
+
+
     /**
      * Sets the value associated with the given key.
      *
@@ -48,6 +53,10 @@ class PropertyBag(val context: Context) {
     }
 
     fun setLong(key: String, value: Long) {
+        set(key, value.toString())
+    }
+
+    fun setBoolean(key: String, value: Boolean) {
         set(key, value.toString())
     }
 
@@ -83,6 +92,18 @@ class PropertyBag(val context: Context) {
 
 
     companion object {
-        private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory
+        private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory, shared by all users of PropertyBag class
+
+        //Known properties (KEYS)
+        const val MAX_DATE_ADDED = "MAX_DATE_ADDED"
+        const val KEEP_FREE_OPTION_IDX = "KEEP_FREE_OPTION_IDX"
+        const val MIN_FREE_SPACE_GOAL_MB = "MIN_FREE_SPACE_GOAL_MB"
+        const val IS_IDLE = "IS_IDLE"
+        const val PRIOR_MEDIA_STORE_VERSION = "PRIOR_MEDIA_STORE_VERSION"
+        const val SUBSCRIPTION_STATUS = "SUBSCRIPTION_STATUS"
+        const val TRIAL_GB_FREE = "TRIAL_GB_FREE"
+        const val MAX_GB_LIMIT_FOR_PLAN = "MAX_GB_LIMIT_FOR_PLAN"
+        const val MIN_GB_FREE_GOAL = "MIN_GB_FREE_GOAL"
+        const val ALWAYS_OPTIMIZE_LEVEL = "ALWAYS_OPTIMIZE_LEVEL"
     }
 }

@@ -1,11 +1,17 @@
 package com.tmf.freespace.presentationlayer.viewmodels
 
+import android.content.Context.BATTERY_SERVICE
+import android.os.BatteryManager
 import android.os.Environment
 import android.os.StatFs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.IS_IDLE
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.KEEP_FREE_OPTION_IDX
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.MIN_FREE_SPACE_GOAL_MB
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,12 +19,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 
 class AppSummaryScreenVM() : ViewModel() {
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository(appContext)
     private val propertyBag = PropertyBag(appContext)
+    private val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
+
     private val _uiState = MutableStateFlow(HomeScreenState())
 
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
@@ -29,28 +40,24 @@ class AppSummaryScreenVM() : ViewModel() {
         }
     }
 
-    fun updateStatus(value: String) {
-        propertyBag.set("STATUS", value)
-        _uiState.update { it.copy(status = value) }
-    }
 
     fun updateKeepFreeOptionIdx(value: Int) {
-        val currentFreeOptionIdx = propertyBag.getInt("KEEP_FREE_OPTION_IDX", 0)
+        val currentFreeOptionIdx = propertyBag.getInt(KEEP_FREE_OPTION_IDX, 0)
         if (currentFreeOptionIdx != value) {
             //TODO Compute KeepFree memory value and store in DB; Start background processing if idle; Keep track of status in DB
             val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
-            propertyBag.setInt("KEEP_FREE_OPTION_IDX", value)
-            propertyBag.setLong("MIN_FREE_SPACE_GOAL_MB", minFreeSpaceGoalMB)
+            propertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
+            propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
             _uiState.update { it.copy(keepFreeOptionIdx = value) }
         }
     }
 
     fun updateMinFreeSpaceMB(minFreeSpaceMB: Long) {
-        propertyBag.setLong("MIN_FREE_SPACE_GOAL_MB", minFreeSpaceMB)
+        propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceMB)
     }
 
     fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
-        //TODO Update status in DB
+        propertyBag.set(SUBSCRIPTION_STATUS, value.name)
         _uiState.update { it.copy(subscriptionStatus = value) }
     }
 
@@ -68,16 +75,32 @@ class AppSummaryScreenVM() : ViewModel() {
                 currentExpansionMB = addedSize / 1_000_000L,
                 expansionAvailableMB = (freeSpace + compressedPhotosAndVideosSize)  / 100_000L,  //100_000 is for nonAppMemory x 10 / 1_000_000
                 status = status(),
-                keepFreeOptionIdx = propertyBag.getInt("KEEP_FREE_OPTION_IDX", 0),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED,  //TODO  Implement
+                keepFreeOptionIdx = propertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
+                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
                 physicalMB = physicalMemorySize / 1_000_000L,
             )
             delay(5_000L)  //Update state every n milli-seconds  //TODO Use longer period
         }
     }
 
-    private fun status(): String {
-        return "Free expansion limit reached - Subscribe now and never run out of memory again"  //TODO: Generate proper status from DB
+    private suspend fun status(): String {
+        val addedSize = mediaFileRepository.getBytesRecovered()
+        if (addedSize >= 8_000_000_000 && !isSubscribed()) {
+            return "Free expansion limit reached — Subscribe now and get almost unlimited memory"
+        }
+
+        val isIdle = propertyBag.getBoolean(IS_IDLE, true)
+        if (isIdle) {
+            if (batteryLow()) {
+                return "Waiting for your battery to charge. Plug in to expand memory now"
+            }
+            else {
+                return "Idle — Extra memory will be automatically added when needed"
+            }
+        }
+        else {
+            return "Adding memory, please check back later. Magic takes time..."
+        }
     }
 
     private fun physicalMemorySize(): Long {
@@ -95,6 +118,17 @@ class AppSummaryScreenVM() : ViewModel() {
 
         return availableBlocks * blockSize
     }
+
+    private fun batteryLow(): Boolean {
+        val batteryManager = appContext.getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        return batterLevelPct <= 33
+    }
+
+    private fun isSubscribed(): Boolean {
+        return propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
+    }
+
 
     private fun minFreeSpaceGoalMB(keepFreeOptionIdx: Int): Long {
         return when (keepFreeOptionIdx) {
@@ -116,7 +150,7 @@ data class HomeScreenState(
     val addedMB: Long = 0L,  //Amount of space added through optimization/compression
     val status: String = "",  //Status, as display string
     val keepFreeOptionIdx: Int = 0,  //Index of keep free option selected by user
-    val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.SUBSCRIBED,  //Subscription status
+    val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.NOT_SUBSCRIBED,  //Subscription status
     val physicalMB: Long = 64_000L,  //Amount of physical space available
 )
 {
