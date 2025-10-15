@@ -23,13 +23,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.tmf.freespace.R
 import com.tmf.freespace.presentationlayer.ui.navigation.NavGraph
+import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: AppSummaryScreenVM) {
+fun MainScreen(viewModel: AppSummaryScreenVM, startRoute: NavRoute) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -60,7 +61,7 @@ fun MainScreen(viewModel: AppSummaryScreenVM) {
     ) { paddingValues ->
         FreeSpaceTheme {
             val navController = rememberNavController()
-            NavGraph(navController, viewModel, paddingValues)
+            NavGraph(navController, startRoute, viewModel, paddingValues)
         }
     }
 }

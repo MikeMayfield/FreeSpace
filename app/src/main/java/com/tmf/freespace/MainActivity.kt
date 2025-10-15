@@ -1,6 +1,8 @@
 package com.tmf.freespace
 
 import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,6 +10,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.screens.MainScreen
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
@@ -37,7 +41,6 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.READ_MEDIA_AUDIO,
                 Manifest.permission.READ_MEDIA_VIDEO,
                 Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.MANAGE_EXTERNAL_STORAGE,
             )
         } else {
             arrayOf(
@@ -54,7 +57,17 @@ class MainActivity : ComponentActivity() {
 
         //Display the AppSummary screen  //TODO Determine true starting screen
         setContent {
-            MainScreen(viewModel)
+            val firstScreenRoute = if (allPermissionsAreGranted(this, permissions)) NavRoute.AppSummary else NavRoute.Welcome
+            MainScreen(viewModel, firstScreenRoute)
         }
+    }
+
+    private fun allPermissionsAreGranted(context: Context, permissions: Array<String>): Boolean {
+        for (permission in permissions) {
+            if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                return false
+            }
+        }
+        return true
     }
 }

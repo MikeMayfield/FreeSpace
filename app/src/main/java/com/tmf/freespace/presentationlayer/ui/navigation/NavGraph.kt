@@ -17,7 +17,7 @@ import com.tmf.freespace.presentationlayer.ui.screens.WelcomeScreen
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
 @Composable
-fun NavGraph(navController: NavHostController, appSummaryViewModel: AppSummaryScreenVM, paddingValues: PaddingValues) {
+fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryViewModel: AppSummaryScreenVM, paddingValues: PaddingValues) {
 
     //Overall navigation graph:
     //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> Start -> AppSummary
@@ -25,7 +25,7 @@ fun NavGraph(navController: NavHostController, appSummaryViewModel: AppSummarySc
     //  Welcome: If already have permissions -> AppSummary
     NavHost(
         navController = navController,
-        startDestination = NavRoute.Welcome.path
+        startDestination = startRoute.path
     ) {
         addWelcomeScreen(navController, this, paddingValues)
 
