@@ -1,13 +1,13 @@
-package com.tmf.freespace.presentationlayer.ui.homescreen
+package com.tmf.freespace.presentationlayer.ui.screens
 
 import android.annotation.SuppressLint
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,10 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,11 +46,9 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tmf.freespace.R
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat
@@ -63,36 +58,36 @@ import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
-    val tag = "FreeSpaceHomeScreen"
+fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues) {
+    val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Replace with your actual app icon resource
-                        Image(
-                            painter = painterResource(id = R.drawable.xxxhdpi_icon),
-                            contentDescription = "FreeSpace Lite Logo",
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite"
-                        Text(
-                            text = "FreeSpace $version",
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
-                )
-            )
-        }
-    ) { paddingValues ->
+//    Scaffold(
+//        topBar = {
+//            TopAppBar(
+//                title = {
+//                    Row(verticalAlignment = Alignment.CenterVertically) {
+//                        // Replace with your actual app icon resource
+//                        Image(
+//                            painter = painterResource(id = R.drawable.xxxhdpi_icon),
+//                            contentDescription = "FreeSpace Lite Logo",
+//                            modifier = Modifier.size(32.dp)
+//                        )
+//                        Spacer(modifier = Modifier.width(8.dp))
+//                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite"
+//                        Text(
+//                            text = "FreeSpace $version",
+//                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+//                        )
+//                    }
+//                },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = Color.White,
+//                    titleContentColor = Color.Black
+//                )
+//            )
+//        }
+//    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,7 +98,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 //            Spacer(modifier = Modifier.height(32.dp))
-            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
+            Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
             Text(
                 text = "Ever-expanding room for all your treasured photos and videos",
@@ -114,7 +109,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
 
 //            Spacer(modifier = Modifier.height(48.dp))
 
-            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
+            Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
             //Max summary and bar
 //            Spacer(modifier = Modifier.height(24.dp))
@@ -200,7 +195,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM) {
 
             Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
         }
-    }
+//    }
 }
 
 @SuppressLint("DefaultLocale")
@@ -230,8 +225,8 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
                 .background(Color(0xFF02EA62)))
             Box(modifier = Modifier  //Future expansion space available bar
                     .weight((futureExpansionMB + 1f) / totalMemoryMB)
-                    .fillMaxHeight()
-                    .background(Color(0xFF00C752)),
+                .fillMaxHeight()
+                .background(Color(0xFF00C752)),
 //                contentAlignment = Alignment.Center,
             )
 //            {
@@ -392,10 +387,10 @@ fun SubscribeButton(onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, device = "id:pixel_4")
-@Composable
-fun FreeSpaceHomeScreenPreview() {
-    MaterialTheme {
-        AppSummaryScreen(AppSummaryScreenVM())
-    }
-}
+//@Preview(showBackground = true, device = "id:pixel_4")
+//@Composable
+//fun FreeSpaceHomeScreenPreview() {
+//    MaterialTheme {
+//        AppSummaryScreen(AppSummaryScreenVM())
+//    }
+//}

@@ -10,7 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
-import com.tmf.freespace.presentationlayer.ui.homescreen.AppSummaryScreen
+import com.tmf.freespace.presentationlayer.ui.screens.MainScreen
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
 
@@ -56,11 +56,11 @@ class MainActivity : ComponentActivity() {
 
         //Display the AppSummary screen  //TODO Determine true starting screen
         setContent {
-            AppSummaryScreen(viewModel)
+            MainScreen(viewModel)
         }
 
         //Start background compression processing, if needed
-//        queuePeriodicBackgroundWorkers(this.applicationContext)  //TODO enable this
+//        queuePeriodicBackgroundWorkers(this.applicationContext)  //TODO enable this after getting permissions
     }
 
     private fun queuePeriodicBackgroundWorkers(context: Context) {

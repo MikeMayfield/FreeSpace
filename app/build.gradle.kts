@@ -71,6 +71,8 @@ dependencies {
     implementation(libs.retrofit2.kotlinx.serialization.converter) // Converter for Retrofit
     implementation(libs.room.runtime)
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
 
     ksp(libs.room.compiler)
 

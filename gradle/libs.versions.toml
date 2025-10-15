@@ -28,6 +28,8 @@ workRuntimeKtx = "2.10.5"
 exifinterface = "1.4.1"
 appcompat = "1.7.1"
 firebaseCrashlyticsBuildtools = "3.0.6"
+navigationRuntimeKtx = "2.9.5"
+navigationCompose = "2.9.5"
 
 [libraries]
 androidx-media3-effect = { module = "androidx.media3:media3-effect", version.ref = "media3" }
@@ -71,6 +73,8 @@ retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit
 androidx-exifinterface = { group = "androidx.exifinterface", name = "exifinterface", version.ref = "exifinterface" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
