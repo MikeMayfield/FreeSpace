@@ -1,7 +1,6 @@
 package com.tmf.freespace
 
 import android.Manifest
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -9,7 +8,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.app.ActivityCompat
-import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.screens.MainScreen
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
@@ -58,12 +56,5 @@ class MainActivity : ComponentActivity() {
         setContent {
             MainScreen(viewModel)
         }
-
-        //Start background compression processing, if needed
-//        queuePeriodicBackgroundWorkers(this.applicationContext)  //TODO enable this after getting permissions
-    }
-
-    private fun queuePeriodicBackgroundWorkers(context: Context) {
-        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing(context)
     }
 }

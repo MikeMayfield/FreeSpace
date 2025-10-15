@@ -49,6 +49,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import com.tmf.freespace.presentationlayer.ui.components.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat
@@ -58,36 +60,11 @@ import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues) {
+fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues, navController: NavHostController) {
     val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Row(verticalAlignment = Alignment.CenterVertically) {
-//                        // Replace with your actual app icon resource
-//                        Image(
-//                            painter = painterResource(id = R.drawable.xxxhdpi_icon),
-//                            contentDescription = "FreeSpace Lite Logo",
-//                            modifier = Modifier.size(32.dp)
-//                        )
-//                        Spacer(modifier = Modifier.width(8.dp))
-//                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite"
-//                        Text(
-//                            text = "FreeSpace $version",
-//                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-//                        )
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = Color.White,
-//                    titleContentColor = Color.Black
-//                )
-//            )
-//        }
-//    ) { paddingValues ->
+    ConfirmExit(navController, paddingValues) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -97,7 +74,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            Spacer(modifier = Modifier.height(32.dp))
+
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
             Text(
@@ -107,12 +84,7 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues
                 color = Color.DarkGray
             )
 
-//            Spacer(modifier = Modifier.height(48.dp))
-
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
-
-            //Max summary and bar
-//            Spacer(modifier = Modifier.height(24.dp))
 
             val maxAvailableGB = uiState.expansionAvailableMB / 1000f
             val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
@@ -181,7 +153,6 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues
                 viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
             }
 
-            //TODO Exclude if a subscriber
             Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
 
             if (uiState.subscriptionStatus == HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) {
@@ -191,11 +162,11 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues
                     Log.d(tag, "Subscribe button clicked")
                     //TODO Handle button click
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
+                Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
+            }
         }
-//    }
+    }
 }
 
 @SuppressLint("DefaultLocale")

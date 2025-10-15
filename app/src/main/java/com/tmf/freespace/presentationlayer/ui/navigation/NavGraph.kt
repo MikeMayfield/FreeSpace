@@ -41,7 +41,7 @@ fun NavGraph(navController: NavHostController, appSummaryViewModel: AppSummarySc
 
         addStart(navController, this, paddingValues)
 
-        AddAppSummaryScreen(this, appSummaryViewModel, paddingValues)
+        AddAppSummaryScreen(navController, this, appSummaryViewModel, paddingValues)
 
     }
 }
@@ -117,11 +117,12 @@ private fun addStart(
 }
 
 private fun AddAppSummaryScreen(
+    navController: NavHostController,
     navGraphBuilder: NavGraphBuilder,
     viewModel: AppSummaryScreenVM,
     paddingValues: PaddingValues
 ) {
     navGraphBuilder.composable(route = NavRoute.AppSummary.path) {
-        AppSummaryScreen(viewModel, paddingValues)
+        AppSummaryScreen(viewModel, paddingValues, navController)
     }
 }

@@ -23,9 +23,11 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun GenericTextBody(
@@ -54,7 +56,7 @@ fun GenericTextBody(
             Image(
                 painter = painterResource(id = imageID),
                 contentDescription = "Content image",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(0.8f)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -64,7 +66,9 @@ fun GenericTextBody(
         if (titleHtml != null) {
             Text(
                 AnnotatedString.fromHtml(titleHtml),
-                modifier
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = modifier
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -82,6 +86,8 @@ fun GenericTextBody(
                     )
                 ),
             ),
+            fontSize = 18.sp,
+//            fontStyle = FontStyle.Italic,
             modifier = modifier
                 .align(Alignment.Start)
                 .clickable() {
