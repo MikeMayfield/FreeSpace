@@ -10,7 +10,7 @@ import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 @Composable
 fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingValues) {
     GenericTextBody(
-        titleHtml = "PERMISSIONS",
+        title = "PERMISSIONS",
         bodyHtml = "TODO: Placeholder for permissions screen",
         paddingValues = paddingValues,
     ) {

@@ -11,8 +11,8 @@ import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 fun WelcomeScreen(navController: NavHostController, paddingValues: PaddingValues) {
     ConfirmExit(navController, paddingValues) {
         GenericTextBody(
-            imageID = com.tmf.freespace.R.drawable.video,
-            titleHtml = "WELCOME TO FREESPACE",
+            imageID = com.tmf.freespace.R.drawable.welcome_screen,
+            title = "WELCOME TO FREESPACE",
             bodyHtml =
                 "Picture this: you’re on that once-in-a-lifetime trip. Every view is breathtaking, every moment worth capturing — but suddenly, your phone flashes that dreaded message: “<b>Storage Full</b>.” Now you’re stuck deleting old memories just to make room for new ones.<br><br>" +
                         "Not anymore.<br><br>" +

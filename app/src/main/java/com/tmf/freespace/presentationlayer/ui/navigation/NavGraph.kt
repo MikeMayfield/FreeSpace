@@ -1,5 +1,9 @@
 package com.tmf.freespace.presentationlayer.ui.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
@@ -25,8 +29,16 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryV
     //  Welcome: If already have permissions -> AppSummary
     NavHost(
         navController = navController,
-        startDestination = startRoute.path
-    ) {
+        startDestination = startRoute.path,
+        enterTransition = {
+            fadeIn(animationSpec = tween(500)) + slideIntoContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left,  tween(1000))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(500)) + slideOutOfContainer(
+                AnimatedContentTransitionScope.SlideDirection.Left, tween(1000))
+        },
+        ) {
         addWelcomeScreen(navController, this, paddingValues)
 
         addSetItForgetIt(navController, this, paddingValues)

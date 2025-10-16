@@ -9,9 +9,9 @@ import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 @Composable
 fun LicenseAgreementScreen(navController: NavHostController, paddingValues: PaddingValues) {
     GenericTextBody(
-        titleHtml = "END USER LICENSE AGREEMENT",
+        title = "LICENSE AGREEMENT",
         bodyHtml = 
-            "This End User License Agreement (“Agreement”) is a legal agreement between you (“User” or “you”) and TMF Enterprises, LLC (“Company,” “we,” “our,” or “us”) governing your use of the FreeSpace mobile application (“App”) for Android devices.<br><br>" +
+            "<br>This End User License Agreement (“Agreement”) is a legal agreement between you (“User” or “you”) and TMF Enterprises, LLC (“Company,” “we,” “our,” or “us”) governing your use of the FreeSpace mobile application (“App”) for Android devices.<br><br>" +
                 "By installing, accessing, or using the App, you agree to be bound by the terms of this Agreement. If you do not agree, do not install or use the App.<br><br>" +
 
                 "<b>1. License Grant</b><br><br>" +
@@ -47,10 +47,10 @@ fun LicenseAgreementScreen(navController: NavHostController, paddingValues: Padd
 
                 "<b>By using FreeSpace, you acknowledge that you have read, understood, and agree to this Agreement, including the disclaimers about photo and video quality and the absence of warranties or liability.</b><br><br>" +
 
-                "<em>Last updated: [Insert Date]</em><br><br>",
+                "<em>Last updated: 15-Oct-2025</em><br><br>",
         navButtonText = "ACCEPT",
         paddingValues = paddingValues,
     ) {
-        navController.navigate(NavRoute.SetItForgetIt.path)
+        navController.navigate(NavRoute.Permissions.path)
     }
 }

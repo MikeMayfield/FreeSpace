@@ -12,8 +12,8 @@ import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 fun StartScreen(navController: NavHostController, paddingValues: PaddingValues) {
     ConfirmExit(navController, paddingValues) {
         GenericTextBody(
-            imageID = com.tmf.freespace.R.drawable.video,
-            titleHtml = "START THE MAGIC",
+            imageID = com.tmf.freespace.R.drawable.start_the_magic,
+            title = "START THE MAGIC",
             bodyHtml =
                 "FreeSpace will automatically optimize and expand your phone or tablet's memory whenever it starts getting full — so you’ll always have room for all your favorite photos and videos.<br><br>" +
                         "<b>NOTE</b>: <em>The first optimization may take a while, maybe even a few hours. Hang tight — it’s doing a lot behind the scenes to make your phone bigger on the inside than it is on the outside.</em>",
