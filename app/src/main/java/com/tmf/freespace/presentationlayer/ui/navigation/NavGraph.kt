@@ -17,6 +17,7 @@ import com.tmf.freespace.presentationlayer.ui.screens.LicenseScreen
 import com.tmf.freespace.presentationlayer.ui.screens.PermissionsScreen
 import com.tmf.freespace.presentationlayer.ui.screens.SetItForgetItScreen
 import com.tmf.freespace.presentationlayer.ui.screens.StartScreen
+import com.tmf.freespace.presentationlayer.ui.screens.SubscriptionPromoScreen
 import com.tmf.freespace.presentationlayer.ui.screens.WelcomeScreen
 import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 
@@ -51,10 +52,11 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryV
 
         addPermissions(navController, this, paddingValues)
 
+        addSubscriptionPromo(navController, this, paddingValues)
+
         addStart(navController, this, paddingValues)
 
-        AddAppSummaryScreen(navController, this, appSummaryViewModel, paddingValues)
-
+        addAppSummaryScreen(navController, this, appSummaryViewModel, paddingValues)
     }
 }
 
@@ -118,6 +120,16 @@ private fun addPermissions(
     }
 }
 
+private fun addSubscriptionPromo(
+    navController: NavHostController,
+    navGraphBuilder: NavGraphBuilder,
+    paddingValues: PaddingValues
+) {
+    navGraphBuilder.composable(route = NavRoute.SubscriptionPromo.path) {
+        SubscriptionPromoScreen(navController, paddingValues)
+    }
+}
+
 private fun addStart(
     navController: NavHostController,
     navGraphBuilder: NavGraphBuilder,
@@ -128,7 +140,7 @@ private fun addStart(
     }
 }
 
-private fun AddAppSummaryScreen(
+private fun addAppSummaryScreen(
     navController: NavHostController,
     navGraphBuilder: NavGraphBuilder,
     viewModel: AppSummaryScreenVM,
