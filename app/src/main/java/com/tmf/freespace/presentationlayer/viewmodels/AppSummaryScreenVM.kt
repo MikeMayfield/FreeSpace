@@ -19,20 +19,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.util.Locale
 
 
 class AppSummaryScreenVM() : ViewModel() {
     val bytesToMB = 1_000_000L
-    val bytesToGB = 1_000_000_000L
-    val mbToGB = 1_000L
 
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository(appContext)
     private val propertyBag = PropertyBag(appContext)
-    private val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
 
     private val _uiState = MutableStateFlow(HomeScreenState())
 
@@ -60,10 +54,10 @@ class AppSummaryScreenVM() : ViewModel() {
         propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceMB)
     }
 
-    fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
-        propertyBag.set(SUBSCRIPTION_STATUS, value.name)
-        _uiState.update { it.copy(subscriptionStatus = value) }
-    }
+//    fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
+//        propertyBag.set(SUBSCRIPTION_STATUS, value.name)
+//        _uiState.update { it.copy(subscriptionStatus = value) }
+//    }
 
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
