@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tmf.freespace.presentationlayer.ui.components.ConfirmExit
-import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
+import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -60,7 +60,7 @@ import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues, navController: NavHostController) {
+fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
     val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
