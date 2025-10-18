@@ -55,6 +55,6 @@ class MainActivity : ComponentActivity() {
                 return false
             }
         }
-        return true  //TODO Change to TRUE to force UI to always start on first screen.
+        return false//TODO true  //TODO Change to TRUE to force UI to always start on first screen.
     }
 }

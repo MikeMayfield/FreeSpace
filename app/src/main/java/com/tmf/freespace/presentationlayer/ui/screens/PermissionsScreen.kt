@@ -3,14 +3,14 @@ package com.tmf.freespace.presentationlayer.ui.screens
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import com.tmf.freespace.R.drawable
+import com.tmf.freespace.R
 import com.tmf.freespace.presentationlayer.ui.components.GenericTextBody
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 
 @Composable
 fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingValues) {
     GenericTextBody(
-        imageID = drawable.permisssions,
+        imageID = R.drawable.permisssions,
         title = "PERMISSIONS",
         bodyHtml =
             "We need your permission to work for you.<br><br>" +

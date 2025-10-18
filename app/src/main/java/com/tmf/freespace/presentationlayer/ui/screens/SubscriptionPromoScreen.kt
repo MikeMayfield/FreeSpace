@@ -1,14 +1,16 @@
 package com.tmf.freespace.presentationlayer.ui.screens
+
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import com.tmf.freespace.R
 import com.tmf.freespace.presentationlayer.ui.components.GenericTextBody
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 
 @Composable
 fun SubscriptionPromoScreen(navController: NavHostController, paddingValues: PaddingValues) {
     GenericTextBody(
-        imageID = com.tmf.freespace.R.drawable.subscription_promo,
+        imageID = R.drawable.subscription_promo,
         title = "SUBSCRIBE ANYTIME",
         bodyHtml =
             "<b>Get started with FreeSpace Lite — Totally free!</b> \uD83C\uDF89\n<br><br>" +
