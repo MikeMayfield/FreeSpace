@@ -13,11 +13,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.screens.MainScreen
-import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
+import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: AppSummaryScreenVM by viewModels()
+    private val viewModel: CommonViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()

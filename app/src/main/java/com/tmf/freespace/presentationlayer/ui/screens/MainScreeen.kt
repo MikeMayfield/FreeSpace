@@ -25,12 +25,12 @@ import com.tmf.freespace.R
 import com.tmf.freespace.presentationlayer.ui.navigation.NavGraph
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
-import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
+import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: AppSummaryScreenVM, startRoute: NavRoute) {
+fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(

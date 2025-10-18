@@ -19,10 +19,10 @@ import com.tmf.freespace.presentationlayer.ui.screens.SetItForgetItScreen
 import com.tmf.freespace.presentationlayer.ui.screens.StartScreen
 import com.tmf.freespace.presentationlayer.ui.screens.SubscriptionPromoScreen
 import com.tmf.freespace.presentationlayer.ui.screens.WelcomeScreen
-import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
+import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 
 @Composable
-fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryViewModel: AppSummaryScreenVM, paddingValues: PaddingValues) {
+fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryViewModel: CommonViewModel, paddingValues: PaddingValues) {
 
     //Overall navigation graph:
     //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> Start -> AppSummary
@@ -143,7 +143,7 @@ private fun addStart(
 private fun addAppSummaryScreen(
     navController: NavHostController,
     navGraphBuilder: NavGraphBuilder,
-    viewModel: AppSummaryScreenVM,
+    viewModel: CommonViewModel,
     paddingValues: PaddingValues
 ) {
     navGraphBuilder.composable(route = NavRoute.AppSummary.path) {

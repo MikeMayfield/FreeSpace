@@ -21,20 +21,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
-class AppSummaryScreenVM() : ViewModel() {
+class CommonViewModel() : ViewModel() {
     val bytesToMB = 1_000_000L
 
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository(appContext)
     private val propertyBag = PropertyBag(appContext)
-
     private val _uiState = MutableStateFlow(HomeScreenState())
 
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            periodicallyPopulateHomeScreenState()
+            periodicallyPopulateHomeScreenState()  //TODO Only do if permissions have been obtained. Maybe it would be better to call it on demand
         }
     }
 
