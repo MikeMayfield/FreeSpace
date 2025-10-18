@@ -1,4 +1,4 @@
-package com.tmf.freespace.presentationlayer.ui.components
+package com.tmf.freespace.presentationlayer.ui.composables
 
 import android.graphics.Color
 import androidx.activity.ComponentActivity

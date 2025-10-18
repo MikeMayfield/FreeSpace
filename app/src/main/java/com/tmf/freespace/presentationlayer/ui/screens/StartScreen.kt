@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import com.tmf.freespace.R
-import com.tmf.freespace.presentationlayer.ui.components.GenericTextBody
+import com.tmf.freespace.presentationlayer.ui.composables.GenericTextBody
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 
 @Composable

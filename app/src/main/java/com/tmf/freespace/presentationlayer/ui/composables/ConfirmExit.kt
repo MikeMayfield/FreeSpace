@@ -1,4 +1,4 @@
-package com.tmf.freespace.presentationlayer.ui.components
+package com.tmf.freespace.presentationlayer.ui.composables
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity

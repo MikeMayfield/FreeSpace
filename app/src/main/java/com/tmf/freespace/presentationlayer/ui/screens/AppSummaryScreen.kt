@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.tmf.freespace.presentationlayer.ui.components.ConfirmExit
+import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat

@@ -25,7 +25,7 @@ import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryViewModel: CommonViewModel, paddingValues: PaddingValues) {
 
     //Overall navigation graph:
-    //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> Start -> AppSummary
+    //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> SubscriptionPromo -> Start -> AppSummary
     //    License.onBodyClick -> LicenseAgreement -> Permissions
     //  Welcome: If already have permissions -> AppSummary
     NavHost(

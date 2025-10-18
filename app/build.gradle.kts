@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.accompanist.permissions)
 
     ksp(libs.room.compiler)
 
