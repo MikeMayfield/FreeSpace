@@ -86,18 +86,19 @@ fun AppSummaryScreen(viewModel: AppSummaryScreenVM, paddingValues: PaddingValues
 
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
-            val maxAvailableGB = uiState.expansionAvailableMB / 1000f
+            val sizeAtMaxExpansion = uiState.expansionAvailableMB + uiState.physicalMB + uiState.currentExpansionMB  //TODO uiState.expansionAvailableMB / 1000f
             val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("${formatter.format(maxAvailableGB)} GB More Memory with FreeSpace Max")
+                        append("Grow your ${formatter.format(uiState.physicalMB / 1_000L)} GB of actual memory to ${formatter.format(sizeAtMaxExpansion / 1000L)} GB with FreeSpace Max")
                     }
                 },
                 fontSize = 18.sp,
                 color = Color.Black
             )
 
+            //Storage bar section
             Spacer(modifier = Modifier.height(16.dp))
 
             StorageBar(
@@ -219,9 +220,9 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
 @SuppressLint("DefaultLocale")
 @Composable
 fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpansionMB: Long, futureExpansionMB: Long, isSubscribed: Boolean) {
-    val virtualAvailableKB = (availableNowMB + futureExpansionMB) * 1000
+    val virtualAvailableKB = (availableNowMB + futureExpansionMB) * 1_000L
     val avgPhotoKB = 500
-    val avgVideoKB = 2000
+    val avgVideoKB = 20_000
     val gbFormatter = DecimalFormat("###,###,##0.0", DecimalFormatSymbols(Locale.getDefault()))
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 

@@ -13,4 +13,3 @@ sealed class NavRoute(val path: String) {
     object Start: NavRoute("start")
     object AppSummary: NavRoute("appSummary")
 }
-

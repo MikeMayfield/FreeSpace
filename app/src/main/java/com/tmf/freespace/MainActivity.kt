@@ -19,26 +19,13 @@ import com.tmf.freespace.presentationlayer.viewmodels.AppSummaryScreenVM
 class MainActivity : ComponentActivity() {
     private val viewModel: AppSummaryScreenVM by viewModels()
 
-//    private val viewModel: MainViewModel by viewModels<MainViewModel>(
-//        factoryProducer = {
-//            object : ViewModelProvider.Factory {
-//                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//                    if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-//                        return MainViewModel(mediaReader) as T
-//                    }
-//                    throw IllegalArgumentException("Unknown ViewModel class")
-//                }
-//            }
-//        }
-//    )
-
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         val permissions = if (Build.VERSION.SDK_INT >= 33) {
             arrayOf(
-                Manifest.permission.READ_MEDIA_AUDIO,
+//                Manifest.permission.READ_MEDIA_AUDIO,
                 Manifest.permission.READ_MEDIA_VIDEO,
                 Manifest.permission.READ_MEDIA_IMAGES,
             )
@@ -68,6 +55,6 @@ class MainActivity : ComponentActivity() {
                 return false
             }
         }
-        return false//TODO true
+        return true  //TODO Change to TRUE to force UI to always start on first screen.
     }
 }

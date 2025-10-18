@@ -25,6 +25,10 @@ import java.util.Locale
 
 
 class AppSummaryScreenVM() : ViewModel() {
+    val bytesToMB = 1_000_000L
+    val bytesToGB = 1_000_000_000L
+    val mbToGB = 1_000L
+
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository(appContext)
     private val propertyBag = PropertyBag(appContext)
@@ -64,20 +68,22 @@ class AppSummaryScreenVM() : ViewModel() {
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
             val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedSize()
-            val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()  //Bytes used for compressed media
+            val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
             val physicalMemorySize = physicalMemorySize()
             val freeSpace = physicalFreeSpaceSize()
             val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
             val addedSize = mediaFileRepository.getBytesRecovered()
+            val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize) * 8L
+            val expansionAvailableFromFreeSpace = freeSpace * 10L
             _uiState.value = _uiState.value.copy(
-                usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / 1_000_000L,
-                availableNowMB = freeSpace / 1_000_000L,
-                currentExpansionMB = addedSize / 1_000_000L,
-                expansionAvailableMB = (freeSpace + compressedPhotosAndVideosSize)  / 100_000L,  //100_000 is for nonAppMemory x 10 / 1_000_000
+                usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
+                availableNowMB = freeSpace / bytesToMB,
+                currentExpansionMB = addedSize / bytesToMB,
+                expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
                 status = status(),
                 keepFreeOptionIdx = propertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
                 subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
-                physicalMB = physicalMemorySize / 1_000_000L,
+                physicalMB = physicalMemorySize / bytesToMB,
             )
             delay(5_000L)  //Update state every n milli-seconds  //TODO Use longer period
         }
