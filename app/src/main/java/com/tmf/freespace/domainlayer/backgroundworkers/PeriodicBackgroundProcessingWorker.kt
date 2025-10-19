@@ -9,6 +9,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.IS_IDLE
@@ -19,6 +20,7 @@ import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
+import com.tmf.freespace.domainlayer.general.Permissions
 import java.util.concurrent.TimeUnit
 
 
@@ -35,6 +37,12 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      */
     override suspend fun doWork(): Result {
         Log.d(tag, "Starting periodic background processing")
+
+        //Can't process if permissions have been revoked after setup
+        if (!Permissions().allPermissionsAreGranted(appContext)) {
+            Log.e(tag, "Permissions not granted")
+            return Result.failure()
+        }
 
         //Run worker in foreground service to allow to run for up to 6 hours
         if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
@@ -171,7 +179,9 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         /**
          * Queue this worker to process periodically (even across reboots)
          */
-        fun queuePeriodicProcessing(context: Context /*, periodHours: Long*/) {
+        fun queuePeriodicProcessing() {
+            val context = BaseApplication.instance.baseContext
+
             //TODO Code below allows immediate execution of PeriodicBackgroundProcessingWorker for testing. REMOVE IT
 //            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>()
 //                // You can add input data here if needed using .setInputData(workDataOf(...))
@@ -182,12 +192,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 //                request
 //            )
 
-
             val constraints = Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
                 .build()
 
-            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(15, TimeUnit.MINUTES)  //(periodHours, TimeUnit.HOURS)  //TODO Set longer interval after testing
+            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(2, TimeUnit.HOURS)
                 .setConstraints(constraints)
                 .build()
 

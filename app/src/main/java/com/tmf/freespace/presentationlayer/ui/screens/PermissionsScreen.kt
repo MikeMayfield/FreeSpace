@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.tmf.freespace.R
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.domainlayer.general.Permissions
 import com.tmf.freespace.presentationlayer.ui.composables.GenericTextBody
 import com.tmf.freespace.presentationlayer.ui.composables.allGranted
@@ -34,6 +35,7 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
     //When permissions have been granted, continue on to the next screen in the flow
     if (permissionStatus.allGranted()) {
         navController.popBackStack()
+        PeriodicBackgroundProcessingWorker.queuePeriodicProcessing()  //Start background processing as soon as we have permissions
         navController.navigate(NavRoute.SubscriptionPromo.path)
         return
     }

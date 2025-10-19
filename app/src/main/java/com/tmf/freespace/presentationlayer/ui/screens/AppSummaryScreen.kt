@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
@@ -63,6 +64,8 @@ import kotlin.math.max
 fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
     val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    PeriodicBackgroundProcessingWorker.queuePeriodicProcessing()  //Ensure that periodic processing is scheduled, just in case
 
     ConfirmExit(navController, paddingValues) {
         Column(
