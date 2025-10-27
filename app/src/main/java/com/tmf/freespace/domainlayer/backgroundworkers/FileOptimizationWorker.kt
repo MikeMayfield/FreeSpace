@@ -1,6 +1,8 @@
 package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
+import android.content.Context.BATTERY_SERVICE
+import android.os.BatteryManager
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
@@ -43,7 +45,9 @@ class FileOptimizationWorker(val appContext: Context) {
         while (fileToCompress != null
                 && maxBytesToRecover > 0
                 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)
-                && !mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)) {
+                && !mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)
+                && !batteryLow())
+            {
             //Compress file and replace existing file in MediaStore
             val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
             if (compressFile(fileToCompress)) {
@@ -154,4 +158,16 @@ class FileOptimizationWorker(val appContext: Context) {
             if (uncompressedFile.exists()) uncompressedFile.delete()
         }
     }
-}
+
+    private val batteryLowLevel = 33  //Battery level considered to low to process in background
+    private fun batteryLow(): Boolean {
+        val batteryManager = appContext.getSystemService(BATTERY_SERVICE) as BatteryManager
+        val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        return if (batterLevelPct <= batteryLowLevel) {
+            Log.d(tag, "Battery low: $batterLevelPct%")
+            true
+        } else {
+            false
+        }
+    }}
