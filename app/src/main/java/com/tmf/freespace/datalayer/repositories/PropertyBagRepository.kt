@@ -31,6 +31,7 @@ class PropertyBagRepository(val context: Context) {
      * @param value The value to set.
      */
     suspend fun set(key: String, value: String) {
+        loadBag()
         bag[key] = value
         propertyBagEntryDao.upsert(PropertyBagEntry(key, value))
     }

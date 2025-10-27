@@ -13,12 +13,14 @@ import java.util.concurrent.ConcurrentHashMap
 class PropertyBag(val context: Context) {
     var propertyBagRepository = PropertyBagRepository(context)
 
+    init {
+        loadBag()
+    }
 
     /**
      * Returns the value associated with the given key. If the key is not found, returns null.
      */
     fun get(key: String, defaultValue: String = ""): String {
-        loadBag()
         return bag[key] ?: defaultValue
     }
 
@@ -42,9 +44,11 @@ class PropertyBag(val context: Context) {
      * @param value The value to set.
      */
     fun set(key: String, value: String) {
-        bag[key] = value
-        CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
-            saveBagEntry(PropertyBagEntry(key, value))
+        if (!bag.containsKey(key) || bag[key] != value) {
+            bag[key] = value
+            CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
+                saveBagEntry(PropertyBagEntry(key, value))
+            }
         }
     }
 
@@ -75,7 +79,7 @@ class PropertyBag(val context: Context) {
                 }
 
                 if (bag.isEmpty()) {
-                    bag["__~EMPTY__"] = ""
+                    bag["__EMPTY__"] = ""
                 }
             }
         }
@@ -85,9 +89,7 @@ class PropertyBag(val context: Context) {
      * Save new/changed property bag entry to database
      */
     private suspend fun saveBagEntry(bagEntry: PropertyBagEntry) {
-        CoroutineScope(Dispatchers.IO).launch {
-            propertyBagRepository.saveBagEntry(bagEntry)
-        }
+        propertyBagRepository.saveBagEntry(bagEntry)
     }
 
 

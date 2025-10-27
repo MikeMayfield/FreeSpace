@@ -39,18 +39,13 @@ class CommonViewModel() : ViewModel() {
 
 
     fun updateKeepFreeOptionIdx(value: Int) {
-        val currentFreeOptionIdx = propertyBag.getInt(KEEP_FREE_OPTION_IDX, 0)
-        if (currentFreeOptionIdx != value) {
-            //TODO Compute KeepFree memory value and store in DB; Start background processing if idle; Keep track of status in DB
-            val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
-            propertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
-            propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
-            _uiState.update { it.copy(keepFreeOptionIdx = value) }
-        }
-    }
-
-    fun updateMinFreeSpaceMB(minFreeSpaceMB: Long) {
-        propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceMB)
+        //TODO Compute KeepFree memory value and store in DB; Start background processing if idle; Keep track of status in DB
+        val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
+        propertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
+        propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
+        _uiState.update { it.copy(
+            keepFreeOptionIdx = value
+        ) }
     }
 
 //    fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
@@ -78,7 +73,7 @@ class CommonViewModel() : ViewModel() {
                 subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
                 physicalMB = physicalMemorySize / bytesToMB,
             )
-            delay(5_000L)  //Update state every n milli-seconds  //TODO Use longer period
+            delay(10_000L)  //Update state every n milli-seconds  //TODO Use longer period, probably multiple minutes
         }
     }
 
