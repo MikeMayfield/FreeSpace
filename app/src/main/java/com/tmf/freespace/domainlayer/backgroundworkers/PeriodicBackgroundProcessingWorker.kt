@@ -3,10 +3,9 @@ package com.tmf.freespace.domainlayer.backgroundworkers
 import android.content.Context
 import android.provider.MediaStore
 import android.util.Log
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.tmf.freespace.BaseApplication
@@ -21,7 +20,6 @@ import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 import com.tmf.freespace.domainlayer.general.Permissions
-import java.util.concurrent.TimeUnit
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
@@ -183,28 +181,29 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             val context = BaseApplication.instance.baseContext
 
             //TODO Code below allows immediate execution of PeriodicBackgroundProcessingWorker for testing. REMOVE IT
-//            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>()
-//                // You can add input data here if needed using .setInputData(workDataOf(...))
-//                .build()
-//            WorkManager.getInstance(context).enqueueUniqueWork(
-//                "FreeSpace_PeriodicBackgroundProcessingWorker",
-//                ExistingWorkPolicy.KEEP,  //Don't queue if already running
-//                request
-//            )
-
-            val constraints = Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
+            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>()
+                // You can add input data here if needed using .setInputData(workDataOf(...))
                 .build()
-
-            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(2, TimeUnit.HOURS)
-                .setConstraints(constraints)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            WorkManager.getInstance(context).enqueueUniqueWork(
                 "FreeSpace_PeriodicBackgroundProcessingWorker",
-                ExistingPeriodicWorkPolicy.KEEP,  //Only one copy of worker can be running at a time
+                ExistingWorkPolicy.REPLACE,
                 request
             )
+
+//            //TODO Use the following when not debugging to allow normal scheduling in the background
+//            val constraints = Constraints.Builder()
+//                .setRequiresBatteryNotLow(true)
+//                .build()
+//
+//            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(2, TimeUnit.HOURS)
+//                .setConstraints(constraints)
+//                .build()
+//
+//            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+//                "FreeSpace_PeriodicBackgroundProcessingWorker",
+//                ExistingPeriodicWorkPolicy.KEEP,  //Only one copy of worker can be running at a time
+//                request
+//            )
         }
     }
 }

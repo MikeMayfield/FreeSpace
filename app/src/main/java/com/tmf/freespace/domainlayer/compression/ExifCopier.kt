@@ -45,7 +45,7 @@ object ExifCopier {
                 if (value != null) {
                     destinationExif.setAttribute(tag, value)
                     tagsCopied++
-                    Log.d(TAG, "Copied tag '$tag': $value")
+//                    Log.d(TAG, "Copied tag '$tag': $value")
                 }
             }
 

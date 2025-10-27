@@ -36,10 +36,14 @@ class FileOptimizationWorker(val appContext: Context) {
         val compressionRatioThatCanExceedOptimalByteCount = propertyBag.getInt(ALWAYS_OPTIMIZE_LEVEL, 5)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)
         var optimalBytesToRecover = calculateOptimalBytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 10GB), but not limited when processing older files
+        val mediaStoreUtil = MediaStoreUtil()
 
         var fileToCompress = getFileToCompress()
         //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available  //TODO Use entire schedule time for video or audio files that might take a long time
-        while (fileToCompress != null && maxBytesToRecover > 0 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)) {
+        while (fileToCompress != null
+                && maxBytesToRecover > 0
+                && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)
+                && !mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)) {
             //Compress file and replace existing file in MediaStore
             val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
             if (compressFile(fileToCompress)) {

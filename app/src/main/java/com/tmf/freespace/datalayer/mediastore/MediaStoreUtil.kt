@@ -40,6 +40,33 @@ class MediaStoreUtil {
         }
     }
 
+    fun mediaIsFavorite(
+        context: Context,
+        mediaFile: MediaFile
+    ): Boolean {
+        val contentResolver = context.contentResolver
+        val projection = arrayOf(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.IS_FAVORITE
+        )
+        val selection = "${MediaStore.MediaColumns._ID} = ? AND ${MediaStore.MediaColumns.IS_FAVORITE} != 0"
+        val selectionArgs = arrayOf( mediaFile.mediaStoreID.toString() )
+
+        val queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+        contentResolver.query(
+            queryUri,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )?.use { cursor ->
+            return cursor.moveToFirst()
+        }
+
+        return false
+    }
+
     //endregion
 
     //region Private methods
