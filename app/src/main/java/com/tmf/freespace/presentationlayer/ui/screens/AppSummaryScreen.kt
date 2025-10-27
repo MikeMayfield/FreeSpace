@@ -142,18 +142,16 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            KeepStorageFreeSection() { selectedOptionIdx ->
-                //TODO Handle dropdown selection
+            KeepStorageFreeSection(uiState.keepFreeOptionIdx) { selectedOptionIdx ->
                 val minFreeSpaceMB: Long = when (selectedOptionIdx) {
                     0 -> 2000  //2GB
                     1 -> 5000  //5GB
                     2 -> 10000  //10GB
                     3 -> (uiState.physicalMB * 0.05f).toLong()  //5%
                     4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
-                    else -> 0
+                    else -> 2000
                 }
 
-                viewModel.updateMinFreeSpaceMB(minFreeSpaceMB)
                 viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
             }
 
@@ -288,14 +286,17 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
 fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionIdx: Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("2 GB", "5 GB", "10 GB", "5%", "10%")
-    var selectedOptionText by remember { mutableStateOf(options[selectedOptionIdx]) }
+    var selectedOptionText by remember { mutableStateOf(options[0]) }
+    selectedOptionText = options[selectedOptionIdx]
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Keep at least", fontSize = 16.sp, color = Color.Black)
+
         Spacer(modifier = Modifier.width(8.dp))
+
         Box {
             OutlinedButton(
                 onClick = { expanded = true },
@@ -326,7 +327,9 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
                 }
             }
         }
+
         Spacer(modifier = Modifier.width(8.dp))
+
         Text("of memory free", fontSize = 16.sp, color = Color.Black)
     }
 }
