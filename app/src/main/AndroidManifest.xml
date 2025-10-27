@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.tmf.freespace">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <!-- Need MANAGE_EXTERNAL_STORAGE to allow us to backup and optimize media for all apps (e.g. photos/videos)
         This requires approval from Google as a backup/file maintenance app.
         See https://developer.android.com/training/data-storage/manage-all-files
