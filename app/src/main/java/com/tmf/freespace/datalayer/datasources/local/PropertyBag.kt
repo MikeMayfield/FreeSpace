@@ -1,6 +1,7 @@
 package com.tmf.freespace.datalayer.datasources.local
 
-import android.content.Context
+import android.annotation.SuppressLint
+import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
 import kotlinx.coroutines.CoroutineScope
@@ -10,8 +11,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
 
-class PropertyBag(val context: Context) {
-    var propertyBagRepository = PropertyBagRepository(context)
+object PropertyBag {
+    @SuppressLint("StaticFieldLeak")
+    private var propertyBagRepository = PropertyBagRepository(BaseApplication.instance.applicationContext)
+    private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory, shared by all users of PropertyBag class
 
     init {
         loadBag()
@@ -36,22 +39,6 @@ class PropertyBag(val context: Context) {
         return get(key, defaultValue.toString()).toBoolean()
     }
 
-
-    /**
-     * Sets the value associated with the given key.
-     *
-     * @param key The key to associate with the value.
-     * @param value The value to set.
-     */
-    fun set(key: String, value: String) {
-        if (!bag.containsKey(key) || bag[key] != value) {
-            bag[key] = value
-            CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
-                saveBagEntry(PropertyBagEntry(key, value))
-            }
-        }
-    }
-
     fun setInt(key: String, value: Int) {
         set(key, value.toString())
     }
@@ -64,6 +51,21 @@ class PropertyBag(val context: Context) {
         set(key, value.toString())
     }
 
+
+    /**
+     * Sets the value associated with the given key.
+     *
+     * @param key The key to associate with the value.
+     * @param value The value to set.
+     */
+    private fun set(key: String, value: String) {
+        if (!bag.containsKey(key) || bag[key] != value) {
+            bag[key] = value
+            CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
+                saveBagEntry(PropertyBagEntry(key, value))
+            }
+        }
+    }
 
     /**
      * Load property bag from database if it is empty.
@@ -93,19 +95,15 @@ class PropertyBag(val context: Context) {
     }
 
 
-    companion object {
-        private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory, shared by all users of PropertyBag class
-
-        //Known properties (KEYS)
-        const val MAX_DATE_ADDED = "MAX_DATE_ADDED"
-        const val KEEP_FREE_OPTION_IDX = "KEEP_FREE_OPTION_IDX"
-        const val MIN_FREE_SPACE_GOAL_MB = "MIN_FREE_SPACE_GOAL_MB"
-        const val IS_IDLE = "IS_IDLE"
-        const val PRIOR_MEDIA_STORE_VERSION = "PRIOR_MEDIA_STORE_VERSION"
-        const val SUBSCRIPTION_STATUS = "SUBSCRIPTION_STATUS"
-        const val TRIAL_GB_FREE = "TRIAL_GB_FREE"
-        const val MAX_GB_LIMIT_FOR_PLAN = "MAX_GB_LIMIT_FOR_PLAN"
-        const val MIN_GB_FREE_GOAL = "MIN_GB_FREE_GOAL"
-        const val ALWAYS_OPTIMIZE_LEVEL = "ALWAYS_OPTIMIZE_LEVEL"
-    }
+    //Known properties (KEYS)
+    const val MAX_DATE_ADDED = "MAX_DATE_ADDED"
+    const val KEEP_FREE_OPTION_IDX = "KEEP_FREE_OPTION_IDX"
+    const val MIN_FREE_SPACE_GOAL_MB = "MIN_FREE_SPACE_GOAL_MB"
+    const val IS_IDLE = "IS_IDLE"
+    const val PRIOR_MEDIA_STORE_VERSION = "PRIOR_MEDIA_STORE_VERSION"
+    const val SUBSCRIPTION_STATUS = "SUBSCRIPTION_STATUS"
+    const val TRIAL_GB_FREE = "TRIAL_GB_FREE"
+    const val MAX_GB_LIMIT_FOR_PLAN = "MAX_GB_LIMIT_FOR_PLAN"
+    const val MIN_GB_FREE_GOAL = "MIN_GB_FREE_GOAL"
+    const val ALWAYS_OPTIMIZE_LEVEL = "ALWAYS_OPTIMIZE_LEVEL"
 }

@@ -14,9 +14,9 @@ import androidx.work.WorkerParameters
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.MediaReader
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.IS_IDLE
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.MAX_DATE_ADDED
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.PRIOR_MEDIA_STORE_VERSION
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MAX_DATE_ADDED
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.PRIOR_MEDIA_STORE_VERSION
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
-    val propertyBag = PropertyBag(appContext)
     private val tag = PeriodicBackgroundProcessingWorker::class.simpleName
 
     /**
@@ -58,17 +57,17 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
         updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-        val maxDateAddedFound = propertyBag.getLong(MAX_DATE_ADDED, 0L)
+        val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
         val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
         if (newMaxDateAddedFound > maxDateAddedFound) {
-            propertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
+            PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
         }
 
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-        propertyBag.setBoolean(IS_IDLE, false)
+        PropertyBag.setBoolean(IS_IDLE, false)
         val success = FileOptimizationWorker(appContext).compressAllPendingMedia()
-        propertyBag.setBoolean(IS_IDLE, true)
+        PropertyBag.setBoolean(IS_IDLE, true)
 
         Log.d(tag, "Finished $tag worker processing")
         return if (success) Result.success() else Result.failure()
@@ -80,13 +79,13 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * If the real MediaStore IDs may have changed, update the MediaStore ID GUIDs in the database, based on the full path to the media
      */
     private suspend fun updateMediaStoreIDsIfRebuilt(mediaFileRepository: MediaFileRepository) {
-        val priorMediaStoreVersion = propertyBag.get(PRIOR_MEDIA_STORE_VERSION, "")
+        val priorMediaStoreVersion = PropertyBag.get(PRIOR_MEDIA_STORE_VERSION, "")
         val newMediaStoreVersion = MediaStore.getVersion(appContext)
 
         if (priorMediaStoreVersion != newMediaStoreVersion) {
             val maxDateAddedFound = rebuildMediaStore(mediaFileRepository)
-            propertyBag.set(PRIOR_MEDIA_STORE_VERSION, newMediaStoreVersion)
-            propertyBag.setLong(MAX_DATE_ADDED, maxDateAddedFound)
+            PropertyBag.set(PRIOR_MEDIA_STORE_VERSION, newMediaStoreVersion)
+            PropertyBag.setLong(MAX_DATE_ADDED, maxDateAddedFound)
         }
     }
 
@@ -98,7 +97,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val oldestDateAddedToSelect = propertyBag.getLong(MAX_DATE_ADDED, 0L)
+        val oldestDateAddedToSelect = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
         val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)

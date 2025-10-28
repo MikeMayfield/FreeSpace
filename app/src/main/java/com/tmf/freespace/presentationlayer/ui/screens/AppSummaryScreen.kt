@@ -153,6 +153,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                     4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
                     else -> 2000
                 }
+                //TODO Save minFreeSpaceMB to PropertyBag
 
                 viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
                 PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing immediately in case more space needs to be freed up now

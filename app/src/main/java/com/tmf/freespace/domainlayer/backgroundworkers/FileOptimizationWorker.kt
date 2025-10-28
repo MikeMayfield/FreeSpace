@@ -7,10 +7,10 @@ import android.os.Environment
 import android.os.StatFs
 import android.util.Log
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.ALWAYS_OPTIMIZE_LEVEL
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.MAX_GB_LIMIT_FOR_PLAN
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.MIN_GB_FREE_GOAL
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.TRIAL_GB_FREE
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.ALWAYS_OPTIMIZE_LEVEL
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MAX_GB_LIMIT_FOR_PLAN
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MIN_GB_FREE_GOAL
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.mediastore.MediaStoreUtil
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
@@ -21,7 +21,6 @@ import java.io.File
 class FileOptimizationWorker(val appContext: Context) {
 //    class FileOptimizationWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     private val tag = FileOptimizationWorker::class.simpleName
-    private val propertyBag = PropertyBag(appContext)
     private val mediaFileRepository = MediaFileRepository(appContext)
 
     /**
@@ -35,7 +34,7 @@ class FileOptimizationWorker(val appContext: Context) {
     suspend fun compressAllPendingMedia(): Boolean {
         Log.d(tag, "Processing files to optimize storage space")
 
-        val compressionRatioThatCanExceedOptimalByteCount = propertyBag.getInt(ALWAYS_OPTIMIZE_LEVEL, 5)  //Desired compression level(s) that can exceed optimal byte count
+        val compressionRatioThatCanExceedOptimalByteCount = PropertyBag.getInt(ALWAYS_OPTIMIZE_LEVEL, 5)  //Desired compression level(s) that can exceed optimal byte count
         var maxBytesToRecover = calculateMaxBytesToRecover()  //Max bytes is based on limit for users subscription (including FREE plan)
         var optimalBytesToRecover = calculateOptimalBytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 10GB), but not limited when processing older files
         val mediaStoreUtil = MediaStoreUtil()
@@ -69,7 +68,7 @@ class FileOptimizationWorker(val appContext: Context) {
     }
 
     private suspend fun calculateMaxBytesToRecover(): Long {
-        val maxGBLimitForPlan = propertyBag.getInt(MAX_GB_LIMIT_FOR_PLAN, 10)
+        val maxGBLimitForPlan = PropertyBag.getInt(MAX_GB_LIMIT_FOR_PLAN, 10)
         val maxByteLimitForPlan = maxGBLimitForPlan * 1_000_000_000L
         return maxByteLimitForPlan - getBytesRecovered()
     }
@@ -80,13 +79,13 @@ class FileOptimizationWorker(val appContext: Context) {
 
     private suspend fun calculateOptimalBytesToRecover(): Long {
         //If trial, always try to recover full trial amount remaining to emphasize value of product during trial
-        val trialFreeBytesToRecover = propertyBag.getLong(TRIAL_GB_FREE, 10L) * 1_000_000_000 - getBytesRecovered()  //TODO Preferences.getInt("TRIAL_GB_FREE", 10) ...
+        val trialFreeBytesToRecover = PropertyBag.getLong(TRIAL_GB_FREE, 10L) * 1_000_000_000 - getBytesRecovered()  //TODO Preferences.getInt("TRIAL_GB_FREE", 10) ...
         if (trialFreeBytesToRecover > 0) {
             return trialFreeBytesToRecover
         }
 
         //Get goal of space to leave free at all times
-        val minGBFreeGoal = propertyBag.getInt(MIN_GB_FREE_GOAL, 10)
+        val minGBFreeGoal = PropertyBag.getInt(MIN_GB_FREE_GOAL, 10)
         val statFs = StatFs(Environment.getExternalStorageDirectory().path)
         val bytesAvailable = statFs.blockSizeLong * statFs.availableBlocksLong
         return minGBFreeGoal * 1_000_000_000L - bytesAvailable

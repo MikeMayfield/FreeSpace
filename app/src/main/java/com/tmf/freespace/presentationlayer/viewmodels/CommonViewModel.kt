@@ -8,10 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.IS_IDLE
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.KEEP_FREE_OPTION_IDX
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.MIN_FREE_SPACE_GOAL_MB
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.Companion.SUBSCRIPTION_STATUS
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTION_IDX
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MIN_FREE_SPACE_GOAL_MB
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,6 @@ class CommonViewModel() : ViewModel() {
 
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository(appContext)
-    private val propertyBag = PropertyBag(appContext)
     private val _uiState = MutableStateFlow(HomeScreenState())
 
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
@@ -41,8 +40,8 @@ class CommonViewModel() : ViewModel() {
     fun updateKeepFreeOptionIdx(value: Int) {
         //TODO Compute KeepFree memory value and store in DB; Start background processing if idle; Keep track of status in DB
         val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
-        propertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
-        propertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
+        PropertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
+        PropertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
         _uiState.update { it.copy(
             keepFreeOptionIdx = value
         ) }
@@ -69,8 +68,8 @@ class CommonViewModel() : ViewModel() {
                 currentExpansionMB = addedSize / bytesToMB,
                 expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
                 status = status(),
-                keepFreeOptionIdx = propertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
+                keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
+                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
                 physicalMB = physicalMemorySize / bytesToMB,
             )
             delay(1_000L)//TODO  //Poll state every n milli-seconds
@@ -83,7 +82,7 @@ class CommonViewModel() : ViewModel() {
             return "TRIAL LIMIT — Free expansion limit reached. Subscribe now and get almost unlimited memory"
         }
 
-        val isIdle = propertyBag.getBoolean(IS_IDLE, true)
+        val isIdle = PropertyBag.getBoolean(IS_IDLE, true)
         if (isIdle) {
             if (batteryLow()) {
                 return "LOW BATTERY — Waiting for your battery to charge. Plug in to expand memory now"
@@ -120,7 +119,7 @@ class CommonViewModel() : ViewModel() {
     }
 
     private fun isSubscribed(): Boolean {
-        return propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
+        return PropertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
     }
 
 
