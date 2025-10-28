@@ -73,27 +73,27 @@ class CommonViewModel() : ViewModel() {
                 subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(propertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
                 physicalMB = physicalMemorySize / bytesToMB,
             )
-            delay(10_000L)  //Update state every n milli-seconds  //TODO Use longer period, probably multiple minutes
+            delay(1_000L)//TODO  //Poll state every n milli-seconds
         }
     }
 
     private suspend fun status(): String {
         val addedSize = mediaFileRepository.getBytesRecovered()
-        if (addedSize >= 8_000_000_000 && !isSubscribed()) {
-            return "Free expansion limit reached — Subscribe now and get almost unlimited memory"
+        if (addedSize >= 8_000_000_000L && !isSubscribed()) {
+            return "TRIAL LIMIT — Free expansion limit reached. Subscribe now and get almost unlimited memory"
         }
 
         val isIdle = propertyBag.getBoolean(IS_IDLE, true)
         if (isIdle) {
             if (batteryLow()) {
-                return "Waiting for your battery to charge. Plug in to expand memory now"
+                return "LOW BATTERY — Waiting for your battery to charge. Plug in to expand memory now"
             }
             else {
-                return "Idle — Extra memory will be automatically added when needed"
+                return "IDLE — Extra memory will be automatically added when needed"
             }
         }
         else {
-            return "Adding memory, please check back later. Magic takes time..."
+            return "ADDING MEMORY — Adding memory; please check back later. Magic takes time..."
         }
     }
 

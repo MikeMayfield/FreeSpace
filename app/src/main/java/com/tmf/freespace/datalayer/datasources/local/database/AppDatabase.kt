@@ -24,11 +24,22 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val propertyBagEntryDao: PropertyBagEntryDao
 
     companion object {
-        fun create(context: Context): AppDatabase {
-            return Room.databaseBuilder(
-                context,
-                AppDatabase::class.java, "FreeSpace.db"
-            ).build()
+        @Volatile // Ensures changes to INSTANCE are immediately visible to other threads
+        private var INSTANCE: AppDatabase? = null
+
+        fun instance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) { // Synchronize to ensure only one thread initializes
+                val instance = Room.databaseBuilder(
+                    context.applicationContext, // Use application context to avoid memory leaks
+                    AppDatabase::class.java,
+                    "FreeSpace.db"
+                )
+                    // .fallbackToDestructiveMigration() // Optional: Handle schema changes by destroying and recreating
+                    .build()
+
+                INSTANCE = instance
+                instance
+            }
         }
     }
 }

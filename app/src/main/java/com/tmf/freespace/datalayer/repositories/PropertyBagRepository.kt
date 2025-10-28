@@ -5,7 +5,7 @@ import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.PropertyBagEntry
 
 class PropertyBagRepository(val context: Context) {
-    private val propertyBagEntryDao = AppDatabase.create(context).propertyBagEntryDao
+    private val propertyBagEntryDao = AppDatabase.instance(context).propertyBagEntryDao
 
     suspend fun allEntries() : List<PropertyBagEntry> {
         return propertyBagEntryDao.getAll()

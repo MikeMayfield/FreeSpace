@@ -10,7 +10,7 @@ import java.io.File
 class MediaFileRepository(val context: Context) {
     private val tag = MediaFileRepository::class.simpleName
 
-    private val mediaFileDao = AppDatabase.create(context).mediaFileDao
+    private val mediaFileDao = AppDatabase.instance(context).mediaFileDao
 
     /**
      * Update media file in database
