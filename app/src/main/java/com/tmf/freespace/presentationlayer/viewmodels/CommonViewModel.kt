@@ -25,7 +25,7 @@ class CommonViewModel() : ViewModel() {
     val bytesToMB = 1_000_000L
 
     private val appContext = BaseApplication.instance.applicationContext
-    private val mediaFileRepository = MediaFileRepository(appContext)
+    private val mediaFileRepository = MediaFileRepository()
     private val _uiState = MutableStateFlow(HomeScreenState())
 
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
@@ -48,7 +48,7 @@ class CommonViewModel() : ViewModel() {
     }
 
 //    fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
-//        propertyBag.set(SUBSCRIPTION_STATUS, value.name)
+//        propertyBag.setString(SUBSCRIPTION_STATUS, value.name)
 //        _uiState.update { it.copy(subscriptionStatus = value) }
 //    }
 
@@ -69,10 +69,10 @@ class CommonViewModel() : ViewModel() {
                 expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
                 status = status(),
                 keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
+                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
                 physicalMB = physicalMemorySize / bytesToMB,
             )
-            delay(1_000L)//TODO  //Poll state every n milli-seconds
+            delay(15_000L)//TODO  //Poll state every n milli-seconds
         }
     }
 
@@ -119,9 +119,8 @@ class CommonViewModel() : ViewModel() {
     }
 
     private fun isSubscribed(): Boolean {
-        return PropertyBag.get(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
+        return PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
     }
-
 
     private fun minFreeSpaceGoalMB(keepFreeOptionIdx: Int): Long {
         return when (keepFreeOptionIdx) {
@@ -134,6 +133,7 @@ class CommonViewModel() : ViewModel() {
         }
     }
 }
+
 
 data class HomeScreenState(
     val usedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)

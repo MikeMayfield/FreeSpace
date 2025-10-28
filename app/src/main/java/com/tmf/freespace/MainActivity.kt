@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.domainlayer.general.Permissions
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.screens.MainScreen
@@ -37,10 +38,14 @@ class MainActivity : ComponentActivity() {
 //            0
 //        )
 
-        //Display the AppSummary screen  //TODO Determine true starting screen
+        //Display the Welcome or AppSummary screen
+        var firstScreenRoute: NavRoute = NavRoute.Welcome
+        if (Permissions().allPermissionsAreGranted(this)) {
+            firstScreenRoute = NavRoute.AppSummary
+            PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Ensure that periodic processing is running, just in case we need to catch up with new files
+        }
         setContent {
-            val firstScreenRoute = if (Permissions().allPermissionsAreGranted(this)) NavRoute.AppSummary else NavRoute.Welcome
-            MainScreen(viewModel, firstScreenRoute)
+           MainScreen(viewModel, firstScreenRoute)
         }
     }
 

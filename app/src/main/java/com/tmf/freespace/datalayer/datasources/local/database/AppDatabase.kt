@@ -1,9 +1,9 @@
 package com.tmf.freespace.datalayer.datasources.local.database
 
-import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.dao.MediaFileDao
 import com.tmf.freespace.datalayer.datasources.local.dao.PropertyBagEntryDao
 import com.tmf.freespace.datalayer.models.MediaFile
@@ -27,10 +27,10 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile // Ensures changes to INSTANCE are immediately visible to other threads
         private var INSTANCE: AppDatabase? = null
 
-        fun instance(context: Context): AppDatabase {
+        fun instance(): AppDatabase {
             return INSTANCE ?: synchronized(this) { // Synchronize to ensure only one thread initializes
                 val instance = Room.databaseBuilder(
-                    context.applicationContext, // Use application context to avoid memory leaks
+                    BaseApplication.instance.applicationContext, // Use application context to avoid memory leaks
                     AppDatabase::class.java,
                     "FreeSpace.db"
                 )

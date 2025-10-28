@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
@@ -145,7 +146,8 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             Spacer(modifier = Modifier.height(24.dp))
 
             KeepStorageFreeSection(uiState.keepFreeOptionIdx) { selectedOptionIdx ->
-                val minFreeSpaceMB: Long = when (selectedOptionIdx) {
+                val currentMinFreeSpaceGoalMB = PropertyBag.getLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB)
+                val newMinFreeSpaceGoalMb: Long = when (selectedOptionIdx) {
                     0 -> 2000  //2GB
                     1 -> 5000  //5GB
                     2 -> 10000  //10GB
@@ -153,10 +155,11 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                     4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
                     else -> 2000
                 }
-                //TODO Save minFreeSpaceMB to PropertyBag
-
+                PropertyBag.setLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB, newMinFreeSpaceGoalMb)
                 viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
-                PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing immediately in case more space needs to be freed up now
+                if (newMinFreeSpaceGoalMb > currentMinFreeSpaceGoalMB) {
+                    PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing to free up more space
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
@@ -303,7 +306,9 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
 
         Box {
             OutlinedButton(
-                onClick = { expanded = true },
+                onClick = {
+                    expanded = true
+                          },
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.height(36.dp)
             ) {

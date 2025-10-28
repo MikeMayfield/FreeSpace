@@ -1,16 +1,15 @@
 package com.tmf.freespace.datalayer.repositories
 
-import android.content.Context
 import android.util.Log
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import java.io.File
 
-class MediaFileRepository(val context: Context) {
+class MediaFileRepository() {
     private val tag = MediaFileRepository::class.simpleName
 
-    private val mediaFileDao = AppDatabase.instance(context).mediaFileDao
+    private val mediaFileDao = AppDatabase.instance().mediaFileDao
 
     /**
      * Update media file in database

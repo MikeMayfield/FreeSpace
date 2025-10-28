@@ -51,7 +51,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             return Result.failure()
         }
 
-        val mediaFileRepository = MediaFileRepository(appContext)
+        val mediaFileRepository = MediaFileRepository()
 
         //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
         //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
@@ -66,7 +66,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
         PropertyBag.setBoolean(IS_IDLE, false)
-        val success = FileOptimizationWorker(appContext).compressAllPendingMedia()
+        val success = FileOptimizationWorker().compressAllPendingMedia()
         PropertyBag.setBoolean(IS_IDLE, true)
 
         Log.d(tag, "Finished $tag worker processing")
@@ -79,12 +79,12 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * If the real MediaStore IDs may have changed, update the MediaStore ID GUIDs in the database, based on the full path to the media
      */
     private suspend fun updateMediaStoreIDsIfRebuilt(mediaFileRepository: MediaFileRepository) {
-        val priorMediaStoreVersion = PropertyBag.get(PRIOR_MEDIA_STORE_VERSION, "")
+        val priorMediaStoreVersion = PropertyBag.getString(PRIOR_MEDIA_STORE_VERSION, "")
         val newMediaStoreVersion = MediaStore.getVersion(appContext)
 
         if (priorMediaStoreVersion != newMediaStoreVersion) {
             val maxDateAddedFound = rebuildMediaStore(mediaFileRepository)
-            PropertyBag.set(PRIOR_MEDIA_STORE_VERSION, newMediaStoreVersion)
+            PropertyBag.setString(PRIOR_MEDIA_STORE_VERSION, newMediaStoreVersion)
             PropertyBag.setLong(MAX_DATE_ADDED, maxDateAddedFound)
         }
     }
