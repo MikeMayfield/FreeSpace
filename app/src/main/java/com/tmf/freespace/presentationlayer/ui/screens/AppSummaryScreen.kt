@@ -66,8 +66,6 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSubscribed = uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED
 
-    PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Ensure that periodic processing is scheduled, just in case
-
     ConfirmExit(navController, paddingValues) {
         Column(
             modifier = Modifier

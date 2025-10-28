@@ -10,6 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.screens.AppSummaryScreen
 import com.tmf.freespace.presentationlayer.ui.screens.CloudBackupScreen
 import com.tmf.freespace.presentationlayer.ui.screens.LicenseAgreementScreen
@@ -147,6 +148,8 @@ private fun addAppSummaryScreen(
     paddingValues: PaddingValues
 ) {
     navGraphBuilder.composable(route = NavRoute.AppSummary.path) {
+        PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Ensure that periodic processing is scheduled, just in case
+
         AppSummaryScreen(viewModel, paddingValues, navController)
     }
 }
