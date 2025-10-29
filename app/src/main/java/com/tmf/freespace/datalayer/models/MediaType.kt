@@ -4,5 +4,5 @@ package com.tmf.freespace.datalayer.models
 enum class MediaType {
     IMAGE,
     VIDEO,
-    AUDIO
+//    AUDIO
 }

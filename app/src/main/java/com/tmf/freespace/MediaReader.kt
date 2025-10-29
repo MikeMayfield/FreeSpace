@@ -68,21 +68,21 @@ class MediaReader(
             }
         }
 
-        // Query for Audios (similar logic to images)
-        context.contentResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            "${MediaStore.MediaColumns.DATE_ADDED} ASC"
-        )?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val mediaFile = createMediaFile(cursor, MediaType.AUDIO)
-                if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
-                    emit(mediaFile)
-                }
-            }
-        }
+//        // Query for Audios (similar logic to images)
+//        context.contentResolver.query(
+//            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+//            projection,
+//            selection,
+//            selectionArgs,
+//            "${MediaStore.MediaColumns.DATE_ADDED} ASC"
+//        )?.use { cursor ->
+//            while (cursor.moveToNext()) {
+//                val mediaFile = createMediaFile(cursor, MediaType.AUDIO)
+//                if (mediaFile.originalSize > 0) {
+//                    emit(mediaFile)
+//                }
+//            }
+//        }
     }
 
     private fun createMediaFile(cursor: Cursor, mediaType: MediaType): MediaFile {

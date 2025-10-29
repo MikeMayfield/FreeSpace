@@ -10,7 +10,6 @@ class Compressor(val context: Context) {
     private val tag = Compressor::class.simpleName
     private val imageCompressor: ImageCompressor = ImageCompressor(context)
     private val videoCompressor: VideoCompressor = VideoCompressor(context)
-    private val audioCompressor: AudioCompressor = AudioCompressor(context)
     private val outputDirectoryPath = "${context.cacheDir.absolutePath}/freespace/"
     private val minFileSizeToCompress = 4 * 1024 * 2  //Don't compress if only slightly larger than disk cluster size. It won't actually save much/any physical space
 
@@ -47,10 +46,9 @@ class Compressor(val context: Context) {
                         success
                     }
 
-                    MediaType.AUDIO -> {
-                        Log.d(tag, "Compressing audio file: $sourceFilePath")
-                        audioCompressor.compress(mediaFile, destinationFile, compressionRatio)
-                    }
+//                    MediaType.AUDIO -> {
+//                        true
+//                    }
                 }
             }
             Log.w(tag, "File not found: $sourceFilePath")

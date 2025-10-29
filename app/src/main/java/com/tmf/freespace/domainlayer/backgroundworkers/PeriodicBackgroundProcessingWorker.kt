@@ -169,7 +169,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         for (compressionLevel in CompressionLevels().compressionLevels) {
             mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.imageCompressionRatio, MediaType.IMAGE)
             mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.videoCompressionRatio, MediaType.VIDEO)
-            mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.audioCompressionRatio, MediaType.AUDIO)
+//            mediaFileRepository.setCompressionLevel(compressionLevel.minDays, compressionLevel.maxDays, compressionLevel.audioCompressionRatio, MediaType.AUDIO)
         }
     }
 
