@@ -33,7 +33,7 @@ class Compressor(val context: Context) {
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
             Log.d(tag, "File already compressed: $sourceFilePath")
 
-            val mediaFileInfo = File(sourceFilePath)  //TODO why do we need sourceFilePath instead of using mediaFile.fullPath?
+            val mediaFileInfo = File(sourceFilePath)
             if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
