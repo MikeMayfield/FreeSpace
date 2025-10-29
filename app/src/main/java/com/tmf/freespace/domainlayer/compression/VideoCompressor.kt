@@ -99,7 +99,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         val tempOutputFilePath = "$outputFilePath.tmp"
 
         //Determine size of input file clipped to n seconds with no conversion. From that we can determine the max size of the file at the desired compression percentage
-        val clipDurationSecs = 5//todo
+        val clipDurationSecs = 5
         val uncompressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionRatio, compressionTemplates[0], clipDurationSecs, true)
         val unclippedFileSize = File(inputFilePath).length().toFloat()
         val clipPctOfFullSize = uncompressedClipSize.toFloat() / unclippedFileSize

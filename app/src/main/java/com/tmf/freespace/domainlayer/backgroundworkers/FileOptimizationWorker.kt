@@ -108,9 +108,8 @@ class FileOptimizationWorker() {
     private suspend fun compressFile(fileToCompress: MediaFile): Boolean {
         //Compress the uncompressed (original or recovered) media file
         val priorCompressedSize = fileToCompress.compressedSize  //NOTE: compressedSize is initially the full file size before any compression
-        val uncompressedFilePath = fileToCompress.fullPath
-        val compressedFilePath = compressedFilePath(File(uncompressedFilePath).extension)
-        if (Compressor(appContext).compress(fileToCompress, uncompressedFilePath, compressedFilePath, fileToCompress.desiredCompressionRatio)) {
+        val compressedFilePath = compressedFilePath(File(fileToCompress.fullPath).extension)
+        if (Compressor(appContext).compress(fileToCompress, compressedFilePath, fileToCompress.desiredCompressionRatio)) {
             val compressedFileSize = File(compressedFilePath).length().toInt()
             if (compressedFileSize < priorCompressedSize) {
                 if (!updateMediaStoreWithCompressedFile(fileToCompress, compressedFilePath)) {

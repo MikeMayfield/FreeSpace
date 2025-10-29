@@ -24,13 +24,15 @@ class Compressor(val context: Context) {
      * Compress a file to create a new file with the compressed data.
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param sourceFilePath The full path of the source file to compress
      * @param destinationFile The full path of the compressed file to create
      * @param compressionRatio Compression ratio (n:1)
      * @return The full path of the compressed file, or null if compression failed
      */
-    fun compress(mediaFile: MediaFile, sourceFilePath: String, destinationFile: String, compressionRatio: Int): Boolean {
+    fun compress(mediaFile: MediaFile, destinationFile: String, compressionRatio: Int): Boolean {
+        val sourceFilePath = mediaFile.fullPath
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
+            Log.d(tag, "File already compressed: $sourceFilePath")
+
             val mediaFileInfo = File(sourceFilePath)  //TODO why do we need sourceFilePath instead of using mediaFile.fullPath?
             if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
