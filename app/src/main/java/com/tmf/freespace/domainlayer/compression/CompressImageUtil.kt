@@ -55,13 +55,13 @@ class CompressImageUtil {
             // Desired width is greater or equal, use original dimensions (or just compress if no resize needed)
             targetWidth = uncompressedWidth
             targetHeight = uncompressedHeight
-            Log.d(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
+            Log.v(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
         } else {
             // Resize needed, maintain aspect ratio
             targetWidth = desiredWidth
             val aspectRatio = uncompressedHeight.toFloat() / uncompressedWidth.toFloat()
             targetHeight = (targetWidth * aspectRatio).roundToInt()
-            Log.d(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
+            Log.v(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
         }
 
         // 3. Decode the bitmap with appropriate sampling options to save memory
@@ -97,7 +97,7 @@ class CompressImageUtil {
             // doesn't bring it exactly to targetWidth/targetHeight but to the nearest power of 2.
             // Or if we decided not to resize earlier (desiredWidth >= originalWidth) but still want to ensure it's not accidentally larger.
             try {
-                Log.d(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
+                Log.v(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
                 processedBitmap = inputBitmap.scale(targetWidth, targetHeight)
                 if (processedBitmap != inputBitmap) { // Only recycle if createScaledBitmap created a new one
                     inputBitmap.recycle()
@@ -168,7 +168,7 @@ class CompressImageUtil {
                 }
                 fos.flush()
             }
-            Log.d(tag, "Successfully processed and saved image to $outputPath")
+            Log.v(tag, "Successfully processed and saved image to $outputPath")
         }
         catch (e: IOException) {
             Log.e(tag, "IOException while saving processed image to $outputPath", e)

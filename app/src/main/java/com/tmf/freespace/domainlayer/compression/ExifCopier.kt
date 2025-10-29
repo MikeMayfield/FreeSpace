@@ -54,9 +54,9 @@ object ExifCopier {
 
             if (tagsCopied > 0) {
                 destinationExif.saveAttributes() // This is crucial to write changes to the file
-                Log.i(TAG, "Successfully copied $tagsCopied EXIF attributes from $sourcePath to $destinationPath")
+                Log.v(TAG, "Successfully copied $tagsCopied EXIF attributes from $sourcePath to $destinationPath")
             } else {
-                Log.i(TAG, "No EXIF attributes to copy or no relevant tags found in $sourcePath.")
+                Log.v(TAG, "No EXIF attributes to copy or no relevant tags found in $sourcePath.")
                 // Return true even if no tags were copied, as the operation itself didn't fail due to an error.
                 // If you want to return false if no tags were copied, change this.
             }

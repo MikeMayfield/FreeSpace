@@ -48,18 +48,22 @@ class FileOptimizationWorker() {
         while (fileToCompress != null
                 && maxBytesToRecover > 0
                 && (optimalBytesToRecover > 0 || fileToCompress.desiredCompressionRatio >= compressionRatioThatCanExceedOptimalByteCount)
-                && !mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)
                 && !batteryLow()
                 && !hasRunTooLong() ) {
             //Compress file and replace existing file in MediaStore
-            val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
-            if (compressFile(fileToCompress)) {
-                updateFileToCompressInDB(fileToCompress)
-                maxBytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
-                optimalBytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
+            if (!mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)) {  //Don't compress media marked as favorite
+                val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
+                if (compressFile(fileToCompress)) {
+                    updateFileToCompressInDB(fileToCompress)
+                    maxBytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
+                    optimalBytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
+                } else {
+                    //If problem processing file, exclude it from processing until next pass assigning desired compression levels
+                    fileToCompress.desiredCompressionRatio = 0
+                    updateFileToCompressInDB(fileToCompress)
+                }
             } else {
-                //If problem processing file, exclude it from processing until next pass assigning desired compression levels
-                fileToCompress.desiredCompressionRatio = 0
+                fileToCompress.currentCompressionRatio = fileToCompress.desiredCompressionRatio  //Consider file compressed file shouldn't be compressed so that it isn't processed again
                 updateFileToCompressInDB(fileToCompress)
             }
 

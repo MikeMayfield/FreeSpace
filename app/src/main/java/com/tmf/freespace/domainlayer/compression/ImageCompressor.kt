@@ -16,7 +16,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         "{{SCREEN_00}}|40",  //Compression medium
         "{{SCREEN_00}}|30",  //Compression medium high
         "{{SCREEN_00}}|50",  //Compression high
-        "{{SCREEN_00}}|40",  //Compression high
+        "{{SCREEN_00}}|40",  //Compression higher
         "{{SCREEN_00}}|25",  //Compression very high
         "{{SCREEN_00}}|10",  //Compression very very high
     )
@@ -56,5 +56,4 @@ class ImageCompressor(context: Context) : ICompressor(context) {
 
         return ExifCopier.copyExifData(inputFilePath, outputFilePath)  //Using maximum compression level
     }
-
 }

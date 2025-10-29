@@ -49,7 +49,7 @@ class MediaStoreUtil {
             MediaStore.MediaColumns._ID,
             MediaStore.MediaColumns.IS_FAVORITE
         )
-        val selection = "${MediaStore.MediaColumns._ID} = ? AND ${MediaStore.MediaColumns.IS_FAVORITE} != 0"
+        val selection = "${MediaStore.MediaColumns._ID} = ? AND ${MediaStore.MediaColumns.IS_FAVORITE} = 1"
         val selectionArgs = arrayOf( mediaFile.mediaStoreID.toString() )
 
         val queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -61,7 +61,7 @@ class MediaStoreUtil {
             selectionArgs,
             null
         )?.use { cursor ->
-            return cursor.moveToFirst()
+            return (cursor.count != 0)
         }
 
         return false
