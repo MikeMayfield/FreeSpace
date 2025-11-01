@@ -198,7 +198,7 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
             Box(Modifier  //Available now bar
                 .weight((availableNowMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
-                .background(Color(0xFFB7F9B6)))
+                .background(Color(0xFF919090)))
             Box(Modifier  //Available now bar
                 .weight((currentExpansionMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
@@ -241,7 +241,7 @@ fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpans
             description = "Add ${formatter.format(virtualAvailableKB / avgPhotoKB)} more photos or ${formatter.format(virtualAvailableKB / avgVideoKB)} videos with FreeSpace Max"
         )
         StorageDetailItem(
-            color = Color(0xFFB7F9B6),
+            color = Color(0xFF919090),
             storageAmount = "${gbFormatter.format(availableNowMB / 1000f)} GB free memory currently available",
             description = "More free memory will be added when needed"
         )
