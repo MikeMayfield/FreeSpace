@@ -78,9 +78,10 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
                         Text("Blocked Permission")
                     },
                     text = {
-                        Text(text = "It looks like FreeSpace doesn’t have all the access it needs yet. To help FreeSpace free up more space, please go to the app’s Settings and grant all of the required permissions.\n" +
+                        Text(text = "It looks like you permanently denied a permission that FreeSpace requires to work for you. Press Grant Permissions, below, to go to the app’s settings and then grant the required permissions.\n" +
                             "\n" +
-                            "Without these permissions, FreeSpace won’t be able to create extra memory for you.")
+                            "On the App Info screen, click the Permissions group. Click on any permission that is shown as not allowed and change it to Always Allow. When finished, navigate back to FreeSpace and you're ready to go. " +
+                                "Note that some versions of Android may be slightly different.")
                     },
                     confirmButton = {
                         TextButton(
@@ -97,7 +98,7 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
             else -> {
                 AlertDialog(
                     onDismissRequest = { showSettingsDialogStep = 0 },
-                    title = { Text(text = "Blocked Permission") },
+                    title = { Text(text = "Almost Done") },
                     text = { Text(text = "Press OK to continue") },
                     confirmButton = {
                         TextButton(

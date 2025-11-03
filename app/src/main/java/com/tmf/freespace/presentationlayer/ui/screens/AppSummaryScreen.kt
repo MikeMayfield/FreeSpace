@@ -366,7 +366,7 @@ fun SubscribeButton(onClick: () -> Unit) {
                 fontSize = 16.sp
             )
             Text(
-                text = "$1.99",
+                text = "$2",
                 color = Color.White,
                 fontSize = 12.sp
             )
