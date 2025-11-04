@@ -12,4 +12,5 @@ sealed class NavRoute(val path: String) {
     object SubscriptionPromo: NavRoute("subscriptionPromo")
     object Start: NavRoute("start")
     object AppSummary: NavRoute("appSummary")
+    object Subscription: NavRoute("subscription")
 }

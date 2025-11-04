@@ -1,7 +1,6 @@
 package com.tmf.freespace.presentationlayer.ui.screens
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -168,8 +167,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 Spacer(modifier = Modifier.height(24.dp))
 
                 SubscribeButton() {
-                    Log.d(tag, "Subscribe button clicked")
-                    //TODO Handle button click
+                    navController.navigate("subscription")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
@@ -366,18 +364,10 @@ fun SubscribeButton(onClick: () -> Unit) {
                 fontSize = 16.sp
             )
             Text(
-                text = "$2",
+                text = "$2.00",
                 color = Color.White,
                 fontSize = 12.sp
             )
         }
     }
 }
-
-//@Preview(showBackground = true, device = "id:pixel_4")
-//@Composable
-//fun FreeSpaceHomeScreenPreview() {
-//    MaterialTheme {
-//        AppSummaryScreen(AppSummaryScreenVM())
-//    }
-//}
