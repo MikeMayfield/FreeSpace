@@ -80,7 +80,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
             Text(
-                text = "Ever-expanding room for all your treasured photos and videos",
+                text = "Ever-expanding space for all your treasured photos and videos",
                 style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center,
                 color = Color.DarkGray

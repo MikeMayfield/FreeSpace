@@ -152,10 +152,6 @@ class FileOptimizationWorker() {
         mediaFileRepository.updateMediaFile(fileToCompress)
     }
 
-//    private fun scheduleFileOptimizationWorker() {
-//        WorkManager.getInstance(appContext).enqueue(buildWorkRequest())
-//    }
-
     private fun compressedFilePath(extension: String): String {
         return "${appContext.cacheDir.absolutePath}/freespace/compressed.$extension"
     }
