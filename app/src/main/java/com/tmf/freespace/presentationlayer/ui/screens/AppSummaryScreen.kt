@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,12 +61,16 @@ import java.text.DecimalFormatSymbols
 import java.util.Locale
 import kotlin.math.max
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
-    val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSubscribed = uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp.dp - paddingValues.calculateTopPadding() + paddingValues.calculateBottomPadding()
+    val shortScreenHeightDp = 750.dp  //Height of screens too short to show full content
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
+    val smallLayout = screenWidthDp < 370.dp
 
     ConfirmExit(navController, paddingValues) {
         Column(
@@ -76,19 +82,22 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
-            Text(
-                text = "Ever-expanding space for all your treasured photos and videos",
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center,
-                color = Color.DarkGray
-            )
+            if (screenHeightDp > shortScreenHeightDp || isSubscribed) {
+                Text(
+                    text = "Ever-expanding space for all your treasured photos and videos",
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    color = Color.DarkGray,
+                )
+            }
 
             //Grow your memory promo section
             if (!isSubscribed) {
-                Spacer(modifier = Modifier.height(12.dp))
+                if (screenHeightDp > shortScreenHeightDp) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 val sizeAtMaxExpansion = uiState.expansionAvailableMB + uiState.physicalMB + uiState.currentExpansionMB  //TODO uiState.expansionAvailableMB / 1000f
                 val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
@@ -104,6 +113,10 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             }
 
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
+
+            if (screenHeightDp <= shortScreenHeightDp) {
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             //Storage bar section
             StorageBar(
@@ -121,10 +134,11 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 uiState.availableNowMB,
                 uiState.currentExpansionMB,
                 uiState.expansionAvailableMB,
-                isSubscribed
+                isSubscribed,
+                smallLayout
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
@@ -142,9 +156,9 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
 
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            KeepStorageFreeSection(uiState.keepFreeOptionIdx) { selectedOptionIdx ->
+            KeepStorageFreeSection(uiState.keepFreeOptionIdx, smallLayout) { selectedOptionIdx ->
                 val currentMinFreeSpaceGoalMB = PropertyBag.getLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB)
                 val newMinFreeSpaceGoalMb: Long = when (selectedOptionIdx) {
                     0 -> 2000  //2GB
@@ -166,7 +180,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             if (!isSubscribed) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                SubscribeButton() {
+                SubscribeButton(smallLayout) {
                     navController.navigate("subscription")
                 }
 
@@ -205,18 +219,7 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
                     .weight((futureExpansionMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
                 .background(Color(0xFF00C752)),
-//                contentAlignment = Alignment.Center,
             )
-//            {
-//                val gbFormatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
-//                val availText = if (futureExpansionMB / totalMemoryMB > 0.1f) " GB Expansion Available" else ""
-//                Text(
-//                    text = "${gbFormatter.format(futureExpansionMB / 1000f)}$availText",
-//                    color = Color.White,
-//                    fontSize = 12.sp,
-//                    fontWeight = FontWeight.Bold
-//                )
-//            }
         }
 
     }
@@ -225,40 +228,44 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpansionMB: Long, futureExpansionMB: Long, isSubscribed: Boolean) {
+fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpansionMB: Long, futureExpansionMB: Long, isSubscribed: Boolean, smallLayout: Boolean) {
     val virtualAvailableKB = (availableNowMB + futureExpansionMB) * 1_000L
     val avgPhotoKB = 500
     val avgVideoKB = 20_000
     val gbFormatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 
-    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(if (smallLayout) 12.dp else 24.dp)) {
         StorageDetailItem(
             color = Color(0xFFF918F3),
             storageAmount = "${gbFormatter.format(usedMB / 1_000f)} GB of Photos, Videos and other files",
-            description = "Add ${formatter.format(virtualAvailableKB / avgPhotoKB)} more photos or ${formatter.format(virtualAvailableKB / avgVideoKB)} videos with FreeSpace Max"
+            description = "Add ${formatter.format(virtualAvailableKB / avgPhotoKB)} more photos or ${formatter.format(virtualAvailableKB / avgVideoKB)} videos with FreeSpace Max",
+            smallLayout
         )
         StorageDetailItem(
             color = Color(0xFF919090),
             storageAmount = "${gbFormatter.format(availableNowMB / 1000f)} GB free memory currently available",
-            description = "More free memory will be added when needed"
+            description = "More free memory will be added when needed",
+            smallLayout
         )
         StorageDetailItem(
             color = Color(0xFF02EA62),
             storageAmount = "${gbFormatter.format(currentExpansionMB / 1000f)} GB memory already added by FreeSpace",
-            description = "FreeSpace Lite is limited to 8 GB"
+            description = "FreeSpace Lite is limited to 8 GB",
+            smallLayout
         )
         StorageDetailItem(
             color = Color(0xFF01AD48),
             storageAmount = "${gbFormatter.format(futureExpansionMB / 1000f)} GB more can be added with FreeSpace Max",
             description = if (isSubscribed) "Relax - With FreeSpace Max you have all the memory you need for all your favorite photos and videos"
-                else "Subscribe now and stop worrying about running out of memory forever"
+                else "Subscribe now and stop worrying about running out of memory forever",
+            smallLayout
         )
     }
 }
 
 @Composable
-fun StorageDetailItem(color: Color, storageAmount: String, description: String) {
+fun StorageDetailItem(color: Color, storageAmount: String, description: String, smallLayout: Boolean) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
@@ -274,13 +281,13 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
             Text(
                 text = storageAmount,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp,
+                fontSize = if (smallLayout) 12.sp else 16.sp,
                 color = Color.Black
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = description,
-                fontSize = 16.sp,
+                fontSize = if (smallLayout) 12.sp else 16.sp,
                 color = Color.DarkGray
             )
         }
@@ -288,7 +295,8 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
 }
 
 @Composable
-fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionIdx: Int) -> Unit) {
+fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, smallLayout: Boolean, onClick: (selectedOptionIdx: Int) -> Unit) {
+    val textFontSize = if (smallLayout) 12.sp else 16.sp
     var expanded by remember { mutableStateOf(false) }
     val options = listOf("2 GB", "5 GB", "10 GB", "5%", "10%")
     var selectedOptionText by remember { mutableStateOf(options[0]) }
@@ -298,7 +306,7 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Keep at least", fontSize = 16.sp, color = Color.Black)
+        Text("Keep at least", fontSize = textFontSize, color = Color.Black)
 
         Spacer(modifier = Modifier.width(8.dp))
 
@@ -337,12 +345,12 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text("of memory free", fontSize = 16.sp, color = Color.Black)
+        Text("of memory free", fontSize = textFontSize, color = Color.Black)
     }
 }
 
 @Composable
-fun SubscribeButton(onClick: () -> Unit) {
+fun SubscribeButton(smallLayout: Boolean, onClick: () -> Unit) {
     Button(
         onClick = {
             onClick()
@@ -350,7 +358,7 @@ fun SubscribeButton(onClick: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(if (smallLayout) 0.9f else 1f)
             .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
     ) {
         Column(

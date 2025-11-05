@@ -40,18 +40,6 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
         return
     }
 
-//    LaunchedEffect(shouldAskForPermissions) {
-//        if (shouldAskForPermissions) {
-//            request.launch(Permissions.allPermissions.toTypedArray())
-////            val context = LocalContext.current
-////                delay(1000)
-////                if (permissionStatus == Status.DENIED_WITH_NEVER_ASK && (LocalActivity.current?.hasWindowFocus() == true)) {
-////                    context.openAppSystemSettings()
-////                }
-////            }
-//        }
-//    }
-
     GenericTextBody(
         imageID = R.drawable.permisssions,
         title = "PERMISSIONS",

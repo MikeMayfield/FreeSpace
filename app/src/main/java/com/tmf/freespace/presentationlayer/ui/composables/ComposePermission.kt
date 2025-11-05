@@ -66,7 +66,6 @@ fun requestMultiplePermission(permissions:List<String>, onChangedStatus:(statusL
             }
         }
         onChangedStatus(permissionsStatus)
-
     })
 }
 

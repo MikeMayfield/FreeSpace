@@ -1,5 +1,6 @@
 package com.tmf.freespace.presentationlayer.ui.composables
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -28,9 +30,11 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun GenericTextBody(
     modifier: Modifier = Modifier,
@@ -42,6 +46,11 @@ fun GenericTextBody(
     onBodyClick: () -> Unit = {},  //Callback for body click
     onNavButtonClick: () -> Unit = {},  //Callback for navigation button click
 ) {
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
+    val smallLayout = screenWidthDp < 370.dp
+    val largeLayout = screenWidthDp >= 700.dp
+
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -58,7 +67,7 @@ fun GenericTextBody(
             Image(
                 painter = painterResource(id = imageID),
                 contentDescription = "Content image",
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier.fillMaxWidth(if (largeLayout) 0.5f else 0.8f)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -68,7 +77,7 @@ fun GenericTextBody(
         if (title != null) {
             Text(
                 AnnotatedString.fromHtml(title),
-                fontSize = 24.sp,
+                fontSize = if (smallLayout) 18.sp else 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xff04049d),
                 modifier = modifier
@@ -89,8 +98,7 @@ fun GenericTextBody(
                     )
                 ),
             ),
-            fontSize = 18.sp,
-//            fontStyle = FontStyle.Italic,
+            fontSize = if (smallLayout) 12.sp else 18.sp,
             modifier = modifier
                 .align(Alignment.Start)
                 .clickable() {
