@@ -24,6 +24,7 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 import com.tmf.freespace.domainlayer.general.Permissions
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
@@ -39,38 +40,51 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     override suspend fun doWork(): Result {
         Log.d(tag, "Starting periodic background processing")
 
-        //Can't process if permissions have been revoked after setup
-        if (!Permissions().allPermissionsAreGranted(appContext)) {
-            Log.e(tag, "Permissions not granted")
-            return Result.failure()
+        try {
+
+            //Can't process if permissions have been revoked after setup
+            if (!Permissions().allPermissionsAreGranted(appContext)) {
+                Log.e(tag, "Permissions not granted")
+                return Result.failure()
+            }
+
+            //Run worker in foreground service to allow to run for up to 6 hours
+            if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
+                Log.e(tag, "Failed to start periodic background processing as foreground service")
+                return Result.failure()
+            }
+
+            val mediaFileRepository = MediaFileRepository()
+
+            //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
+            //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
+            updateMediaStoreIDsIfRebuilt(mediaFileRepository)
+
+            val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
+            val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
+            if (newMaxDateAddedFound > maxDateAddedFound) {
+                PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
+            }
+
+            updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
+
+            PropertyBag.setBoolean(IS_IDLE, false)
+            val success = FileOptimizationWorker().compressAllPendingMedia()
+            PropertyBag.setBoolean(IS_IDLE, true)
+
+            Log.d(tag, "Finished $tag worker processing")
+            return if (success) Result.success() else Result.failure()
         }
-
-        //Run worker in foreground service to allow to run for up to 6 hours
-        if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
-            Log.e(tag, "Failed to start periodic background processing as foreground service")
-            return Result.failure()
+        catch (e: Exception) {
+            PropertyBag.setString(IS_IDLE, "true")
+            if (!(e is CancellationException)) {
+                Log.e(tag, "Error in $tag worker: ${e.message}")
+                return Result.failure()
+            } else {
+                Log.d(tag, "User cancelled $tag worker")
+                return Result.success()
+            }
         }
-
-        val mediaFileRepository = MediaFileRepository()
-
-        //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
-        //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
-        updateMediaStoreIDsIfRebuilt(mediaFileRepository)
-
-        val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
-        val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
-        if (newMaxDateAddedFound > maxDateAddedFound) {
-            PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
-        }
-
-        updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
-
-        PropertyBag.setBoolean(IS_IDLE, false)
-        val success = FileOptimizationWorker().compressAllPendingMedia()
-        PropertyBag.setBoolean(IS_IDLE, true)
-
-        Log.d(tag, "Finished $tag worker processing")
-        return if (success) Result.success() else Result.failure()
     }
 
     //region Private Methods

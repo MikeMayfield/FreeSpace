@@ -53,8 +53,8 @@ class ForegroundWorkerUtils {
         val notification = NotificationCompat.Builder(context, notificationChannelID)
             .setContentTitle(title)
             .setTicker(title)
-            .setContentText("Optimizing SD memory...")
-            .setSmallIcon(R.drawable.ic_notifications) // Replace with your notification icon
+            .setContentText("FreeSpace is creating more memory...")
+            .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true) // Makes the notification non-dismissible
             // Add the cancel action to the notification which can
             // be used to cancel the worker
