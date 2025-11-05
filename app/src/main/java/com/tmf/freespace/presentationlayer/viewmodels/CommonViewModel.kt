@@ -69,10 +69,10 @@ class CommonViewModel() : ViewModel() {
                 expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
                 status = status(),
                 keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),  //TODO  Implement
+                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),
                 physicalMB = physicalMemorySize / bytesToMB,
             )
-            delay(15_000L)//TODO  //Poll state every n milli-seconds
+            delay(10_000L)  //Poll state every n milli-seconds
         }
     }
 
