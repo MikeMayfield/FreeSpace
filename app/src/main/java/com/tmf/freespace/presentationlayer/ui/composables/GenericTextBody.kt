@@ -117,7 +117,7 @@ fun GenericTextBody(
                     text = navButtonText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = White,
                     modifier = modifier.padding(horizontal = 16.dp)
                 )
             }
