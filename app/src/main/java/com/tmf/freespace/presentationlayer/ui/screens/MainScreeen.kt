@@ -40,7 +40,7 @@ fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Replace with your actual app icon resource
                         Image(
-                            painter = painterResource(id = R.drawable.xxxhdpi_icon),
+                            painter = painterResource(id = R.drawable.icon_base96x96),
                             contentDescription = "FreeSpace Lite Logo",
                             modifier = Modifier.size(32.dp)
                         )
