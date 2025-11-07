@@ -1,6 +1,5 @@
 package com.tmf.freespace.domainlayer.general
 
-import android.content.Context
 import android.net.Uri
 import android.os.ParcelFileDescriptor
 import android.util.Log
@@ -21,48 +20,44 @@ object DLog {
 
     fun e(tag: String, msg: String) {
         Log.e("D-$tag", msg)
-        supportLog("E", tag, msg)
+        writeToSupportLog("E", tag, msg)
     }
 
     fun e(tag: String, msg: String, throwable: Throwable) {
         Log.e("D-$tag", msg, throwable)
-        supportLog("E", tag, msg, throwable)
+        writeToSupportLog("E", tag, msg, throwable)
     }
 
     fun w(tag: String, msg: String) {
         Log.w("D-$tag", msg)
-        supportLog("W", tag, msg)
+        writeToSupportLog("W", tag, msg)
     }
 
     fun i(tag: String, msg: String) {
         Log.i("D-$tag", msg)
-        supportLog("I", tag, msg)
+        writeToSupportLog("I", tag, msg)
     }
 
     fun d(tag: String, msg: String) {
         Log.d("D-$tag", msg)
-        supportLog("D", tag, msg)
+        writeToSupportLog("D", tag, msg)
     }
 
     fun v(tag: String, msg: String) {
         Log.v("D-$tag", msg)
-        supportLog("V", tag, msg)
+        writeToSupportLog("V", tag, msg)
     }
 
 
-    private fun supportLog(priority: String, tag: String, msg: String, throwable: Throwable? = null) {
+    private fun writeToSupportLog(priority: String, tag: String, msg: String, throwable: Throwable? = null) {
         if (supportLogUri != null && "EWD".contains(priority)) {
+            if (createSupportLogIfNeeded()) {  //Must be completed before using coroutine for remaining code
+                return
+            }
+
             CoroutineScope(Dispatchers.IO).launch {  //Log to disk in background
                 try {
                     val context = BaseApplication.instance.applicationContext
-
-                    //If we haven't checked for the support log file, do so now. If found, clone it to copy for this execution
-                    if (supportLogUri == Uri.EMPTY) {
-                        supportLogUri = cloneSupportLog(context)
-                        if (supportLogUri == null) {
-                            return@launch
-                        }
-                    }
 
                     //Write to the support log file
                     val parcelFileDescriptor: ParcelFileDescriptor? =
@@ -81,17 +76,28 @@ object DLog {
                 }
                 catch (e: Exception) {
                     // Handle exceptions related to file operations or permissions
-                    Log.e("DLog", "Error writing to support log", e)
+                    Log.e("DLog", "Error writing to support log", e)  //NOTE: Use Log not DLog to avoid infinite loop
                 }
             }
         }
     }
 
-    private fun cloneSupportLog(context: Context): Uri? {
-        val baseSupportLogUri: Uri? = MediaReader(context).supportLogUri()
-        if (baseSupportLogUri != null) {
-            supportLogUri = MediaReader(context).cloneSupportLogFile(baseSupportLogUri)
+    private fun createSupportLogIfNeeded(): Boolean {
+
+        //If we haven't checked for the support log file, do so now. If found, clone it to copy for this execution
+        if (supportLogUri == Uri.EMPTY) {
+            cloneSupportLog()
         }
-        return supportLogUri
+        return (supportLogUri == null)
+    }
+
+    private fun cloneSupportLog() {
+        val context = BaseApplication.instance.applicationContext
+        val baseSupportLogUri: Uri? = MediaReader(context).supportLogUri()
+        supportLogUri = if (baseSupportLogUri != null) {
+            MediaReader(context).cloneSupportLogFile(baseSupportLogUri)
+        } else {
+            null
+        }
     }
 }

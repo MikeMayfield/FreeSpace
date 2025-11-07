@@ -21,7 +21,6 @@ class CompressImageUtil {
      * @param outputPath Path where the processed image will be saved.
      * @param desiredWidth The desired width for the output image. If the original image width
      *                     is smaller than this, the original width will be used.
-     * @param maxCompressedSizeBytes Maximum size of compressed file
      * @return True if processing was successful and the output file was created, false otherwise.
      */
     fun compressImage(
@@ -67,7 +66,7 @@ class CompressImageUtil {
         // 3. Decode the bitmap with appropriate sampling options to save memory
         options.inJustDecodeBounds = false  //Load full bitmap
         options.inSampleSize = calculateInSampleSize(uncompressedWidth, uncompressedHeight, targetWidth, targetHeight)  //Sampling size, to handle large images
-        var inputBitmap: Bitmap? = null
+        var inputBitmap: Bitmap?
         try {
             inputBitmap = BitmapFactory.decodeFile(inputPath, options)
         } catch (e: OutOfMemoryError) {
@@ -141,7 +140,7 @@ class CompressImageUtil {
                 processedBitmap = orientedBitmap
             }
         } catch (e: IOException) {
-            DLog.e(tag, "Could not read EXIF orientation for $inputPath")
+            DLog.e(tag, "Could not read EXIF orientation for $inputPath", e)
         } catch (e: OutOfMemoryError) {
             DLog.e(tag, "OutOfMemoryError while applying EXIF orientation for $inputPath", e)
             processedBitmap.recycle()
