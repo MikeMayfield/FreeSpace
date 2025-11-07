@@ -2,7 +2,6 @@ package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
 import android.media.MediaMetadataRetriever
-import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.Effect
 import androidx.media3.common.MediaItem
@@ -17,6 +16,7 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
 import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.domainlayer.general.DLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -27,7 +27,7 @@ import kotlin.coroutines.resumeWithException
 
 
 class VideoCompressor(context: Context) : ICompressor(context) {
-    private val tag = VideoCompressor::class.simpleName
+    private val tag = "VideoCompressor"
 
     override val compressionTemplates = listOf(
         //ResizeWidth|FramerateFps
@@ -67,19 +67,19 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 
                     //Find compression level based on compression of 5 second clip to allow finding probable compression level more quickly than using full size file for each test
                     val compressionTemplate = getCompressionTemplateForDesiredCompressionRatio(inputFilePath, outputFilePath, compressionRatio)
-                    Log.d(tag, "Optimal template: $compressionTemplate")
+                    DLog.d(tag, "Optimal template: $compressionTemplate")
 
                     //Compress full size file using appropriate compression level
                     if (compressionTemplate != null) {
                         val success = compressInBackground(inputFilePath, outputFilePath, compressionTemplate)
                         return@runBlocking success
                     } else {
-                        Log.e(tag, "Error during video compression of $inputFilePath with compressionTemplate: $compressionTemplate")
+                        DLog.e(tag, "Error during video compression of $inputFilePath with compressionTemplate: $compressionTemplate")
                         return@runBlocking false
                     }
                 }
                 catch (e: Exception) {
-                    Log.e(tag, "Error during video compression in coroutine: ${e.message}", e)
+                    DLog.e(tag, "Error during video compression in coroutine: ${e.message}", e)
                     return@runBlocking false // Return false on exception
                 }
             }
@@ -104,7 +104,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         val unclippedFileSize = File(inputFilePath).length().toFloat()
         val clipPctOfFullSize = uncompressedClipSize.toFloat() / unclippedFileSize
         val maxCompressedSizeForClippedFile = (unclippedFileSize * clipPctOfFullSize / compressionRatio.toFloat()).toInt()
-        Log.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile at compression ratio $compressionRatio, full size: ${File(inputFilePath).length()}")
+        DLog.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile at compression ratio $compressionRatio, full size: ${File(inputFilePath).length()}")
 
         var minTemplateIdx = 0
         var maxTemplateIdx = compressionTemplates.size - 1
@@ -130,10 +130,10 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     private suspend fun compressClipByTemplate(inputFilePath: String, outputFilePath: String, compressionRatio: Int, compressionTemplate: String, clipDurationSecs: Int, noConversion: Boolean = false): Int {
         if (compressInBackground(inputFilePath, outputFilePath, compressionTemplate, clipDurationSecs * 1024L, noConversion)) {
             val newSize = File(outputFilePath).length()
-            Log.i(tag, "Video compression for $inputFilePath, output file size: $newSize, command: $compressionTemplate, compression: ${File(inputFilePath).length() / compressionRatio / newSize.toFloat()}")
+            DLog.i(tag, "Video compression for $inputFilePath, output file size: $newSize, command: $compressionTemplate, compression: ${File(inputFilePath).length() / compressionRatio / newSize.toFloat()}")
             return newSize.toInt()
         } else {
-            Log.e(tag, "Image compression failed for $inputFilePath")
+            DLog.e(tag, "Image compression failed for $inputFilePath")
             return 0
         }
 
@@ -174,7 +174,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 
                             override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) {
                                 result = false
-                                Log.e(tag, "Video compression failed for '${inputFilePath}' with exportException: ${exportException.message}")
+                                DLog.e(tag, "Video compression failed for '${inputFilePath}' with exportException: ${exportException.message}")
                                 continuation.resumeWithException(exportException)
                             }
                         })
@@ -182,7 +182,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
                     transformerBuilder.build().start(editedMediaItem, outputFilePath)
                 }
                 catch (e: Exception) {
-                    Log.e(tag, "Error during video compression: ${e.message}")
+                    DLog.e(tag, "Error during video compression: ${e.message}")
                 }
             }
         }
@@ -205,7 +205,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
                 result[key] = retriever.extractMetadata(key)
             }
         } catch (e: Exception) {
-            Log.e(tag, "Error retrieving video width: ${e.message}")
+            DLog.e(tag, "Error retrieving video width: ${e.message}")
             return result
         } finally {
             retriever.release()

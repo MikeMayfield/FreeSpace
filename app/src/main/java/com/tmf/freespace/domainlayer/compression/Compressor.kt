@@ -1,13 +1,13 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
-import android.util.Log
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 
 class Compressor(val context: Context) {
-    private val tag = Compressor::class.simpleName
+    private val tag = "Compressor"
     private val imageCompressor: ImageCompressor = ImageCompressor(context)
     private val videoCompressor: VideoCompressor = VideoCompressor(context)
     private val outputDirectoryPath = "${context.cacheDir.absolutePath}/freespace/"
@@ -31,20 +31,20 @@ class Compressor(val context: Context) {
     fun compress(mediaFile: MediaFile, destinationFile: String, compressionRatio: Int): Boolean {
         val sourceFilePath = mediaFile.fullPath
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
-            Log.d(tag, "File already compressed: $sourceFilePath")
+            DLog.d(tag, "File already compressed: $sourceFilePath")
 
             val mediaFileInfo = File(sourceFilePath)
             if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
-                        Log.d(tag, "Compressing image file: $sourceFilePath")
+                        DLog.d(tag, "Compressing image file: $sourceFilePath")
                         imageCompressor.compress(mediaFile, destinationFile, compressionRatio)
                     }
 
                     MediaType.VIDEO -> {
-                        Log.d(tag, "Compressing video file: $sourceFilePath")
+                        DLog.d(tag, "Compressing video file: $sourceFilePath")
                         val success = videoCompressor.compress(mediaFile, destinationFile, compressionRatio)
-                        Log.d(tag, "Compressed size: ${File(destinationFile).length()}")
+                        DLog.d(tag, "Compressed size: ${File(destinationFile).length()}")
                         success
                     }
 
@@ -53,10 +53,10 @@ class Compressor(val context: Context) {
 //                    }
                 }
             }
-            Log.w(tag, "File not found: $sourceFilePath")
+            DLog.w(tag, "File not found: $sourceFilePath")
         }
         else {
-            Log.d(tag, "File too small to compress: $sourceFilePath")
+            DLog.d(tag, "File too small to compress: $sourceFilePath")
         }
 
         return false  //No compression occurred

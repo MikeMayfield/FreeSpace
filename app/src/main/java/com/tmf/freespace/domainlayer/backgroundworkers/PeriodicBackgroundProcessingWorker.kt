@@ -2,7 +2,6 @@ package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
 import android.provider.MediaStore
-import android.util.Log
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -21,6 +20,7 @@ import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.CompressionLevels
+import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 import com.tmf.freespace.domainlayer.general.Permissions
 import java.util.concurrent.TimeUnit
@@ -28,7 +28,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private val tag = PeriodicBackgroundProcessingWorker::class.simpleName
+    private val tag = "PeriodicBackgroundProcessingWorker"
 
     /**
      * Worker: Start of periodic processing of background compression tasks
@@ -38,19 +38,19 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain to process first pending file
      */
     override suspend fun doWork(): Result {
-        Log.d(tag, "Starting periodic background processing")
+        DLog.d(tag, "Starting periodic background processing")
 
         try {
 
             //Can't process if permissions have been revoked after setup
             if (!Permissions().allPermissionsAreGranted(appContext)) {
-                Log.e(tag, "Permissions not granted")
+                DLog.e(tag, "Permissions not granted")
                 return Result.failure()
             }
 
             //Run worker in foreground service to allow to run for up to 6 hours
             if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
-                Log.e(tag, "Failed to start periodic background processing as foreground service")
+                DLog.e(tag, "Failed to start periodic background processing as foreground service")
                 return Result.failure()
             }
 
@@ -69,19 +69,19 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
             PropertyBag.setBoolean(IS_IDLE, false)
-            val success = FileOptimizationWorker().compressAllPendingMedia()
+            FileOptimizationWorker().compressAllPendingMedia()
             PropertyBag.setBoolean(IS_IDLE, true)
 
-            Log.d(tag, "Finished $tag worker processing")
-            return if (success) Result.success() else Result.failure()
+            DLog.d(tag, "Finished $tag worker processing")
+            return Result.success()
         }
         catch (e: Exception) {
             PropertyBag.setString(IS_IDLE, "true")
             if (!(e is CancellationException)) {
-                Log.e(tag, "Error in $tag worker: ${e.message}")
+                DLog.e(tag, "Error in $tag worker: ${e.message}")
                 return Result.failure()
             } else {
-                Log.d(tag, "User cancelled $tag worker")
+                DLog.d(tag, "User cancelled $tag worker")
                 return Result.success()
             }
         }
@@ -138,26 +138,29 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaReader.getMediaFilesAddedSinceDate(oldestDateAddedToSelect)
             .collect { mediaStoreMediaFile -> // Use collect to consume the Flow
                 // Try to find an existing file by fullPath to update its MediaStore ID if it changed
-                val existingMediaFile = mediaFileRepository.getMediaFileByFullPath(mediaStoreMediaFile.fullPath)
+                if (!mediaStoreMediaFile.fullPath.contains("/SupportLog")) {
 
-                val fileToUpsert: MediaFile
-                if (resyncingMediaStore && existingMediaFile != null) {
-                    // File exists while resyncing MediaStore, the existing file's MediaStoreID might have changed original
-                    fileToUpsert = existingMediaFile.copy(
-                        mediaStoreID = mediaStoreMediaFile.mediaStoreID,
-                        dateInMediaStore = mediaStoreMediaFile.dateInMediaStore
-                    )
-                    Log.v(tag, "Updating existing file: ${fileToUpsert.fullPath}")
-                } else {
-                     // New file, use it as is
-                    fileToUpsert = mediaStoreMediaFile.copy()
-                    Log.v(tag, "Adding new file: ${fileToUpsert.fullPath}")
-                }
+                    val existingMediaFile = mediaFileRepository.getMediaFileByFullPath(mediaStoreMediaFile.fullPath)
 
-                mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
+                    val fileToUpsert: MediaFile
+                    if (resyncingMediaStore && existingMediaFile != null) {
+                        // File exists while resyncing MediaStore, the existing file's MediaStoreID might have changed original
+                        fileToUpsert = existingMediaFile.copy(
+                            mediaStoreID = mediaStoreMediaFile.mediaStoreID,
+                            dateInMediaStore = mediaStoreMediaFile.dateInMediaStore
+                        )
+                        DLog.v(tag, "Updating existing file: ${fileToUpsert.fullPath}")
+                    } else {
+                        // New file, use it as is
+                        fileToUpsert = mediaStoreMediaFile.copy()
+                        DLog.v(tag, "Adding new file: ${fileToUpsert.fullPath}")
+                    }
 
-                if (fileToUpsert.dateInMediaStore > maxDateAddedFound) {
-                    maxDateAddedFound = fileToUpsert.dateInMediaStore
+                    mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
+
+                    if (fileToUpsert.dateInMediaStore > maxDateAddedFound) {
+                        maxDateAddedFound = fileToUpsert.dateInMediaStore
+                    }
                 }
             }
         return maxDateAddedFound

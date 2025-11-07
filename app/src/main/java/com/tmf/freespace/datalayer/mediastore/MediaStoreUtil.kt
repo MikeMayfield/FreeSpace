@@ -4,8 +4,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import com.tmf.freespace.datalayer.models.MediaFile
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -34,7 +34,7 @@ class MediaStoreUtil {
         return try {
             replaceFile(contentResolver, mediaStoreUri, File(newFilePath))
         } catch (e: IOException) {
-            Log.e("replaceMediaStoreFile", "Error replacing file: ${e.message}")
+            DLog.e("replaceMediaStoreFile", "Error replacing file: ${e.message}")
             e.printStackTrace()
             false
         }
@@ -99,7 +99,7 @@ class MediaStoreUtil {
             }
         }
 
-        Log.e("getMediaStoreUri", "File not found in MediaStore with ID: $mediaStoreId")
+        DLog.e("getMediaStoreUri", "File not found in MediaStore with ID: $mediaStoreId")
         return null
     }
 

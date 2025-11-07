@@ -3,16 +3,16 @@ package com.tmf.freespace.domainlayer.compression // Or your preferred package
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.util.Log
 import androidx.core.graphics.scale
 import androidx.exifinterface.media.ExifInterface
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import kotlin.math.roundToInt
 
 class CompressImageUtil {
-    private val tag = CompressImageUtil::class.simpleName
+    private val tag = "CompressImageUtil"
 
     /**
      * Resizes and compresses an image file.
@@ -32,7 +32,7 @@ class CompressImageUtil {
     ): Boolean {
         val inputFile = File(inputPath)
         if (!inputFile.exists()) {
-            Log.e(tag, "Input file does not exist: $inputPath")
+            DLog.e(tag, "Input file does not exist: $inputPath")
             return false
         }
 
@@ -44,7 +44,7 @@ class CompressImageUtil {
         val uncompressedWidth = options.outWidth
         val uncompressedHeight = options.outHeight
         if (uncompressedWidth <= 0 || uncompressedHeight <= 0) {  //Validate reasonable image dimensions
-            Log.e(tag, "Invalid uncompressed image dimensions: ${uncompressedWidth}x${uncompressedHeight} for $inputPath")
+            DLog.e(tag, "Invalid uncompressed image dimensions: ${uncompressedWidth}x${uncompressedHeight} for $inputPath")
             return false // Don't process if dimensions are invalid
         }
 
@@ -55,13 +55,13 @@ class CompressImageUtil {
             // Desired width is greater or equal, use original dimensions (or just compress if no resize needed)
             targetWidth = uncompressedWidth
             targetHeight = uncompressedHeight
-            Log.v(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
+            DLog.v(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
         } else {
             // Resize needed, maintain aspect ratio
             targetWidth = desiredWidth
             val aspectRatio = uncompressedHeight.toFloat() / uncompressedWidth.toFloat()
             targetHeight = (targetWidth * aspectRatio).roundToInt()
-            Log.v(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
+            DLog.v(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
         }
 
         // 3. Decode the bitmap with appropriate sampling options to save memory
@@ -71,22 +71,22 @@ class CompressImageUtil {
         try {
             inputBitmap = BitmapFactory.decodeFile(inputPath, options)
         } catch (e: OutOfMemoryError) {
-            Log.e(tag, "OutOfMemoryError while decoding bitmap with inSampleSize: ${options.inSampleSize}", e)
+            DLog.e(tag, "OutOfMemoryError while decoding bitmap with inSampleSize: ${options.inSampleSize}", e)
             // Optionally, try with a larger inSampleSize if the first attempt fails
             options.inSampleSize *= 2
             try {
                 inputBitmap = BitmapFactory.decodeFile(inputPath, options)
             } catch (e2: OutOfMemoryError) {
-                Log.e(tag, "OutOfMemoryError on second attempt to decode bitmap for $inputPath", e2)
+                DLog.e(tag, "OutOfMemoryError on second attempt to decode bitmap for $inputPath", e2)
                 return false
             }
         } catch (e: Exception) {
-            Log.e(tag, "Error decoding bitmap for $inputPath", e)
+            DLog.e(tag, "Error decoding bitmap for $inputPath", e)
             return false
         }
 
         if (inputBitmap == null) {
-            Log.e(tag, "BitmapFactory.decodeFile returned null for $inputPath")
+            DLog.e(tag, "BitmapFactory.decodeFile returned null for $inputPath")
             return false
         }
 
@@ -97,17 +97,17 @@ class CompressImageUtil {
             // doesn't bring it exactly to targetWidth/targetHeight but to the nearest power of 2.
             // Or if we decided not to resize earlier (desiredWidth >= originalWidth) but still want to ensure it's not accidentally larger.
             try {
-                Log.v(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
+                DLog.v(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
                 processedBitmap = inputBitmap.scale(targetWidth, targetHeight)
                 if (processedBitmap != inputBitmap) { // Only recycle if createScaledBitmap created a new one
                     inputBitmap.recycle()
                 }
             } catch (e: OutOfMemoryError) {
-                Log.e(tag, "OutOfMemoryError during Bitmap.createScaledBitmap for $inputPath", e)
+                DLog.e(tag, "OutOfMemoryError during Bitmap.createScaledBitmap for $inputPath", e)
                 inputBitmap.recycle() // Recycle the original bitmap
                 return false
             }  catch (e: Exception) {
-                Log.e(tag, "Error during Bitmap.createScaledBitmap for $inputPath", e)
+                DLog.e(tag, "Error during Bitmap.createScaledBitmap for $inputPath", e)
                 inputBitmap.recycle()
                 return false
             }
@@ -141,13 +141,13 @@ class CompressImageUtil {
                 processedBitmap = orientedBitmap
             }
         } catch (e: IOException) {
-            Log.w(tag, "Could not read EXIF orientation for $inputPath", e)
+            DLog.e(tag, "Could not read EXIF orientation for $inputPath")
         } catch (e: OutOfMemoryError) {
-            Log.e(tag, "OutOfMemoryError while applying EXIF orientation for $inputPath", e)
+            DLog.e(tag, "OutOfMemoryError while applying EXIF orientation for $inputPath", e)
             processedBitmap.recycle()
             return false
         } catch (e: Exception) {
-            Log.e(tag, "Error while applying EXIF orientation for $inputPath", e)
+            DLog.e(tag, "Error while applying EXIF orientation for $inputPath", e)
             processedBitmap.recycle()
             return false
         }
@@ -162,16 +162,16 @@ class CompressImageUtil {
             FileOutputStream(outputFile).use { fos ->
                 // Ensure compressionQuality is within 0-100 range
                 if (!processedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, fos)) {
-                    Log.e(tag, "Bitmap.compress returned false for $outputPath")
+                    DLog.e(tag, "Bitmap.compress returned false for $outputPath")
                     processedBitmap.recycle()
                     return false
                 }
                 fos.flush()
             }
-            Log.v(tag, "Successfully processed and saved image to $outputPath")
+            DLog.v(tag, "Successfully processed and saved image to $outputPath")
         }
         catch (e: IOException) {
-            Log.e(tag, "IOException while saving processed image to $outputPath", e)
+            DLog.e(tag, "IOException while saving processed image to $outputPath", e)
             if (outputFile.exists()) {
                 outputFile.delete() // Clean up partially created file
             }
@@ -179,7 +179,7 @@ class CompressImageUtil {
             return false
         }
         catch (e: Exception) {
-            Log.e(tag, "Error saving processed image to $outputPath", e)
+            DLog.e(tag, "Error saving processed image to $outputPath", e)
             if (outputFile.exists()) {
                 outputFile.delete()
             }
@@ -217,7 +217,7 @@ class CompressImageUtil {
                 inSampleSize *= 2
             }
         }
-        Log.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${reqWidth}x${reqHeight}")
+        DLog.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${reqWidth}x${reqHeight}")
         return inSampleSize
     }
 }

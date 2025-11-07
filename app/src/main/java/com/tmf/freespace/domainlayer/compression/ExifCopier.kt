@@ -1,7 +1,7 @@
 package com.tmf.freespace.domainlayer.compression.ExifCopier
 
-import android.util.Log
 import androidx.exifinterface.media.ExifInterface
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 import java.io.IOException
 
@@ -23,11 +23,11 @@ object ExifCopier {
         val destinationFile = File(destinationPath)
 
         if (!sourceFile.exists()) {
-            Log.e(TAG, "Source file does not exist: $sourcePath")
+            DLog.e(TAG, "Source file does not exist: $sourcePath")
             return false
         }
         if (!destinationFile.exists()) {
-            Log.e(TAG, "Destination file does not exist: $destinationPath")
+            DLog.e(TAG, "Destination file does not exist: $destinationPath")
             return false
         }
 
@@ -45,7 +45,7 @@ object ExifCopier {
                 if (value != null) {
                     destinationExif.setAttribute(tag, value)
                     tagsCopied++
-//                    Log.d(TAG, "Copied tag '$tag': $value")
+//                    DLog.d(TAG, "Copied tag '$tag': $value")
                 }
             }
 
@@ -54,20 +54,20 @@ object ExifCopier {
 
             if (tagsCopied > 0) {
                 destinationExif.saveAttributes() // This is crucial to write changes to the file
-                Log.v(TAG, "Successfully copied $tagsCopied EXIF attributes from $sourcePath to $destinationPath")
+                DLog.v(TAG, "Successfully copied $tagsCopied EXIF attributes from $sourcePath to $destinationPath")
             } else {
-                Log.v(TAG, "No EXIF attributes to copy or no relevant tags found in $sourcePath.")
+                DLog.v(TAG, "No EXIF attributes to copy or no relevant tags found in $sourcePath.")
                 // Return true even if no tags were copied, as the operation itself didn't fail due to an error.
                 // If you want to return false if no tags were copied, change this.
             }
             return true
 
         } catch (e: IOException) {
-            Log.e(TAG, "IOException during EXIF copy from $sourcePath to $destinationPath", e)
+            DLog.e(TAG, "IOException during EXIF copy from $sourcePath to $destinationPath", e)
         } catch (e: IllegalArgumentException) {
-            Log.e(TAG, "IllegalArgumentException: Possibly an issue with file format or tag for $destinationPath", e)
+            DLog.e(TAG, "IllegalArgumentException: Possibly an issue with file format or tag for $destinationPath", e)
         } catch (e: Exception) {
-            Log.e(TAG, "Unexpected error during EXIF copy from $sourcePath to $destinationPath", e)
+            DLog.e(TAG, "Unexpected error during EXIF copy from $sourcePath to $destinationPath", e)
         }
         return false
     }

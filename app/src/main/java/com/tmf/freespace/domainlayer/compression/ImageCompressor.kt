@@ -1,13 +1,13 @@
 package com.tmf.freespace.domainlayer.compression
 
 import android.content.Context
-import android.util.Log
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.domainlayer.compression.ExifCopier.ExifCopier
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 
 class ImageCompressor(context: Context) : ICompressor(context) {
-    private val tag = ImageCompressor::class.simpleName
+    private val tag = "ImageCompressor"
 
     override val compressionTemplates = listOf(
         //ScreenWidth|Quality(1..100, 1 lowest)
@@ -37,7 +37,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         for (compressionCommand in compressionTemplates) {
             val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath).split("|")
             if (tokens.size == 2) {
-                Log.v(tag, "Image compression command: $compressionCommand")
+                DLog.v(tag, "Image compression command: $compressionCommand")
                 val desiredWidth = tokens[0].toInt()
                 val quality = tokens[1].toInt()
                 if (CompressImageUtil().compressImage(inputFilePath, outputFilePath, desiredWidth, quality)) {
@@ -45,11 +45,11 @@ class ImageCompressor(context: Context) : ICompressor(context) {
                         return ExifCopier.copyExifData(inputFilePath, outputFilePath)
                     }
                 } else {
-                    Log.e(tag, "Image compression failed for $inputFilePath")
+                    DLog.e(tag, "Image compression failed for $inputFilePath")
                     return false
                 }
             } else {
-                Log.e(tag, "Invalid compression command: $compressionCommand")
+                DLog.e(tag, "Invalid compression command: $compressionCommand")
                 return false
             }
         }

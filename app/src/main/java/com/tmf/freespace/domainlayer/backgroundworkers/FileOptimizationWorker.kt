@@ -4,7 +4,6 @@ import android.content.Context.BATTERY_SERVICE
 import android.os.BatteryManager
 import android.os.Environment
 import android.os.StatFs
-import android.util.Log
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MIN_FREE_SPACE_GOAL_MB
@@ -13,6 +12,7 @@ import com.tmf.freespace.datalayer.mediastore.MediaStoreUtil
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import com.tmf.freespace.domainlayer.compression.Compressor
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -20,7 +20,7 @@ import kotlin.time.ExperimentalTime
 
 class FileOptimizationWorker() {
 //    class FileOptimizationWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
-    private val tag = FileOptimizationWorker::class.simpleName
+    private val tag = "FileOptimizationWorker"
 
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository()
@@ -33,14 +33,21 @@ class FileOptimizationWorker() {
      * . . Compress the uncompressed (original or recovered) media file
      * . . Replace file in MediaStore with compressed file
      */
-    suspend fun compressAllPendingMedia(): Boolean {
-        Log.d(tag, "Processing files to optimize storage space")
+    suspend fun compressAllPendingMedia() {
+
 
         var bytesToRecover = bytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 5GB), but not limited when processing older files
         val mediaStoreUtil = MediaStoreUtil()
 
         //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available  //TODO Use entire schedule time for video or audio files that might take a long time
         var fileToCompress = getFileToCompress()
+        if (fileToCompress == null) {
+            DLog.v(tag, "No files need optimization")
+            return
+        }
+
+        DLog.d(tag, "Processing files to optimize storage space")
+
         while (fileToCompress != null
                 && bytesToRecover > 0
                 && !batteryLow()
@@ -65,8 +72,8 @@ class FileOptimizationWorker() {
             fileToCompress = getFileToCompress()
         }
 
-        Log.d(tag, "Finished processing files to optimize storage space")
-        return true
+        DLog.d(tag, "Finished processing files to optimize storage space")
+        return
     }
 
     private suspend fun getBytesRecovered(): Long {
@@ -109,7 +116,7 @@ class FileOptimizationWorker() {
             }
             deleteFile(compressedFilePath)
         } else {
-            Log.d(tag, "Error compressing file ${fileToCompress.fullPath}")
+            DLog.d(tag, "Error compressing file ${fileToCompress.fullPath}")
             return false
         }
 
@@ -128,11 +135,11 @@ class FileOptimizationWorker() {
                 if (MediaStoreUtil().overwriteMediaStoreFile(appContext, fileToCompress, compressedFilePath)) {
                     fileToCompress.compressedSize = compressedFile.length().toInt()
                     fileToCompress.currentCompressionRatio = fileToCompress.desiredCompressionRatio
-                    Log.d("updateMediaStoreWithCompressedFile", "Updated media store for ${fileToCompress.fullPath} from $priorCompressedSize to ${fileToCompress.compressedSize} bytes")
+                    DLog.d("updateMediaStoreWithCompressedFile", "Updated media store for ${fileToCompress.fullPath} from $priorCompressedSize to ${fileToCompress.compressedSize} bytes")
                     return true
                 }
             } catch (e: Exception) {
-                Log.e("updateMediaStoreWithCompressedFile", "Error updating media store for ${fileToCompress.fullPath}: ${e.message}")
+                DLog.e("updateMediaStoreWithCompressedFile", "Error updating media store for ${fileToCompress.fullPath}: ${e.message}")
                 return false
             }
         }
@@ -160,7 +167,7 @@ class FileOptimizationWorker() {
         val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
 
         return if (batterLevelPct <= batteryLowLevel) {
-            Log.d(tag, "Battery low: $batterLevelPct%")
+            DLog.d(tag, "Battery low: $batterLevelPct%")
             true
         } else {
             false

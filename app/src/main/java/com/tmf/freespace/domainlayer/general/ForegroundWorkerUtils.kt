@@ -6,7 +6,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -29,10 +28,10 @@ class ForegroundWorkerUtils {
         val foregroundInfo = createForegroundInfo(worker, context)
         try {
             worker.setForeground(foregroundInfo) // Use suspend version for CoroutineWorker
-            Log.d(tag, "Foreground service started for worker ${worker.id}")
+            DLog.d(tag, "Foreground service started for worker ${worker.id}")
             return true
         } catch (e: IllegalStateException) {
-            Log.e(tag, "Error setting foreground service. Does the app have FOREGROUND_SERVICE permission? Or is it running on an older API without appropriate service type?", e)
+            DLog.e(tag, "Error setting foreground service. Does the app have FOREGROUND_SERVICE permission? Or is it running on an older API without appropriate service type?", e)
             return false
         }
     }

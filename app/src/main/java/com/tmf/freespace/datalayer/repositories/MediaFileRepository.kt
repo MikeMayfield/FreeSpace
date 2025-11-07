@@ -1,13 +1,13 @@
 package com.tmf.freespace.datalayer.repositories
 
-import android.util.Log
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
+import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
 
 class MediaFileRepository() {
-    private val tag = MediaFileRepository::class.simpleName
+    private val tag = "MediaFileRepository"
 
     private val mediaFileDao = AppDatabase.instance().mediaFileDao
 
@@ -50,7 +50,7 @@ class MediaFileRepository() {
              */
             fileHasBeenDeleted = hasFileBeenDeleted(fileToCompress)
             if (fileHasBeenDeleted) {
-                Log.d(tag, "File ${fileToCompress.fullPath} has been deleted, removing from database")
+                DLog.d(tag, "File ${fileToCompress.fullPath} has been deleted, removing from database")
                 deleteFile(fileToCompress)
                 fileToCompress = mediaFileDao.getFileToCompress()
             }
