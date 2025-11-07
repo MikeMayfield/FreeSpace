@@ -53,7 +53,7 @@ class ForegroundWorkerUtils {
         val notification = NotificationCompat.Builder(context, notificationChannelID)
             .setContentTitle(title)
             .setTicker(title)
-            .setContentText("FreeSpace is creating more memory...")
+            .setContentText("Making your storage bigger on the inside than the outside...")
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true) // Makes the notification non-dismissible
             // Add the cancel action to the notification which can
