@@ -44,7 +44,7 @@ fun LicenseAgreementScreen(navController: NavHostController, paddingValues: Padd
 
                 "<b>By using FreeSpace, you acknowledge that you have read, understood, and agree to this Agreement, including the disclaimers about photo and video quality and the absence of warranties or liability.</b><br><br>" +
 
-                "<em>Last updated: 07-Nov-2025</em><br><br>",
+                "<em>Last update: 08-Nov-2025</em><br><br>",
         navButtonText = "ACCEPT",
         paddingValues = paddingValues,
     ) {

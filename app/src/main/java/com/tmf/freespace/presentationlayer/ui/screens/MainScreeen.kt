@@ -45,7 +45,7 @@ fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite"
+                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite (alpha)"
                         Text(
                             text = "FreeSpace $version",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
