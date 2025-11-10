@@ -167,7 +167,6 @@ class CompressImageUtil {
                 }
                 fos.flush()
             }
-            DLog.v(tag, "Successfully processed and saved image to $outputPath")
         }
         catch (e: IOException) {
             DLog.e(tag, "IOException while saving processed image to $outputPath", e)

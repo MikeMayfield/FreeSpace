@@ -24,27 +24,27 @@ class Compressor(val context: Context) {
      * Compress a file to create a new file with the compressed data.
      *
      * @param mediaFile The MediaFile object representing the current media file
-     * @param destinationFile The full path of the compressed file to create
+     * @param destinationFilePath The full path of the compressed file to create
      * @param compressionRatio Compression ratio (n:1)
      * @return The full path of the compressed file, or null if compression failed
      */
-    fun compress(mediaFile: MediaFile, destinationFile: String, compressionRatio: Int): Boolean {
+    fun compress(mediaFile: MediaFile, destinationFilePath: String, compressionRatio: Int): Boolean {
         val sourceFilePath = mediaFile.fullPath
         if (mediaFile.compressedSize > minFileSizeToCompress) {  //
-            DLog.d(tag, "File already compressed: $sourceFilePath")
-
             val mediaFileInfo = File(sourceFilePath)
             if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
                         DLog.d(tag, "Compressing image file: $sourceFilePath")
-                        imageCompressor.compress(mediaFile, destinationFile, compressionRatio)
+                        val success = imageCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
+                        DLog.d(tag, "Compressed image from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
+                        success
                     }
 
                     MediaType.VIDEO -> {
                         DLog.d(tag, "Compressing video file: $sourceFilePath")
-                        val success = videoCompressor.compress(mediaFile, destinationFile, compressionRatio)
-                        DLog.d(tag, "Compressed size: ${File(destinationFile).length()}")
+                        val success = videoCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
+                        DLog.d(tag, "Compressed video from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
                         success
                     }
 
