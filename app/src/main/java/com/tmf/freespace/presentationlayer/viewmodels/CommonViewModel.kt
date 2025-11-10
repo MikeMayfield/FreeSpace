@@ -68,8 +68,8 @@ class CommonViewModel() : ViewModel() {
                 currentExpansionMB = addedSize / bytesToMB,
                 expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
                 status = status(),
-                keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX, 0),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())),
+                keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
+                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS)),
                 physicalMB = physicalMemorySize / bytesToMB,
             )
             delay(10_000L)  //Poll state every n milli-seconds
@@ -82,7 +82,7 @@ class CommonViewModel() : ViewModel() {
             return "TRIAL LIMIT — Free expansion limit reached. Subscribe now and get almost unlimited memory"
         }
 
-        val isIdle = PropertyBag.getBoolean(IS_IDLE, true)
+        val isIdle = PropertyBag.getBoolean(IS_IDLE)
         if (isIdle) {
             if (batteryLow()) {
                 return "LOW BATTERY — Waiting for your battery to charge. Plug in to expand memory now"
@@ -119,7 +119,7 @@ class CommonViewModel() : ViewModel() {
     }
 
     private fun isSubscribed(): Boolean {
-        return PropertyBag.getString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
+        return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
     }
 
     private fun minFreeSpaceGoalMB(keepFreeOptionIdx: Int): Long {
@@ -142,7 +142,7 @@ data class HomeScreenState(
     val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion (8GB Lite, 10 x Physical for MAX)
     val addedMB: Long = 0L,  //Amount of space added through optimization/compression
     val status: String = "",  //Status, as display string
-    val keepFreeOptionIdx: Int = 0,  //Index of keep free option selected by user
+    val keepFreeOptionIdx: Int = 1,  //Index of keep free option selected by user
     val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.NOT_SUBSCRIBED,  //Subscription status
     val physicalMB: Long = 64_000L,  //Amount of physical space available
 )

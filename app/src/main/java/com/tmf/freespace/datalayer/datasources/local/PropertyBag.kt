@@ -2,6 +2,7 @@ package com.tmf.freespace.datalayer.datasources.local
 
 import com.tmf.freespace.datalayer.models.PropertyBagEntry
 import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -33,6 +34,10 @@ object PropertyBag {
         return getString(key, defaultValue.toString()).toLong()
     }
 
+    fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
+        return getString(key, defaultValue.toString()).toBoolean()
+    }
+
     /**
      * Sets the string value associated with the given key.
      *
@@ -46,10 +51,6 @@ object PropertyBag {
                 saveBagEntry(PropertyBagEntry(key, value))
             }
         }
-    }
-
-    fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
-        return getString(key, defaultValue.toString()).toBoolean()
     }
 
     fun setInt(key: String, value: Int) {
@@ -79,10 +80,30 @@ object PropertyBag {
                 }
 
                 if (bag.isEmpty()) {
-                    bag["__EMPTY__"] = ""
+                    CoroutineScope(Dispatchers.IO).launch {
+                        initPropertyBag()
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Initialize the property bag with default values the first time it is used
+     */
+    private suspend fun initPropertyBag() {
+        createAndSaveBagEntry(MAX_DATE_ADDED, "0")
+        createAndSaveBagEntry(KEEP_FREE_OPTION_IDX, "1")
+        createAndSaveBagEntry(MIN_FREE_SPACE_GOAL_MB, "5000")
+        createAndSaveBagEntry(IS_IDLE, "true")
+        createAndSaveBagEntry(PRIOR_MEDIA_STORE_VERSION, "0")
+        createAndSaveBagEntry(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())
+        createAndSaveBagEntry(TRIAL_GB_FREE, "8")
+    }
+
+    private suspend fun createAndSaveBagEntry(key: String, value: String) {
+        bag[key] = value
+        saveBagEntry(PropertyBagEntry(key, value))
     }
 
     /**
@@ -103,6 +124,4 @@ object PropertyBag {
     const val PRIOR_MEDIA_STORE_VERSION = "PRIOR_MEDIA_STORE_VERSION"  //Latest media store version seen. If newer version becomes available, database needs to be updated with possibly different MediaIDs
     const val SUBSCRIPTION_STATUS = "SUBSCRIPTION_STATUS"  //Current subscription status
     const val TRIAL_GB_FREE = "TRIAL_GB_FREE"  //Size of free trial in GB
-    const val MAX_GB_LIMIT_FOR_PLAN = "MAX_GB_LIMIT_FOR_PLAN"  //Max GB limit for the current plan. Initially set to TRIAL_GB_FREE, then changed to higher limit if subscription in effect
-    const val ALWAYS_OPTIMIZE_LEVEL = "ALWAYS_OPTIMIZE_LEVEL"  //Compression level to always process, regardless of goal from MIN_GB_FREE_GOAL
 }

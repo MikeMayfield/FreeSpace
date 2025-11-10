@@ -85,8 +85,8 @@ class FileOptimizationWorker() {
      */
     private suspend fun bytesToRecover(): Long {
         //If trial, always try to recover full trial amount remaining to emphasize value of product during trial
-        if (PropertyBag.getString(PropertyBag.SUBSCRIPTION_STATUS, "NOT_SUBSCRIBED") == "NOT_SUBSCRIBED") {
-            val trialFreeBytesToRecover = PropertyBag.getLong(TRIAL_GB_FREE, 8L) * 1_000_000_000 - getBytesRecovered()
+        if (PropertyBag.getString(PropertyBag.SUBSCRIPTION_STATUS) == "NOT_SUBSCRIBED") {
+            val trialFreeBytesToRecover = PropertyBag.getLong(TRIAL_GB_FREE) * 1_000_000_000 - getBytesRecovered()
             if (trialFreeBytesToRecover > 0) {
                 return trialFreeBytesToRecover
             }
@@ -95,7 +95,7 @@ class FileOptimizationWorker() {
         //Get goal of space to leave free at all times
         val statFs = StatFs(Environment.getExternalStorageDirectory().path)
         val bytesAvailable = statFs.blockSizeLong * statFs.availableBlocksLong
-        val minFreeSpaceGoalMB = PropertyBag.getInt(MIN_FREE_SPACE_GOAL_MB, 2_000)
+        val minFreeSpaceGoalMB = PropertyBag.getInt(MIN_FREE_SPACE_GOAL_MB)
         return minFreeSpaceGoalMB * 1_000_000L - bytesAvailable
     }
 

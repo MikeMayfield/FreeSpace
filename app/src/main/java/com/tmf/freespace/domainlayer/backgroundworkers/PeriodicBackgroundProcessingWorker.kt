@@ -60,7 +60,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
             updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-            val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
+            val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED)
             val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
             if (newMaxDateAddedFound > maxDateAddedFound) {
                 PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
@@ -93,7 +93,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * If the real MediaStore IDs may have changed, update the MediaStore ID GUIDs in the database, based on the full path to the media
      */
     private suspend fun updateMediaStoreIDsIfRebuilt(mediaFileRepository: MediaFileRepository) {
-        val priorMediaStoreVersion = PropertyBag.getString(PRIOR_MEDIA_STORE_VERSION, "")
+        val priorMediaStoreVersion = PropertyBag.getString(PRIOR_MEDIA_STORE_VERSION)
         val newMediaStoreVersion = MediaStore.getVersion(appContext)
 
         if (priorMediaStoreVersion != newMediaStoreVersion) {
@@ -111,7 +111,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         mediaFileRepository.markAllMediaAsNotUpdated()
 
         //Rebuild all MediaStore IDs in the database
-        val oldestDateAddedToSelect = PropertyBag.getLong(MAX_DATE_ADDED, 0L)
+        val oldestDateAddedToSelect = PropertyBag.getLong(MAX_DATE_ADDED)
         val maxDateAddedFound = updateMediaFilesFromMediaStore(oldestDateAddedToSelect, mediaFileRepository, true)
 
         //Delete files that were deleted from the device (i.e. they are no longer in the database)
