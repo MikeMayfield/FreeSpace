@@ -30,25 +30,109 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     private val tag = "VideoCompressor"
 
     override val compressionTemplates = listOf(
-        //ResizeWidth|FramerateFps
-        "0|0",  //Just convert to H265
-        "{{SCREEN_00}}|0",  //Screen width (2.3007243)
-        "{{VIDEO_75}}|0",  //75% of video width (2.968316)
-        "{{SCREEN_75}}|0",  //75% of screen width (4.029935)
-        "{{VIDEO_50}}|0",  //50% of video width (6.4749637)
-        "{{SCREEN_50}}|0",  //50% of screen width (8.694984)
-        "{{VIDEO_50}}|20",  //50% of video width (8.694984)
-        "{{SCREEN_50}}|20",  //50% of screen width (8.694984)
-        "{{SCREEN_40}}|0",  //40% of video width (12.959882)
-        "{{SCREEN_40}}|20",  //40% of video width (12.959882)
-        "{{VIDEO_25}}|0",  //25% of video width (21.979757)
-        "{{SCREEN_25}}|0",  //25% of screen width (28.050495)
-        "{{VIDEO_25}}|20",  //25% of video width (21.979757)
-        "{{SCREEN_25}}|20",  //25% of screen width (28.050495)
-        "{{VIDEO_20}}|20",  //20% of screen width (37.987946)
-        "{{SCREEN_20}}|20",  //10% of screen width (50.804916)
-        "{{SCREEN_10}}|0",  //20% of screen width (37.987946)
-        "{{SCREEN_10}}|20",  //10% of screen width (50.804916)
+        //ResizeWidth|Fps
+        "0|0",  //Just convert to H265 (must always be the first entry)
+
+        "{{SCREEN_00}}|0",
+//        "{{SCREEN_00}}|20",
+
+        "{{SCREEN_90}}|0",
+//        "{{SCREEN_90}}|15",
+//        "{{SCREEN_90}}|20",
+//        "{{SCREEN_90}}|30",
+
+        "{{SCREEN_80}}|0",
+//        "{{SCREEN_80}}|15",
+//        "{{SCREEN_80}}|20",
+
+        "{{SCREEN_70}}|0",
+//        "{{SCREEN_70}}|15",
+//        "{{SCREEN_70}}|20",
+
+        "{{SCREEN_60}}|0",
+//        "{{SCREEN_60}}|15",
+//        "{{SCREEN_60}}|20",
+
+        "{{SCREEN_50}}|0",
+//        "{{SCREEN_50}}|15",
+//        "{{SCREEN_50}}|20",
+
+        "{{SCREEN_40}}|0",
+//        "{{SCREEN_40}}|15",
+//        "{{SCREEN_40}}|20",
+
+        "{{SCREEN_30}}|0",
+//        "{{SCREEN_30}}|15",
+//        "{{SCREEN_30}}|20",
+
+        "{{SCREEN_20}}|0",
+//        "{{SCREEN_20}}|15",
+//        "{{SCREEN_20}}|20",
+
+        "{{SCREEN_10}}|0",
+//        "{{SCREEN_10}}|15",
+//        "{{SCREEN_10}}|20",
+
+
+//        "{{VIDEO_00}}|0",
+//        "{{VIDEO_00}}|15",
+//        "{{VIDEO_00}}|20",
+//
+//        "{{VIDEO_90}}|0",
+//        "{{VIDEO_90}}|15",
+//        "{{VIDEO_90}}|20",
+//
+//        "{{VIDEO_80}}|0",
+//        "{{VIDEO_80}}|15",
+//        "{{VIDEO_80}}|20",
+//
+//        "{{VIDEO_70}}|0",
+//        "{{VIDEO_70}}|15",
+//        "{{VIDEO_70}}|20",
+//
+//        "{{VIDEO_60}}|0",
+//        "{{VIDEO_60}}|15",
+//        "{{VIDEO_60}}|20",
+//
+//        "{{VIDEO_50}}|0",
+//        "{{VIDEO_50}}|15",
+//        "{{VIDEO_50}}|20",
+//
+//        "{{VIDEO_40}}|0",
+//        "{{VIDEO_40}}|15",
+//        "{{VIDEO_40}}|20",
+//
+//        "{{VIDEO_30}}|0",
+//        "{{VIDEO_30}}|15",
+//        "{{VIDEO_30}}|20",
+//
+//        "{{VIDEO_20}}|0",
+//        "{{VIDEO_20}}|15",
+//        "{{VIDEO_20}}|20",
+//
+//        "{{VIDEO_10}}|0",
+//        "{{VIDEO_10}}|15",
+//        "{{VIDEO_10}}|20",
+
+
+
+//        "{{SCREEN_00}}|0",  //Screen width (2.3007243)
+//        "{{VIDEO_75}}|0",  //75% of video width (2.968316)
+//        "{{SCREEN_75}}|0",  //75% of screen width (4.029935)
+//        "{{VIDEO_50}}|0",  //50% of video width (6.4749637)
+//        "{{SCREEN_50}}|0",  //50% of screen width (8.694984)
+//        "{{VIDEO_50}}|20",  //50% of video width (8.694984)
+//        "{{SCREEN_50}}|20",  //50% of screen width (8.694984)
+//        "{{SCREEN_40}}|0",  //40% of video width (12.959882)
+//        "{{SCREEN_40}}|20",  //40% of video width (12.959882)
+//        "{{VIDEO_25}}|0",  //25% of video width (21.979757)
+//        "{{SCREEN_25}}|0",  //25% of screen width (28.050495)
+//        "{{VIDEO_25}}|20",  //25% of video width (21.979757)
+//        "{{SCREEN_25}}|20",  //25% of screen width (28.050495)
+//        "{{VIDEO_20}}|20",  //20% of screen width (37.987946)
+//        "{{SCREEN_20}}|20",  //10% of screen width (50.804916)
+//        "{{SCREEN_10}}|0",  //20% of screen width (37.987946)
+//        "{{SCREEN_10}}|20",  //10% of screen width (50.804916)
     )
 
     /**
@@ -89,54 +173,40 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     }
 
     private suspend fun getCompressionTemplateForDesiredCompressionRatio(inputFilePath: String, outputFilePath: String, compressionRatio: Int): String? {
-        //Optimization for low compression ratios
-        when (compressionRatio) {
-            0 -> return null  //No compression (shouldn't be allowed)
-            1 -> return compressionTemplates[0]  //Just convert to H265
-            2 -> return compressionTemplates[1]  //Just convert to screen width
+        //Optimization for low compression ratio
+        if (compressionRatio <= 1) {
+            return compressionTemplates[0]  //Just convert to H265
         }
 
         val tempOutputFilePath = "$outputFilePath.tmp"
 
         //Determine size of input file clipped to n seconds with no conversion. From that we can determine the max size of the file at the desired compression percentage
         val clipDurationSecs = 5
-        val uncompressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionRatio, compressionTemplates[0], clipDurationSecs, true)
-        val unclippedFileSize = File(inputFilePath).length().toFloat()
-        val clipPctOfFullSize = uncompressedClipSize.toFloat() / unclippedFileSize
-        val maxCompressedSizeForClippedFile = (unclippedFileSize * clipPctOfFullSize / compressionRatio.toFloat()).toInt()
-        DLog.d(tag, "Max compressed size for clipped file '$inputFilePath': $maxCompressedSizeForClippedFile at compression ratio $compressionRatio, full size: ${File(inputFilePath).length()}")
+        val uncompressedClipSizeInt = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionTemplates[0], clipDurationSecs, true)
+        val uncompressedClipSize = uncompressedClipSizeInt.toFloat()
 
-        var minTemplateIdx = 0
-        var maxTemplateIdx = compressionTemplates.size - 1
-        var templateIdx = compressionTemplates.size / 2
-        var templateIdxForLargestCompressedSizeLEGoal = maxTemplateIdx
-        var compressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionRatio, compressionTemplates[templateIdx], clipDurationSecs)
-        do {
-            if (compressedClipSize <= maxCompressedSizeForClippedFile) {
-                templateIdxForLargestCompressedSizeLEGoal = templateIdx
-                maxTemplateIdx = templateIdx - 1
-            } else {
-                minTemplateIdx = templateIdx + 1
+        //Search for the optimal compression template: Lowest compression that yields the desired compression ratio
+        for (templateIdx in 0 .. compressionTemplates.size - 1) {
+            val compressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionTemplates[templateIdx], clipDurationSecs)
+            val compressedCompressionRatio = uncompressedClipSize / compressedClipSize.toFloat()
+            DLog.i(tag, "Video compression from $uncompressedClipSize to $compressedClipSize bytes, command: [$templateIdx] ${compressionTemplates[templateIdx]}, compression: $compressedCompressionRatio")
+
+            if (compressedCompressionRatio >= compressionRatio) {
+                return compressionTemplates[templateIdx]
             }
-            if (minTemplateIdx > maxTemplateIdx) break
-
-            templateIdx = (minTemplateIdx + maxTemplateIdx) / 2
-            compressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionRatio, compressionTemplates[templateIdx], clipDurationSecs)
-        } while (true)
-
-        return compressionTemplates[templateIdxForLargestCompressedSizeLEGoal]
-    }
-
-    private suspend fun compressClipByTemplate(inputFilePath: String, outputFilePath: String, compressionRatio: Int, compressionTemplate: String, clipDurationSecs: Int, noConversion: Boolean = false): Int {
-        if (compressInBackground(inputFilePath, outputFilePath, compressionTemplate, clipDurationSecs * 1024L, noConversion)) {
-            val newSize = File(outputFilePath).length()
-            DLog.i(tag, "Video compression for $inputFilePath, output file size: $newSize, command: $compressionTemplate, compression: ${File(inputFilePath).length() / compressionRatio / newSize.toFloat()}")
-            return newSize.toInt()
-        } else {
-            DLog.e(tag, "Image compression failed for $inputFilePath")
-            return 0
         }
 
+        return compressionTemplates[compressionTemplates.size - 1]
+    }
+
+    private suspend fun compressClipByTemplate(inputFilePath: String, outputFilePath: String, compressionTemplate: String, clipDurationSecs: Int, noConversion: Boolean = false): Int {
+        if (compressInBackground(inputFilePath, outputFilePath, compressionTemplate, clipDurationSecs * 1024L, noConversion)) {
+            val newSize = File(outputFilePath).length()
+            return newSize.toInt()
+        } else {
+            DLog.e(tag, "Video compression failed for $inputFilePath")
+            return 0
+        }
     }
 
     @OptIn(UnstableApi::class)

@@ -6,7 +6,7 @@ package com.tmf.freespace.domainlayer.compression
 class CompressionLevels {
     val compressionLevels = listOf(
         CompressionLevel(0, 31, 5, 5, 1),  //TODO ***Change to ratio=0 or remove after debugging. This date range is never compressed
-        CompressionLevel(31, 60, 1, 1, 1),
+        CompressionLevel(31, 60, 1, 1, 1),  //Ratio 1 means minimum compression, but compressed
         CompressionLevel(60, 90, 3, 2, 3),
         CompressionLevel(90, 180, 5, 3, 5),
         CompressionLevel(180, 365, 10, 8, 8),

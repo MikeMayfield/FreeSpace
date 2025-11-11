@@ -11,6 +11,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
 
     override val compressionTemplates = listOf(
         //ScreenWidth|Quality(1..100, 1 lowest)
+        "{{SCREEN_00}}|90",  //Compression very low
         "{{SCREEN_00}}|80",  //Compression low
         "{{SCREEN_00}}|60",  //Compression medium low
         "{{SCREEN_00}}|40",  //Compression medium

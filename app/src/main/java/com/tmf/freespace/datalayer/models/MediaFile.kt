@@ -11,7 +11,7 @@ import java.util.UUID
 )
 data class MediaFile(
     var mediaFileID: UUID = UUID.randomUUID(),
-    val mediaStoreID: Long,  //TODO BUG: **** MediaStore ID can change between reboots. Fix this!!
+    val mediaStoreID: Long,
     @PrimaryKey val fullPath: String,
     val originalSize: Int,
     var compressedSize: Int = originalSize,
