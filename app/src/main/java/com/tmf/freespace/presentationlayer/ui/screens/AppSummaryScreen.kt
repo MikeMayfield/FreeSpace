@@ -250,7 +250,7 @@ fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpans
         )
         StorageDetailItem(
             color = Color(0xFF02EA62),
-            storageAmount = "${gbFormatter.format(currentExpansionMB / 1000f)} GB memory already added by FreeSpace",
+            storageAmount = storageAmountDetail,
             description = "FreeSpace Lite is limited to 8 GB",
             smallLayout
         )
