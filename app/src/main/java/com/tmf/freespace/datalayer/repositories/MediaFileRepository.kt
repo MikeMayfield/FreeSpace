@@ -97,7 +97,7 @@ class MediaFileRepository() {
         return mediaFileDao.getBytesRecovered()
     }
 
-    suspend fun getTotalUncompressedSize(): Long {
+    suspend fun getTotalUncompressedMediaSize(): Long {
         return mediaFileDao.getTotalUncompressedSize()
     }
 

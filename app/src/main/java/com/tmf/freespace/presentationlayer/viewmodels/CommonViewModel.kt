@@ -54,19 +54,19 @@ class CommonViewModel() : ViewModel() {
 
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
-            val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedSize()
+            val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
             val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
             val physicalMemorySize = physicalMemorySize()
             val freeSpace = physicalFreeSpaceSize()
             val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
             val addedSize = mediaFileRepository.getBytesRecovered()
-            val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize) * 8L
-            val expansionAvailableFromFreeSpace = freeSpace * 10L
+            val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize * 10L) - (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize)  //10:1 media compression, minus amount already recovered
+            val expansionAvailableFromCompressingFreeSpace = freeSpace * 10L  //Assuming 10:1 total expansion from optimizing future media, as added
             _uiState.value = _uiState.value.copy(
                 usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
                 availableNowMB = freeSpace / bytesToMB,
                 currentExpansionMB = addedSize / bytesToMB,
-                expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromFreeSpace)  / bytesToMB,
+                expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromCompressingFreeSpace)  / bytesToMB,
                 status = status(),
                 keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
                 subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS)),
