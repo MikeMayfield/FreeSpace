@@ -139,7 +139,7 @@ data class HomeScreenState(
     val usedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)
     val availableNowMB: Long = 0L,  //Amount of space available now
     val currentExpansionMB: Long = 0L,  //Amount of space already added by FreeSpace
-    val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion (8GB Lite, 10 x Physical for MAX)
+    val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion
     val addedMB: Long = 0L,  //Amount of space added through optimization/compression
     val status: String = "",  //Status, as display string
     val keepFreeOptionIdx: Int = 1,  //Index of keep free option selected by user

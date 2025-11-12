@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
@@ -254,7 +255,7 @@ fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpans
         StorageDetailItem(
             color = Color(0xFF02EA62),
             storageAmount = storageAmountDetail,
-            description = "FreeSpace Lite is limited to 8 GB",
+            description = "FreeSpace Lite is limited to ${PropertyBag.getInt(TRIAL_GB_FREE)} GB",
             smallLayout
         )
         StorageDetailItem(

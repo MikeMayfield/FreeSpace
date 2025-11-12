@@ -98,7 +98,7 @@ object PropertyBag {
         createAndSaveBagEntry(IS_IDLE, "true")
         createAndSaveBagEntry(PRIOR_MEDIA_STORE_VERSION, "0")
         createAndSaveBagEntry(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())
-        createAndSaveBagEntry(TRIAL_GB_FREE, "8")
+        createAndSaveBagEntry(TRIAL_GB_FREE, "10")
     }
 
     private suspend fun createAndSaveBagEntry(key: String, value: String) {

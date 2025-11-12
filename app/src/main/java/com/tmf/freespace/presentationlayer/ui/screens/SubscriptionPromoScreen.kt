@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import com.tmf.freespace.R
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.presentationlayer.ui.composables.GenericTextBody
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 
@@ -14,7 +16,7 @@ fun SubscriptionPromoScreen(navController: NavHostController, paddingValues: Pad
         title = "SUBSCRIBE ANYTIME",
         bodyHtml =
             "<b>Get started with FreeSpace Lite — Totally free!</b> \uD83C\uDF89\n<br><br>" +
-                    "You get <b>8 GB of memory</b>, all yours, forever. No catches, no expiration, just more space to keep your favorite moments.<br><br>" +
+                    "You get <b>${PropertyBag.getInt(TRIAL_GB_FREE)} GB of memory</b>, all yours, forever. No catches, no expiration, just more space to keep your favorite moments.<br><br>" +
                     "Need more memory? Say hello to <b>FreeSpace Max</b> — the upgrade that gives you endless space for all your photos and videos. No more choosing which memories to delete.<br><br>" +
                     "And the best part? It costs <b>less than a cup of coffee</b> ☕ — so you can keep snapping, saving, and smiling without limits!",
         navButtonText = "NEXT",
