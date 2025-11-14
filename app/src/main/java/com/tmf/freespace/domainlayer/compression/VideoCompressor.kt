@@ -34,33 +34,12 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         "0|0",  //Just convert to H265 (must always be the first entry)
 
         "{{SCREEN_00}}|0",
-//        "{{SCREEN_00}}|20",
-
         "{{SCREEN_90}}|0",
-//        "{{SCREEN_90}}|15",
-//        "{{SCREEN_90}}|20",
-//        "{{SCREEN_90}}|30",
-
         "{{SCREEN_80}}|0",
-//        "{{SCREEN_80}}|15",
-//        "{{SCREEN_80}}|20",
-
         "{{SCREEN_70}}|0",
-//        "{{SCREEN_70}}|15",
-//        "{{SCREEN_70}}|20",
-
         "{{SCREEN_60}}|0",
-//        "{{SCREEN_60}}|15",
-//        "{{SCREEN_60}}|20",
-
         "{{SCREEN_50}}|0",
-//        "{{SCREEN_50}}|15",
-//        "{{SCREEN_50}}|20",
-
         "{{SCREEN_40}}|0",
-//        "{{SCREEN_40}}|15",
-//        "{{SCREEN_40}}|20",
-
         "{{SCREEN_30}}|0",
 //        "{{SCREEN_30}}|15",
 //        "{{SCREEN_30}}|20",
@@ -70,6 +49,13 @@ class VideoCompressor(context: Context) : ICompressor(context) {
 //        "{{SCREEN_20}}|20",
 
         "{{SCREEN_10}}|0",
+        "{{SCREEN_10}}|20",
+        "{{SCREEN_10}}|10",
+
+        "{{SCREEN_5}}|0",
+        "{{SCREEN_5}}|10",
+        "{{SCREEN_5}}|5",
+
 //        "{{SCREEN_10}}|15",
 //        "{{SCREEN_10}}|20",
 

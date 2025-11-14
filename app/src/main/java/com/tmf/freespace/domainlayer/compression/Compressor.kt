@@ -35,14 +35,14 @@ class Compressor(val context: Context) {
             if (mediaFileInfo.exists()) {
                 return when (mediaFile.mediaType) {
                     MediaType.IMAGE -> {
-                        DLog.d(tag, "Compressing image file: $sourceFilePath")
+                        DLog.d(tag, "Compressing image file: $sourceFilePath $compressionRatio:1")
                         val success = imageCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
                         DLog.d(tag, "Compressed image from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
                         success
                     }
 
                     MediaType.VIDEO -> {
-                        DLog.d(tag, "Compressing video file: $sourceFilePath")
+                        DLog.d(tag, "Compressing video file: $sourceFilePath $compressionRatio:1")
                         val success = videoCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
                         DLog.d(tag, "Compressed video from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
                         success
