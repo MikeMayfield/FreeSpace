@@ -12,6 +12,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTION_IDX
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MIN_FREE_SPACE_GOAL_MB
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,7 +79,7 @@ class CommonViewModel() : ViewModel() {
 
     private suspend fun status(): String {
         val addedSize = mediaFileRepository.getBytesRecovered()
-        if (addedSize >= 8_000_000_000L && !isSubscribed()) {
+        if (addedSize >= PropertyBag.getInt(TRIAL_GB_FREE) * 1_000_000_000L && !isSubscribed()) {
             return "TRIAL LIMIT — Free expansion limit reached. Subscribe now and get almost unlimited memory"
         }
 
@@ -92,7 +93,7 @@ class CommonViewModel() : ViewModel() {
             }
         }
         else {
-            return "ADDING MEMORY — Adding memory; please check back later. Magic takes time..."
+            return "ADDING MEMORY — Please check back later. Magic takes time..."
         }
     }
 
