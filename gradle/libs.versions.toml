@@ -1,6 +1,6 @@
 [versions]
 accompanistPermissions = "0.37.3"
-agp = "8.13.0"
+agp = "8.13.1"
 checkerQual = "3.52.0"
 commonsNet = "3.12.0"
 kotlin = "2.2.20"  #Must match ksp version, below
