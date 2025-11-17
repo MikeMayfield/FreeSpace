@@ -52,9 +52,9 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         "{{SCREEN_10}}|20",
         "{{SCREEN_10}}|10",
 
-        "{{SCREEN_5}}|0",
-        "{{SCREEN_5}}|10",
-        "{{SCREEN_5}}|5",
+        "{{SCREEN_05}}|0",
+        "{{SCREEN_05}}|10",
+        "{{SCREEN_05}}|5",
 
 //        "{{SCREEN_10}}|15",
 //        "{{SCREEN_10}}|20",
