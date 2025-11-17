@@ -9,6 +9,7 @@ import com.tmf.freespace.R
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.presentationlayer.ui.composables.GenericTextBody
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 
 @Composable
 fun SubscriptionScreen(navController: NavHostController, paddingValues: PaddingValues) {
@@ -36,5 +37,7 @@ fun SubscriptionScreen(navController: NavHostController, paddingValues: PaddingV
 
 private fun handleSubscription(navController: NavHostController): () -> Unit = {
     Toast.makeText(BaseApplication.instance.baseContext, "TODO: Process Play Store subscription flow", Toast.LENGTH_SHORT).show()
+
+    PropertyBag.setString(PropertyBag.SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.SUBSCRIBED.toString())
     navController.popBackStack()
 }
