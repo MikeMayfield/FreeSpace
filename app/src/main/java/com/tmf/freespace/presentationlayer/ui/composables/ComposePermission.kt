@@ -102,7 +102,6 @@ private fun Context.requiredActivity(): Activity {
     throw IllegalStateException("Permissions should be called in the context of an Activity")
 }
 
-//TODO How do we call this
 fun Context.openAppSystemSettings() {
     startActivity(Intent().apply {
         action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS

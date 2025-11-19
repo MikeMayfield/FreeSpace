@@ -30,95 +30,26 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     private val tag = "VideoCompressor"
 
     override val compressionTemplates = listOf(
-        //ResizeWidth|Fps
-        "0|0",  //Just convert to H265 (must always be the first entry)
-
-        "{{SCREEN_00}}|0",
-        "{{SCREEN_90}}|0",
-        "{{SCREEN_80}}|0",
-        "{{SCREEN_70}}|0",
-        "{{SCREEN_60}}|0",
-        "{{SCREEN_50}}|0",
-        "{{SCREEN_40}}|0",
-        "{{SCREEN_30}}|0",
-//        "{{SCREEN_30}}|15",
-//        "{{SCREEN_30}}|20",
-
-        "{{SCREEN_20}}|0",
-//        "{{SCREEN_20}}|15",
-//        "{{SCREEN_20}}|20",
-
-        "{{SCREEN_10}}|0",
-        "{{SCREEN_10}}|20",
-        "{{SCREEN_10}}|10",
-
-        "{{SCREEN_05}}|0",
-        "{{SCREEN_05}}|10",
-        "{{SCREEN_05}}|5",
-
-//        "{{SCREEN_10}}|15",
-//        "{{SCREEN_10}}|20",
-
-
-//        "{{VIDEO_00}}|0",
-//        "{{VIDEO_00}}|15",
-//        "{{VIDEO_00}}|20",
-//
-//        "{{VIDEO_90}}|0",
-//        "{{VIDEO_90}}|15",
-//        "{{VIDEO_90}}|20",
-//
-//        "{{VIDEO_80}}|0",
-//        "{{VIDEO_80}}|15",
-//        "{{VIDEO_80}}|20",
-//
-//        "{{VIDEO_70}}|0",
-//        "{{VIDEO_70}}|15",
-//        "{{VIDEO_70}}|20",
-//
-//        "{{VIDEO_60}}|0",
-//        "{{VIDEO_60}}|15",
-//        "{{VIDEO_60}}|20",
-//
-//        "{{VIDEO_50}}|0",
-//        "{{VIDEO_50}}|15",
-//        "{{VIDEO_50}}|20",
-//
-//        "{{VIDEO_40}}|0",
-//        "{{VIDEO_40}}|15",
-//        "{{VIDEO_40}}|20",
-//
-//        "{{VIDEO_30}}|0",
-//        "{{VIDEO_30}}|15",
-//        "{{VIDEO_30}}|20",
-//
-//        "{{VIDEO_20}}|0",
-//        "{{VIDEO_20}}|15",
-//        "{{VIDEO_20}}|20",
-//
-//        "{{VIDEO_10}}|0",
-//        "{{VIDEO_10}}|15",
-//        "{{VIDEO_10}}|20",
-
-
-
-//        "{{SCREEN_00}}|0",  //Screen width (2.3007243)
-//        "{{VIDEO_75}}|0",  //75% of video width (2.968316)
-//        "{{SCREEN_75}}|0",  //75% of screen width (4.029935)
-//        "{{VIDEO_50}}|0",  //50% of video width (6.4749637)
-//        "{{SCREEN_50}}|0",  //50% of screen width (8.694984)
-//        "{{VIDEO_50}}|20",  //50% of video width (8.694984)
-//        "{{SCREEN_50}}|20",  //50% of screen width (8.694984)
-//        "{{SCREEN_40}}|0",  //40% of video width (12.959882)
-//        "{{SCREEN_40}}|20",  //40% of video width (12.959882)
-//        "{{VIDEO_25}}|0",  //25% of video width (21.979757)
-//        "{{SCREEN_25}}|0",  //25% of screen width (28.050495)
-//        "{{VIDEO_25}}|20",  //25% of video width (21.979757)
-//        "{{SCREEN_25}}|20",  //25% of screen width (28.050495)
-//        "{{VIDEO_20}}|20",  //20% of screen width (37.987946)
-//        "{{SCREEN_20}}|20",  //10% of screen width (50.804916)
-//        "{{SCREEN_10}}|0",  //20% of screen width (37.987946)
-//        "{{SCREEN_10}}|20",  //10% of screen width (50.804916)
+        //ResizeWidth|Fps|H265
+        "0|0|T",  //Just convert to H265 (must always be the first entry)
+        "{{SCREEN_50}}|0|F",
+        "{{SCREEN_40}}|0|F",
+        "{{SCREEN_30}}|0|T",
+        "{{SCREEN_30}}|0|F",
+        "{{SCREEN_20}}|0|T",
+        "{{SCREEN_20}}|0|F",
+        "{{SCREEN_10}}|0|T",
+        "{{SCREEN_10}}|0|F",
+        "{{SCREEN_10}}|20|T",
+        "{{SCREEN_10}}|20|F",
+        "{{SCREEN_10}}|10|T",
+        "{{SCREEN_10}}|10|F",
+        "{{SCREEN_05}}|0|T",
+        "{{SCREEN_05}}|0|F",
+        "{{SCREEN_05}}|10|T",
+        "{{SCREEN_05}}|10|F",
+        "{{SCREEN_05}}|5|T",
+        "{{SCREEN_05}}|5|F",
     )
 
     /**
@@ -165,28 +96,55 @@ class VideoCompressor(context: Context) : ICompressor(context) {
         }
 
         val tempOutputFilePath = "$outputFilePath.tmp"
+        var maxCompressionRatioSoFar = 0.0f
+        var bestTemplateIdx = 0
 
-        //Determine size of input file clipped to n seconds with no conversion. From that we can determine the max size of the file at the desired compression percentage
-        val clipDurationSecs = 5
-        val uncompressedClipSizeInt = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionTemplates[0], clipDurationSecs, true)
-        val uncompressedClipSize = uncompressedClipSizeInt.toFloat()
+        try {
+            //Determine size of input file clipped to n seconds with no conversion. From that we can determine the max size of the file at the desired compression percentage
+            val clipDurationSecs = 5
+            val uncompressedClipSizeInt = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionTemplates[0], clipDurationSecs)
+            val uncompressedClipSize = uncompressedClipSizeInt.toFloat()
 
-        //Search for the optimal compression template: Lowest compression that yields the desired compression ratio
-        for (templateIdx in 0 .. compressionTemplates.size - 1) {
-            val compressedClipSize = compressClipByTemplate(inputFilePath, tempOutputFilePath, compressionTemplates[templateIdx], clipDurationSecs)
-            val compressedCompressionRatio = uncompressedClipSize / compressedClipSize.toFloat()
-            DLog.i(tag, "Video compression from $uncompressedClipSize to $compressedClipSize bytes, command: [$templateIdx] ${compressionTemplates[templateIdx]}, compression: $compressedCompressionRatio")
+            //Search for the optimal compression template: Lowest compression that yields the desired compression ratio
+            for (templateIdx in 1..compressionTemplates.size - 1) {
+                val compressedClipSize = compressClip(inputFilePath, tempOutputFilePath, compressionTemplates[templateIdx])
+                if (compressedClipSize == 0) {
+                    DLog.d(tag, "Video compression not possible for $inputFilePath")
+                    return null  //Compression isn't possible, abort early
+                }
+                val clippedCompressionRatio = uncompressedClipSize / compressedClipSize.toFloat()
+                DLog.i(tag,
+                    "Video compression from $uncompressedClipSizeInt to $compressedClipSize bytes, command: [$templateIdx] ${compressionTemplates[templateIdx]}, compression: $clippedCompressionRatio")
 
-            if (compressedCompressionRatio >= compressionRatio) {
-                return compressionTemplates[templateIdx]
+                if (clippedCompressionRatio >= compressionRatio - 0.25f) {
+                    return compressionTemplates[templateIdx]
+                }
+
+                if (clippedCompressionRatio > maxCompressionRatioSoFar) {
+                    maxCompressionRatioSoFar = clippedCompressionRatio
+                    bestTemplateIdx = templateIdx
+                }
             }
         }
+        catch (e: Exception) {
+            DLog.e(tag, "Error during video compression in getCompressionTemplateForDesiredCompressionRatio", e)
+        }
 
-        return compressionTemplates[compressionTemplates.size - 1]
+        return compressionTemplates[bestTemplateIdx]
     }
 
-    private suspend fun compressClipByTemplate(inputFilePath: String, outputFilePath: String, compressionTemplate: String, clipDurationSecs: Int, noConversion: Boolean = false): Int {
-        if (compressInBackground(inputFilePath, outputFilePath, compressionTemplate, clipDurationSecs * 1024L, noConversion)) {
+    private suspend fun compressClip(inputFilePath: String, outputFilePath: String, compressionTemplate: String): Int {
+        try {
+            return compressClipByTemplate(inputFilePath, outputFilePath, compressionTemplate, 5)
+        }
+        catch (e: Exception) {
+//            DLog.e(tag, "Error during video compression in compressClip", e)
+            return 0
+        }
+    }
+
+    private suspend fun compressClipByTemplate(inputFilePath: String, outputFilePath: String, compressionTemplate: String, clipDurationSecs: Int): Int {
+        if (compressInBackground(inputFilePath, outputFilePath, compressionTemplate, clipDurationSecs * 1024L)) {
             val newSize = File(outputFilePath).length()
             return newSize.toInt()
         } else {
@@ -196,7 +154,7 @@ class VideoCompressor(context: Context) : ICompressor(context) {
     }
 
     @OptIn(UnstableApi::class)
-    suspend fun compressInBackground(inputFilePath: String, outputFilePath: String, compressionCommand: String, clipDurationMs: Long = 0L, noConversion: Boolean = false): Boolean {
+    suspend fun compressInBackground(inputFilePath: String, outputFilePath: String, compressionCommand: String, clipDurationMs: Long = 0L): Boolean {
         var result = true
 
         if (File(outputFilePath).exists()) {
@@ -211,11 +169,12 @@ class VideoCompressor(context: Context) : ICompressor(context) {
                     val videoHeight = videoInfo[MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT]?.toIntOrNull() ?: 0
                     val videoSizeScale = tokens[0].toFloat() / if (videoWidth > videoHeight) videoWidth.toFloat() else videoHeight.toFloat()
                     val frameRateFps = tokens[1].toFloat()
+                    val convertToH265 = (tokens[2] == "T")
                     val editedMediaItem = createEditedMediaItem(inputFilePath, clipDurationMs, videoSizeScale, frameRateFps)  //Input transformations
 
                     //Process transformer to create new file
                     val transformerBuilder = Transformer.Builder(context)
-                    if (!noConversion) {
+                    if (convertToH265) {
                         with (transformerBuilder) {
                             transformerBuilder.setVideoMimeType(MimeTypes.VIDEO_H265)
                             transformerBuilder.setAudioMimeType(MimeTypes.AUDIO_AAC)

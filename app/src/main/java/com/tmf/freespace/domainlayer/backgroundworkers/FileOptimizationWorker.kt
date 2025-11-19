@@ -39,7 +39,7 @@ class FileOptimizationWorker() {
         var bytesToRecover = bytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 5GB), but not limited when processing older files
         val mediaStoreUtil = MediaStoreUtil()
 
-        //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available  //TODO Use entire schedule time for video or audio files that might take a long time
+        //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available
         var fileToCompress = getFileToCompress()
         if (fileToCompress == null) {
             DLog.v(tag, "No files need optimization")
@@ -60,7 +60,7 @@ class FileOptimizationWorker() {
                     bytesToRecover -= (fileSizeBeforeCompression - fileToCompress.compressedSize)
                 } else {
                     //If problem processing file, exclude it from processing until next pass assigning desired compression levels
-                    fileToCompress.desiredCompressionRatio = 0
+                    fileToCompress.currentCompressionRatio = fileToCompress.desiredCompressionRatio  //Consider file compressed so that it isn't processed again
                     updateFileToCompressInDB(fileToCompress)
                 }
             } else {

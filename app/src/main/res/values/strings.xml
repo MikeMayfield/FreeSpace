@@ -4,5 +4,5 @@
     <string name="file_optimization_notification_cancel">Cancel</string>
     <string name="file_optimization_channel_name">Storage Optimization</string>
     <string name="file_optimization_channel_description">Ongoing storage optimization notification</string>
-    <string name="support_log">SupportLog.bmp</string>
+    <string name="support_log">FreeSpaceLog.txt</string>
 </resources>

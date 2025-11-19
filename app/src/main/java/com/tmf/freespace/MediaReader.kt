@@ -1,19 +1,12 @@
 package com.tmf.freespace
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import android.net.Uri
-import android.os.Environment
 import android.provider.MediaStore
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
-import com.tmf.freespace.domainlayer.general.DLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class MediaReader(
     private val context: Context,
@@ -93,41 +86,6 @@ class MediaReader(
 //        }
     }
 
-    /**
-     * Returns the path to the support log image file.
-     *
-     * @return The path to the support log image file, or null if not found.
-     */
-    fun supportLogUri(): Uri? {
-        val projection = arrayOf(
-            MediaStore.MediaColumns._ID,
-            MediaStore.MediaColumns.DISPLAY_NAME,
-        )
-
-        // Selection for date filtering
-        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(BaseApplication.instance.applicationContext.getString(R.string.support_log))
-
-        // Query for Images
-        context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            "${MediaStore.MediaColumns.DATE_ADDED} ASC" // Order by date added
-        )?.use { cursor -> // Use 'use' to ensure the cursor is closed
-            if (cursor.moveToNext()) {
-                val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
-                val supportLogUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.buildUpon()
-                    .appendPath(id.toString())
-                    .build()
-                return supportLogUri
-            }
-        }
-
-        return null
-    }
-
     private fun createMediaFile(cursor: Cursor, mediaType: MediaType): MediaFile {
         val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
         val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
@@ -161,38 +119,5 @@ class MediaReader(
         )
 
         return mediaFile
-    }
-
-    fun cloneSupportLogFile(supportLogUri: Uri): Uri? {
-        try {
-            val contentResolver = context.contentResolver
-            val imageCollection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val newImageDetails = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "SupportLog_${currentDateTime()}.jpg")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-            }
-            val newImageUri = contentResolver.insert(imageCollection, newImageDetails)
-
-            //Clone base SupportLog.bmp image into new copy
-            newImageUri?.let { uri ->
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    contentResolver.openInputStream(supportLogUri)?.use { inputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-            }
-
-            return newImageUri
-        } catch (e: Exception) {
-            DLog.e(tag, "Error cloning support log file", e)
-            e.printStackTrace()
-            return null
-        }
-    }
-
-    private fun currentDateTime(): String {
-        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-        return sdf.format(Date())
     }
 }

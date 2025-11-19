@@ -33,13 +33,12 @@ class CommonViewModel() : ViewModel() {
 
     init {
         viewModelScope.launch {
-            periodicallyPopulateHomeScreenState()  //TODO Only do if permissions have been obtained. Maybe it would be better to call it on demand
+            periodicallyPopulateHomeScreenState()
         }
     }
 
 
     fun updateKeepFreeOptionIdx(value: Int) {
-        //TODO Compute KeepFree memory value and store in DB; Start background processing if idle; Keep track of status in DB
         val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
         PropertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
         PropertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)

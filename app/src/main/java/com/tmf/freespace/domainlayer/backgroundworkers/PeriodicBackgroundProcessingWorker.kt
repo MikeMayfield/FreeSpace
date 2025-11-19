@@ -54,6 +54,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 return Result.failure()
             }
 
+            PropertyBag.setBoolean(IS_IDLE, false)
+
             val mediaFileRepository = MediaFileRepository()
 
             //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
@@ -68,7 +70,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-            PropertyBag.setBoolean(IS_IDLE, false)
             FileOptimizationWorker().compressAllPendingMedia()
             PropertyBag.setBoolean(IS_IDLE, true)
 
@@ -165,19 +166,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             }
         return maxDateAddedFound
     }
-
-//    /**
-//     * Calculate the amount of space to recover, based on user’s stated free space goal and the current free space on the device
-//     */
-//    private fun calculateBytesToRecover(): Long {
-//        //Get current free space on primary disk
-//        val currentFreeSpace = StatFs(Environment.getExternalStorageDirectory().absolutePath).availableBytes
-//
-//        //Get desired free space from user preferences
-//        val desiredFreeSpace = currentFreeSpace + 1000_000_000L  //TODO Get from preferences as (desiredFreeSpaceGB * 1GB)
-//
-//        return desiredFreeSpace - currentFreeSpace
-//    }
 
     /**
      * Set or update desired compression level for all files in database based on their creation date
