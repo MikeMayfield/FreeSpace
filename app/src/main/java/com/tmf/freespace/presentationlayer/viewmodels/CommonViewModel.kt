@@ -10,7 +10,6 @@ import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTION_IDX
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MIN_FREE_SPACE_GOAL_MB
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
@@ -39,9 +38,7 @@ class CommonViewModel() : ViewModel() {
 
 
     fun updateKeepFreeOptionIdx(value: Int) {
-        val minFreeSpaceGoalMB = minFreeSpaceGoalMB(value)
         PropertyBag.setInt(KEEP_FREE_OPTION_IDX, value)
-        PropertyBag.setLong(MIN_FREE_SPACE_GOAL_MB, minFreeSpaceGoalMB)
         _uiState.update { it.copy(
             keepFreeOptionIdx = value
         ) }
