@@ -34,8 +34,6 @@ class FileOptimizationWorker() {
      * . . Replace file in MediaStore with compressed file
      */
     suspend fun compressAllPendingMedia() {
-
-
         var bytesToRecover = bytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 5GB), but not limited when processing older files
         val mediaStoreUtil = MediaStoreUtil()
 
@@ -95,7 +93,7 @@ class FileOptimizationWorker() {
         //Get goal of space to leave free at all times
         val statFs = StatFs(Environment.getExternalStorageDirectory().path)
         val bytesAvailable = statFs.blockSizeLong * statFs.availableBlocksLong
-        val minFreeSpaceGoalMB = PropertyBag.getInt(MIN_FREE_SPACE_GOAL_MB)
+        val minFreeSpaceGoalMB = PropertyBag.getLong(MIN_FREE_SPACE_GOAL_MB)
         return minFreeSpaceGoalMB * 1_000_000L - bytesAvailable
     }
 

@@ -127,8 +127,8 @@ class CommonViewModel() : ViewModel() {
             0 -> 2000L  //2GB
             1 -> 5000L  //5GB
             2 -> 10000L  //10GB
-            3 -> (physicalMemorySize() * 0.05f).toLong()  //5%
-            4 -> (physicalMemorySize() * 0.10f).toLong()  //10%
+            3 -> (physicalMemorySize() * 0.00000005f).toLong()  //5%
+            4 -> (physicalMemorySize() * 0.00000010f).toLong()  //10%
             else -> 0
         }
     }
