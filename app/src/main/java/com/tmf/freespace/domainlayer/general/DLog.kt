@@ -6,6 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -90,14 +92,29 @@ object DLog {
      */
     fun createSupportLog(): File? {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = File(downloadsDir, "FreeSpaceLog.txt")
+        val bytesToRetainCnt = 1_000_000L
 
         try {
-            if (file.exists()) {
-                file.delete()
+            val logFile = File(downloadsDir, "FreeSpaceLog.txt")
+            if (!logFile.exists()) {
+                logFile.createNewFile()
             }
-            file.createNewFile()
-            return file
+
+            //Trim all but desired retained text from existing log file
+            if (logFile.length() > bytesToRetainCnt) {
+                val tempFile = File(downloadsDir, "FreeSpaceLog.txt.tmp")
+                FileInputStream(logFile).use { inputStream ->
+                    FileOutputStream(tempFile).use { outputStream ->
+                        inputStream.skip(logFile.length() - bytesToRetainCnt) // Skip all but the bytes to retain
+                        // Copy the remaining content to the temporary file
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                logFile.delete()
+                tempFile.renameTo(logFile)
+            }
+
+            return logFile
         } catch (e: Exception) {
             Log.e(tag, "Error creating support log", e)
             return null
