@@ -50,7 +50,7 @@ object DLog {
 
 
     private fun writeToSupportLog(priority: String, tag: String, msg: String, throwable: Throwable? = null) {
-        if ("EWD".contains(priority)) {  //Only log E, W, and D to support log
+        if ("EWDV".contains(priority)) {  //Only log E, W, and D to support log
             if (createSupportLogIfNeeded()) {  //Must be completed before using coroutine for remaining code
                 return
             }
@@ -92,7 +92,7 @@ object DLog {
      */
     fun createSupportLog(): File? {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val bytesToRetainCnt = 1_000_000L
+        val bytesToRetainCnt = 10_000_000L  //10MB
 
         try {
             val logFile = File(downloadsDir, "FreeSpaceLog.txt")
