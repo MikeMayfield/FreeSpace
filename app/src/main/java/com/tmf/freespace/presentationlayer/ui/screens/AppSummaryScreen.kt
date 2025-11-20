@@ -165,8 +165,8 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                     0 -> 2_000L  //2GB
                     1 -> 5_000L  //5GB
                     2 -> 10_000L  //10GB
-                    3 -> (uiState.physicalMB * 0.05f).toLong()  //5%
-                    4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
+                    3 -> (uiState.physicalMB * 0.00000005f).toLong()  //5%
+                    4 -> (uiState.physicalMB * 0.00000010f).toLong()  //10%
                     else -> 2_000L
                 }
                 PropertyBag.setLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB, newMinFreeSpaceGoalMb)
