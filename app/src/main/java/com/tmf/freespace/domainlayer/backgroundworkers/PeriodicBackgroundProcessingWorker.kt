@@ -192,7 +192,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 .setRequiresBatteryNotLow(true)
                 .build()
 
-            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(2, TimeUnit.HOURS)
+            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(15, TimeUnit.MINUTES)  //TODO Maybe make this longer after stabilized
                 .setConstraints(constraints)
                 .build()
 

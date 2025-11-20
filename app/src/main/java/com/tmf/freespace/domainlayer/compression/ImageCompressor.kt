@@ -11,6 +11,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
 
     override val compressionTemplates = listOf(
         //ScreenWidth|Quality(1..100, 1 lowest)
+        "{{SCREEN_00}}|100",  //Just change resolution to screen size
         "{{SCREEN_00}}|90",  //Compression very low
         "{{SCREEN_00}}|80",  //Compression low
         "{{SCREEN_00}}|60",  //Compression medium low
@@ -35,6 +36,10 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         val inputFilePath = mediaFile.fullPath
         val maxCompressedSize = mediaFile.originalSize / compressionRatio
 
+        if (isRawImage(inputFilePath)) {
+            return deleteRawFile(outputFilePath)
+        }
+
         for (compressionCommand in compressionTemplates) {
             val tokens = xlateDesiredCompressionCommand(compressionCommand, inputFilePath, outputFilePath).split("|")
             if (tokens.size == 2) {
@@ -56,5 +61,21 @@ class ImageCompressor(context: Context) : ICompressor(context) {
         }
 
         return ExifCopier.copyExifData(inputFilePath, outputFilePath)  //Using maximum compression level
+    }
+
+    private fun isRawImage(inputFilePath: String): Boolean {
+        val fileType = inputFilePath.substring(inputFilePath.length - 4).uppercase()
+        return ".ARW.SRW.DNG.ORF.CR1.CR2.CR3.CRW.NEF.NRW.SRF.SR2.OLY.PEF.RW2.RWL.3FR.DRG.ERF.FFF.IIQ.K25.KDC.MEF.MOS".indexOf(fileType) >= 0
+    }
+
+    private fun deleteRawFile(outputFilePath: String): Boolean {
+        try {
+            File(outputFilePath).createNewFile()
+            return true
+        }
+        catch (e: Exception) {
+            DLog.e(tag, "Error creating file: $outputFilePath", e)
+            return false
+        }
     }
 }

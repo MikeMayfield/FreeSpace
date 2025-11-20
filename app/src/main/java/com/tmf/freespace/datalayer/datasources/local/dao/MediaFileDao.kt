@@ -31,7 +31,7 @@ interface MediaFileDao {
     @Query(
         "SELECT * FROM MediaFile" +
                 " WHERE currentCompressionRatio != desiredCompressionRatio AND desiredCompressionRatio > 0 AND originalSize > 0" +
-                " ORDER BY desiredCompressionRatio DESC, compressedSize DESC, creationDtm DESC" +
+                " ORDER BY MediaType ASC, desiredCompressionRatio DESC, compressedSize DESC, creationDtm DESC" +
                 " LIMIT 1"
     )
     suspend fun getFileToCompress(): MediaFile?
