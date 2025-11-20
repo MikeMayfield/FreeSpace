@@ -54,7 +54,7 @@ class CompressImageUtil {
             // Desired width is greater or equal, use original dimensions (or just compress if no resize needed)
             targetWidth = uncompressedWidth
             targetHeight = uncompressedHeight
-            DLog.v(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
+//            DLog.v(tag, "Using original dimensions: ${targetWidth}x${targetHeight} for $inputPath as desiredWidth ($desiredWidth) >= originalWidth ($uncompressedWidth)")
         } else {
             // Resize needed, maintain aspect ratio
             targetWidth = desiredWidth

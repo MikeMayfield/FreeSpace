@@ -1,9 +1,12 @@
 package com.tmf.freespace.datalayer.repositories
 
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.domainlayer.general.DLog
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.io.File
 
 class MediaFileRepository() {
@@ -37,8 +40,9 @@ class MediaFileRepository() {
      * If file no longer exists, remove from DB and try next file(s)
      */
     suspend fun getFileToCompress(): MediaFile? {
+        val minCompressionRatio = if (PropertyBag.getString(SUBSCRIPTION_STATUS) == HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) 1 else 3
         var fileHasBeenDeleted = true
-        var fileToCompress = mediaFileDao.getFileToCompress()
+        var fileToCompress = mediaFileDao.getFileToCompress(minCompressionRatio)
 
         while (fileHasBeenDeleted) {
             if (fileToCompress == null) {
@@ -52,7 +56,7 @@ class MediaFileRepository() {
             if (fileHasBeenDeleted) {
                 DLog.d(tag, "File ${fileToCompress.fullPath} has been deleted, removing from database")
                 deleteFile(fileToCompress)
-                fileToCompress = mediaFileDao.getFileToCompress()
+                fileToCompress = mediaFileDao.getFileToCompress(minCompressionRatio)
             }
         }
 

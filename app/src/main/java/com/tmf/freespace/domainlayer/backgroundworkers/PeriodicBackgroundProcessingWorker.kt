@@ -41,7 +41,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
         DLog.d(tag, "Starting periodic background processing")
 
         try {
-
             //Can't process if permissions have been revoked after setup
             if (!Permissions().allPermissionsAreGranted(appContext)) {
                 DLog.e(tag, "Permissions not granted")
@@ -150,11 +149,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                             mediaStoreID = mediaStoreMediaFile.mediaStoreID,
                             dateInMediaStore = mediaStoreMediaFile.dateInMediaStore
                         )
-                        DLog.v(tag, "Updating existing file: ${fileToUpsert.fullPath}")
+                        DLog.d(tag, "Updating existing file: ${fileToUpsert.fullPath}")
                     } else {
                         // New file, use it as is
                         fileToUpsert = mediaStoreMediaFile.copy()
-                        DLog.v(tag, "Adding new file: ${fileToUpsert.fullPath}")
+                        DLog.d(tag, "Adding new file: ${fileToUpsert.fullPath}")
                     }
 
                     mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
@@ -198,7 +197,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 "FreeSpace_PeriodicBackgroundProcessingWorker",
-                ExistingPeriodicWorkPolicy.KEEP,  //Only one copy of worker can be running at a time
+                ExistingPeriodicWorkPolicy.UPDATE,  //Only one copy of worker can be running at a time
                 request
             )
         }
