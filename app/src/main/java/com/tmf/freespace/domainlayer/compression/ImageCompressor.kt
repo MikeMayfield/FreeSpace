@@ -70,6 +70,10 @@ class ImageCompressor(context: Context) : ICompressor(context) {
 
     private fun deleteRawFile(outputFilePath: String): Boolean {
         try {
+            val file =  File(outputFilePath)
+            if (file.exists()) {
+                file.delete()
+            }
             File(outputFilePath).createNewFile()
             return true
         }

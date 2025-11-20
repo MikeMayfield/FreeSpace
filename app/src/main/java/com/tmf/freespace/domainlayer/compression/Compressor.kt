@@ -38,7 +38,9 @@ class Compressor(val context: Context) {
                         DLog.d(tag, "Compressing image file: $sourceFilePath $compressionRatio:1")
                         val success = imageCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
                         if (success) {
-                            DLog.d(tag, "Compressed image from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
+                            val sourceFileSize = File(sourceFilePath).length()
+                            val compressedFileSize = File(destinationFilePath).length()
+                            DLog.d(tag, "Compressed image from $sourceFileSize to $compressedFileSize bytes ${sourceFileSize.toFloat() / compressedFileSize.toFloat()}:1")
                         }
                         success
                     }
@@ -47,7 +49,12 @@ class Compressor(val context: Context) {
                         DLog.d(tag, "Compressing video file: $sourceFilePath $compressionRatio:1")
                         val success = videoCompressor.compress(mediaFile, destinationFilePath, compressionRatio)
                         if (success) {
-                            DLog.d(tag, "Compressed video from ${File(sourceFilePath).length()} to ${File(destinationFilePath).length()} bytes")
+                            val sourceFileSize = File(sourceFilePath).length()
+                            val compressedFileSize = File(destinationFilePath).length()
+                            DLog.d(tag, "Compressed video from $sourceFileSize to $compressedFileSize bytes ${sourceFileSize.toFloat() / compressedFileSize.toFloat()}:1")
+                        }
+                        else {
+                            DLog.w(tag, "Failed to compress video: $sourceFilePath")
                         }
 
                         success

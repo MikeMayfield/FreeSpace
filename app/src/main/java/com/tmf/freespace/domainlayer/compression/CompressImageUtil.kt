@@ -96,7 +96,7 @@ class CompressImageUtil {
             // doesn't bring it exactly to targetWidth/targetHeight but to the nearest power of 2.
             // Or if we decided not to resize earlier (desiredWidth >= originalWidth) but still want to ensure it's not accidentally larger.
             try {
-                DLog.v(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
+//                DLog.v(tag, "Scaling bitmap from ${inputBitmap.width}x${inputBitmap.height} to ${targetWidth}x${targetHeight}")
                 processedBitmap = inputBitmap.scale(targetWidth, targetHeight)
                 if (processedBitmap != inputBitmap) { // Only recycle if createScaledBitmap created a new one
                     inputBitmap.recycle()
@@ -202,20 +202,20 @@ class CompressImageUtil {
     private fun calculateInSampleSize(
         originalWidth: Int,
         originalHeight: Int,
-        reqWidth: Int,
-        reqHeight: Int,
+        desiredWidth: Int,
+        desiredHeight: Int,
     ): Int {
         var inSampleSize = 1
-        if (originalHeight > reqHeight || originalWidth > reqWidth) {
+        if (originalHeight > desiredHeight || originalWidth > desiredWidth) {
             val halfHeight: Int = originalHeight / 2
             val halfWidth: Int = originalWidth / 2
             // Calculate the largest inSampleSize value that is a power of 2 and keeps both
             // height and width larger than the requested height and width.
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
+            while (halfHeight / inSampleSize >= desiredHeight && halfWidth / inSampleSize >= desiredWidth) {
                 inSampleSize *= 2
             }
         }
-        DLog.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${reqWidth}x${reqHeight}")
+        DLog.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${desiredWidth}x${desiredHeight}")
         return inSampleSize
     }
 }
