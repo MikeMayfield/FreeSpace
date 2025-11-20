@@ -160,7 +160,6 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             Spacer(modifier = Modifier.height(16.dp))
 
             KeepStorageFreeSection(uiState.keepFreeOptionIdx, smallLayout) { selectedOptionIdx ->
-                val currentMinFreeSpaceGoalMB = PropertyBag.getLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB)
                 val newMinFreeSpaceGoalMb: Long = when (selectedOptionIdx) {
                     0 -> 2_000L  //2GB
                     1 -> 5_000L  //5GB

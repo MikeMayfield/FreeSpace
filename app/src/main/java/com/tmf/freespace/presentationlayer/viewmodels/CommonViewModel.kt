@@ -118,17 +118,6 @@ class CommonViewModel() : ViewModel() {
     private fun isSubscribed(): Boolean {
         return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
     }
-
-    private fun minFreeSpaceGoalMB(keepFreeOptionIdx: Int): Long {
-        return when (keepFreeOptionIdx) {
-            0 -> 2000L  //2GB
-            1 -> 5000L  //5GB
-            2 -> 10000L  //10GB
-            3 -> (physicalMemorySize() * 0.00000005f).toLong()  //5%
-            4 -> (physicalMemorySize() * 0.00000010f).toLong()  //10%
-            else -> 0
-        }
-    }
 }
 
 

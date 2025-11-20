@@ -98,7 +98,7 @@ class FileOptimizationWorker() {
     }
 
     private suspend fun getFileToCompress() : MediaFile? {
-        return mediaFileRepository.getFileToCompress()  //TODO More sophisticated selection criteria needed
+        return mediaFileRepository.getFileToCompress()
     }
 
     private suspend fun compressFile(fileToCompress: MediaFile): Boolean {
