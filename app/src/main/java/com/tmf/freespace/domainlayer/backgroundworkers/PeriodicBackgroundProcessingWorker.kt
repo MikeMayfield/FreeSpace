@@ -69,6 +69,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             val mediaFileRepository = MediaFileRepository()
 
             do {
+                decrementRestartRequests()
                 // The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
                 //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
                 updateMediaStoreIDsIfRebuilt(mediaFileRepository)
@@ -85,7 +86,6 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 if (restartRequested()) {
                     DLog.d(tag, "Restarting $tag processing")
                 }
-                decrementRestartRequests()
             } while (restartRequested())  //NOTE: There is a small race condition here, but the worst case is that processing wait until the next periodic processing instead of running immediately
 
             PropertyBag.setBoolean(IS_IDLE, true)
@@ -235,12 +235,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         @OptIn(ExperimentalAtomicApi::class)
         fun restartRequested(): Boolean {
-            if (restartRequestCount.load() > 0) {
-                return true
-            } else {
-                restartRequestCount.store(0)  //Don't let negative numbers propagate between runs on tight race conditions
-                return false
-            }
+            return restartRequestCount.load() > 0
         }
 
         @OptIn(ExperimentalAtomicApi::class)
@@ -250,7 +245,10 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         @OptIn(ExperimentalAtomicApi::class)
         private fun decrementRestartRequests() {
-            restartRequestCount.fetchAndDecrement()
+            val wasZero = restartRequestCount.fetchAndDecrement() == 0
+            if (wasZero) {
+                incrementRestartRequests()
+            }
         }
     }
 }

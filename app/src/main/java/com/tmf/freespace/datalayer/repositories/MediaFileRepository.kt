@@ -40,7 +40,8 @@ class MediaFileRepository() {
      * If file no longer exists, remove from DB and try next file(s)
      */
     suspend fun getFileToCompress(): MediaFile? {
-        val minCompressionRatio = if (PropertyBag.getString(SUBSCRIPTION_STATUS) == HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) 1 else 6//TODO 3
+        //If in a trial subscription, only process older media to emphasize the quality of optimization while still recovering enough space to try to hit the 10MB goal
+        val minCompressionRatio = if (PropertyBag.getString(SUBSCRIPTION_STATUS) == HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) 1 else 3
         var fileHasBeenDeleted = true
         var fileToCompress = mediaFileDao.getFileToCompress(minCompressionRatio)
 
