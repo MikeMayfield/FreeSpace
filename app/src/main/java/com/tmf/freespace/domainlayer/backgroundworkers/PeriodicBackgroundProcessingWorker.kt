@@ -70,6 +70,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             do {
                 decrementRestartRequests()
+
                 // The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
                 //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
                 updateMediaStoreIDsIfRebuilt(mediaFileRepository)
