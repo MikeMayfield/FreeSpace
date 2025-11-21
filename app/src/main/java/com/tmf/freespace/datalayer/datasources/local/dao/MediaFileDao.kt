@@ -21,8 +21,7 @@ interface MediaFileDao {
      */
     @Query(
         "UPDATE MediaFile SET desiredCompressionRatio = :compressionLevel" +
-                " WHERE CASE WHEN modifiedDtm > dateInMediaStore THEN modifiedDtm ELSE dateInMediaStore END > :oldestDtm " +
-                    "AND CASE WHEN modifiedDtm > dateInMediaStore THEN modifiedDtm ELSE dateInMediaStore END <= :mostRecentDtm " +
+                " WHERE creationDtm > :oldestDtm AND creationDtm <= :mostRecentDtm " +
                     "AND mediaType = :mediaType AND currentCompressionRatio < :compressionLevel AND originalSize > 8192"
     )
     suspend fun setCompressionLevel(mostRecentDtm: Long, oldestDtm: Long, compressionLevel: Int, mediaType: MediaType)

@@ -164,29 +164,26 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 }
 
                 // Try to find an existing file by fullPath to update its MediaStore ID if it changed
-                if (!mediaStoreMediaFile.fullPath.contains("/SupportLog")) {
+                val existingMediaFile = mediaFileRepository.getMediaFileByFullPath(mediaStoreMediaFile.fullPath)
 
-                    val existingMediaFile = mediaFileRepository.getMediaFileByFullPath(mediaStoreMediaFile.fullPath)
+                val fileToUpsert: MediaFile
+                if (resyncingMediaStore && existingMediaFile != null) {
+                    // File exists while resyncing MediaStore, the existing file's MediaStoreID might have changed original
+                    fileToUpsert = existingMediaFile.copy(
+                        mediaStoreID = mediaStoreMediaFile.mediaStoreID,
+                        dateInMediaStore = mediaStoreMediaFile.dateInMediaStore
+                    )
+                    DLog.d(tag, "Updating existing file: ${fileToUpsert.fullPath}")
+                } else {
+                    // New file, use it as is
+                    fileToUpsert = mediaStoreMediaFile.copy()
+                    DLog.d(tag, "Adding new file: ${fileToUpsert.fullPath}")
+                }
 
-                    val fileToUpsert: MediaFile
-                    if (resyncingMediaStore && existingMediaFile != null) {
-                        // File exists while resyncing MediaStore, the existing file's MediaStoreID might have changed original
-                        fileToUpsert = existingMediaFile.copy(
-                            mediaStoreID = mediaStoreMediaFile.mediaStoreID,
-                            dateInMediaStore = mediaStoreMediaFile.dateInMediaStore
-                        )
-                        DLog.d(tag, "Updating existing file: ${fileToUpsert.fullPath}")
-                    } else {
-                        // New file, use it as is
-                        fileToUpsert = mediaStoreMediaFile.copy()
-                        DLog.d(tag, "Adding new file: ${fileToUpsert.fullPath}")
-                    }
+                mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
 
-                    mediaFileRepository.upsertMediaFile(fileToUpsert) // Assumes upsert logic: inserts if new, updates if existing (based on PK)
-
-                    if (fileToUpsert.dateInMediaStore > maxDateAddedFound) {
-                        maxDateAddedFound = fileToUpsert.dateInMediaStore
-                    }
+                if (fileToUpsert.dateInMediaStore > maxDateAddedFound) {
+                    maxDateAddedFound = fileToUpsert.dateInMediaStore
                 }
             }
         return maxDateAddedFound

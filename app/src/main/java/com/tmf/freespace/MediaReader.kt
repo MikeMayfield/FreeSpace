@@ -26,6 +26,7 @@ class MediaReader(
             MediaStore.MediaColumns.DISPLAY_NAME,
             MediaStore.MediaColumns.DATA, // For file path - use with caution for Scoped Storage
             MediaStore.MediaColumns.DATE_ADDED,
+            MediaStore.MediaColumns.DATE_TAKEN,
             MediaStore.MediaColumns.DATE_MODIFIED,
             MediaStore.MediaColumns.SIZE,
             MediaStore.MediaColumns.MIME_TYPE,
@@ -90,6 +91,7 @@ class MediaReader(
         val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
         val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA))
         val dateAdded = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED))
+        val dateTaken = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_TAKEN)) / 1000L
         val dateModified = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_MODIFIED))
         val size = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.SIZE)) // Changed to Int to match MediaFile
         val width = cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.WIDTH))
@@ -112,7 +114,7 @@ class MediaReader(
             mediaType = mediaType,
             currentCompressionRatio = 0,
             desiredCompressionRatio = 0,
-            creationDtm = dateAdded, // Assuming creationDtm maps to dateAdded
+            creationDtm = if (dateTaken > 0 && dateTaken < dateAdded) dateTaken else dateAdded,
             modifiedDtm = dateModified,
             dateInMediaStore = dateAdded,
             mediaHasBeenUpdated = true // Default for new files from MediaStore
