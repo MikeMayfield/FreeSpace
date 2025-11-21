@@ -4,6 +4,8 @@ import android.content.Context
 import android.provider.MediaStore
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -195,12 +197,12 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
          */
         fun queueImmediateProcessing() {
             queuePeriodicProcessing()
-//            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>().build()
-//            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueueUniqueWork(
-//                "FreeSpace_PeriodicBackgroundProcessingWorker",
-//                ExistingWorkPolicy.REPLACE,
-//                request
-//            )
+            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>().build()
+            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueueUniqueWork(
+                "FreeSpace_PeriodicBackgroundProcessingWorker",
+                ExistingWorkPolicy.REPLACE,
+                request
+            )
         }
     }
 }
