@@ -32,7 +32,7 @@ class MediaStoreUtil {
         val mediaStoreUri = getMediaStoreUriByID(contentResolver, mediaFile.mediaStoreID)
             ?: return false // File not found in MediaStore
         return try {
-            replaceFile(contentResolver, mediaStoreUri, File(newFilePath))
+            replaceFile(contentResolver, mediaStoreUri, File(newFilePath), mediaFile)
         } catch (e: IOException) {
             DLog.e("replaceMediaStoreFile", "Error replacing file: ${e.message}")
             e.printStackTrace()
@@ -115,16 +115,19 @@ class MediaStoreUtil {
     private fun replaceFile(
         contentResolver: ContentResolver,
         mediaStoreUri: Uri,
-        newFile: File
+        newFile: File,
+        mediaFile: MediaFile
     ): Boolean {
-        contentResolver.openFileDescriptor(mediaStoreUri, "rwt")?.use { pfd ->
-            FileOutputStream(pfd.fileDescriptor).use { outputStream ->
+        val mediaStoreFile = File(mediaFile.fullPath)
+        val savedModificationDate = mediaStoreFile.lastModified()
+        contentResolver.openFileDescriptor(mediaStoreUri, "rwt")?.use { mediaFileDescriptor ->
+            FileOutputStream(mediaFileDescriptor.fileDescriptor).use { outputStream ->
                 FileInputStream(newFile).use { inputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
-        } ?:
-            throw IOException("Failed to open file descriptor for writing")
+        } ?: throw IOException("Failed to open file descriptor for writing")
+        mediaStoreFile.setLastModified(savedModificationDate)  //Don't let MediaStore lastModified change
         return true
     }
 
