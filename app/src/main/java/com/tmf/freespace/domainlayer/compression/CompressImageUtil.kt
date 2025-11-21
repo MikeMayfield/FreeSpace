@@ -60,7 +60,7 @@ class CompressImageUtil {
             targetWidth = desiredWidth
             val aspectRatio = uncompressedHeight.toFloat() / uncompressedWidth.toFloat()
             targetHeight = (targetWidth * aspectRatio).roundToInt()
-            DLog.v(tag, "Resizing to: ${targetWidth}x${targetHeight} for $inputPath")
+            DLog.v(tag, "Resizing from ${uncompressedWidth}x${uncompressedHeight} to: ${targetWidth}x${targetHeight} for $inputPath")
         }
 
         // 3. Decode the bitmap with appropriate sampling options to save memory
@@ -215,7 +215,7 @@ class CompressImageUtil {
                 inSampleSize *= 2
             }
         }
-        DLog.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${desiredWidth}x${desiredHeight}")
+//        DLog.d(tag, "Calculated inSampleSize: $inSampleSize for original ${originalWidth}x${originalHeight} -> req ${desiredWidth}x${desiredHeight}")
         return inSampleSize
     }
 }

@@ -1,12 +1,9 @@
 package com.tmf.freespace.datalayer.repositories
 
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag
-import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.database.AppDatabase
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.domainlayer.general.DLog
-import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.io.File
 
 class MediaFileRepository() {
@@ -41,7 +38,7 @@ class MediaFileRepository() {
      */
     suspend fun getFileToCompress(): MediaFile? {
         //If in a trial subscription, only process older media to emphasize the quality of optimization while still recovering enough space to try to hit the 10MB goal
-        val minCompressionRatio = if (PropertyBag.getString(SUBSCRIPTION_STATUS) == HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) 1 else 3
+        val minCompressionRatio = 1//TODO if (PropertyBag.getString(SUBSCRIPTION_STATUS) == HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) 1 else 3
         var fileHasBeenDeleted = true
         var fileToCompress = mediaFileDao.getFileToCompress(minCompressionRatio)
 
