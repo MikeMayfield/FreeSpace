@@ -92,7 +92,7 @@ object DLog {
      */
     fun createSupportLog(): File? {
         val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val bytesToRetainCnt = 10_000_000L  //10MB
+        val bytesToRetainCnt = 2_000_000L
 
         try {
             val logFile = File(downloadsDir, "FreeSpaceLog.txt")
