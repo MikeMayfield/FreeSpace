@@ -63,6 +63,7 @@ object DLog {
                 catch (e: Exception) {
                     // Handle exceptions related to file operations or permissions
                     Log.e("DLog", "Error writing to support log", e)  //NOTE: Use Log not DLog to avoid infinite loop
+                    supportLogFile = null  //Create log file again next time
                 }
             }
         }
