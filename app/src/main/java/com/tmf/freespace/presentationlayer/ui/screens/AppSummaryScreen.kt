@@ -54,6 +54,7 @@ import androidx.navigation.NavHostController
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
+import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
@@ -66,6 +67,7 @@ import kotlin.math.max
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
+    val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSubscribed = uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED
     val screenHeightDp = LocalConfiguration.current.screenHeightDp.dp - paddingValues.calculateTopPadding() + paddingValues.calculateBottomPadding()
@@ -170,6 +172,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 }
                 PropertyBag.setLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB, newMinFreeSpaceGoalMb)
                 viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
+                DLog.d(tag, "Starting background processing in case we need to free up space or stop processing against a larger size goal")
                 PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing to free up more space
             }
 

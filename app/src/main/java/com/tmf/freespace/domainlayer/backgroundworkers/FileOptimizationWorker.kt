@@ -11,6 +11,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.mediastore.MediaStoreUtil
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker.Companion.restartRequested
 import com.tmf.freespace.domainlayer.compression.Compressor
 import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
@@ -49,7 +50,8 @@ class FileOptimizationWorker() {
         while (fileToCompress != null
                 && bytesToRecover > 0
                 && !batteryLow()
-                && !hasRunTooLong() ) {
+                && !hasRunTooLong()
+                && !restartRequested() ) {
             //Compress file and replace existing file in MediaStore
             if (!mediaStoreUtil.mediaIsFavorite(appContext, fileToCompress)) {  //Don't compress media marked as favorite
                 val fileSizeBeforeCompression = fileToCompress.compressedSize  //Note:  compressedSize = original file size if not compressed yet
@@ -159,7 +161,7 @@ class FileOptimizationWorker() {
         }
     }
 
-    private val batteryLowLevel = 33  //Battery level considered to low to process in background
+    private val batteryLowLevel = 33  //Battery level considered too low to process in background
     private fun batteryLow(): Boolean {
         val batteryManager = appContext.getSystemService(BATTERY_SERVICE) as BatteryManager
         val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)

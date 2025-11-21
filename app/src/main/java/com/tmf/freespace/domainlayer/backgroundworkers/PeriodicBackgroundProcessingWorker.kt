@@ -4,7 +4,6 @@ import android.content.Context
 import android.provider.MediaStore
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -23,6 +22,10 @@ import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 import com.tmf.freespace.domainlayer.general.Permissions
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.fetchAndDecrement
+import kotlin.concurrent.atomics.fetchAndIncrement
 import kotlin.coroutines.cancellation.CancellationException
 
 
@@ -36,6 +39,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      * . Update potential compression level for all files
      * . Queue SelectFileToCompress + FileUploadDownloadWorker + CompressionWorker chain to process first pending file
      */
+    @OptIn(ExperimentalAtomicApi::class)
     override suspend fun doWork(): Result {
         DLog.d(tag, "Starting periodic background processing")
 
@@ -45,6 +49,14 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 DLog.e(tag, "Permissions not granted")
                 return Result.failure()
             }
+
+            //If we are currently running when this worker is queued, restart it ASAP
+            if (currentlyRunning) {
+                incrementRestartRequests()
+                DLog.d(tag, "Requested restart of $tag processing")
+                return Result.success()  //Don't start another service if one is already running
+            }
+            currentlyRunning = true
 
             //Run worker in foreground service to allow to run for up to 6 hours
             if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
@@ -56,35 +68,46 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             val mediaFileRepository = MediaFileRepository()
 
-            //The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
-            //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
-            updateMediaStoreIDsIfRebuilt(mediaFileRepository)
+            do {
+                // The MediaStore ID (GUIDs) can change when the MediaStore is rebuilt after a reboot or other (less common) significant event.
+                //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
+                updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-            val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED)
-            val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
-            if (newMaxDateAddedFound > maxDateAddedFound) {
-                PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
-            }
+                val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED)
+                val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
+                if (newMaxDateAddedFound > maxDateAddedFound) {
+                    PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
+                }
 
-            updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
+                updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
 
-            FileOptimizationWorker().compressAllPendingMedia()
+                FileOptimizationWorker().compressAllPendingMedia()
+                if (restartRequested()) {
+                    DLog.d(tag, "Restarting $tag processing")
+                }
+                decrementRestartRequests()
+            } while (restartRequested())  //NOTE: There is a small race condition here, but the worst case is that processing wait until the next periodic processing instead of running immediately
+
             PropertyBag.setBoolean(IS_IDLE, true)
 
             DLog.d(tag, "Finished $tag worker processing")
+            currentlyRunning = false
             return Result.success()
         }
         catch (e: Exception) {
             PropertyBag.setString(IS_IDLE, "true")
-            if (!(e is CancellationException)) {
-                DLog.e(tag, "Error in $tag worker: ${e.message}")
-                return Result.failure()
-            } else {
+            if (e is CancellationException) {
                 DLog.d(tag, "User cancelled $tag worker")
+                currentlyRunning = false
                 return Result.success()
+            } else {
+                DLog.e(tag, "Error in $tag worker: ${e.message}")
+                currentlyRunning = false
+                return Result.failure()
             }
         }
     }
+
 
     //region Private Methods
 
@@ -136,6 +159,10 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
         mediaReader.getMediaFilesAddedSinceDate(oldestDateAddedToSelect)
             .collect { mediaStoreMediaFile -> // Use collect to consume the Flow
+                if (restartRequested()) {
+                    return@collect
+                }
+
                 // Try to find an existing file by fullPath to update its MediaStore ID if it changed
                 if (!mediaStoreMediaFile.fullPath.contains("/SupportLog")) {
 
@@ -196,13 +223,34 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
          * Queue this worker to process immediately
          */
         fun queueImmediateProcessing() {
-            queuePeriodicProcessing()
             val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>().build()
-            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueueUniqueWork(
-                "FreeSpace_PeriodicBackgroundProcessingWorker",
-                ExistingWorkPolicy.REPLACE,
-                request
-            )
+            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueue(request)
+        }
+
+
+        @Volatile
+        var currentlyRunning = false  //Flag: The service is currently running
+        @Volatile @OptIn(ExperimentalAtomicApi::class)
+        private var restartRequestCount = AtomicInt(0)
+
+        @OptIn(ExperimentalAtomicApi::class)
+        fun restartRequested(): Boolean {
+            if (restartRequestCount.load() > 0) {
+                return true
+            } else {
+                restartRequestCount.store(0)  //Don't let negative numbers propagate between runs on tight race conditions
+                return false
+            }
+        }
+
+        @OptIn(ExperimentalAtomicApi::class)
+        private fun incrementRestartRequests() {
+            restartRequestCount.fetchAndIncrement()
+        }
+
+        @OptIn(ExperimentalAtomicApi::class)
+        private fun decrementRestartRequests() {
+            restartRequestCount.fetchAndDecrement()
         }
     }
 }
