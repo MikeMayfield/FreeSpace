@@ -2,11 +2,8 @@ package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
 import android.provider.MediaStore
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -185,17 +182,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
          * Queue this worker to process periodically (even across reboots)
          */
         fun queuePeriodicProcessing() {
-            val context = BaseApplication.instance.baseContext
-
-            val constraints = Constraints.Builder()
-                .setRequiresBatteryNotLow(true)
-                .build()
-
-            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(15, TimeUnit.MINUTES)  //TODO Maybe make this longer after stabilized
-                .setConstraints(constraints)
-                .build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            val request = PeriodicWorkRequestBuilder<PeriodicBackgroundProcessingWorker>(15, TimeUnit.MINUTES).build()
+            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueueUniquePeriodicWork(
                 "FreeSpace_PeriodicBackgroundProcessingWorker",
                 ExistingPeriodicWorkPolicy.UPDATE,  //Only one copy of worker can be running at a time
                 request
@@ -206,15 +194,13 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
          * Queue this worker to process immediately
          */
         fun queueImmediateProcessing() {
-            val context = BaseApplication.instance.baseContext
-
-            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>()
-                .build()
-            WorkManager.getInstance(context).enqueueUniqueWork(
-                "FreeSpace_PeriodicBackgroundProcessingWorker",
-                ExistingWorkPolicy.REPLACE,
-                request
-            )
+            queuePeriodicProcessing()
+//            val request = OneTimeWorkRequestBuilder<PeriodicBackgroundProcessingWorker>().build()
+//            WorkManager.getInstance(BaseApplication.instance.baseContext).enqueueUniqueWork(
+//                "FreeSpace_PeriodicBackgroundProcessingWorker",
+//                ExistingWorkPolicy.REPLACE,
+//                request
+//            )
         }
     }
 }
