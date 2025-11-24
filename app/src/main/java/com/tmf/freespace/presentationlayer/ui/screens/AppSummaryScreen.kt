@@ -248,8 +248,8 @@ fun StorageInfoSection(usedMB: Long = 0, availableNowMB: Long = 0, currentExpans
             smallLayout
         )
         val storageAmountDetail = if (currentExpansionMB < 1000)
-            "${gbFormatter.format(currentExpansionMB)} MB memory already added by FreeSpace"
-            else "${gbFormatter.format(currentExpansionMB / 1000f)} GB memory already added by FreeSpace"
+            "${gbFormatter.format(currentExpansionMB)} MB of memory already added by FreeSpace"
+            else "${gbFormatter.format(currentExpansionMB / 1000f)} GB of memory already added by FreeSpace"
         StorageDetailItem(
             color = Color(0xFF02EA62),
             storageAmount = storageAmountDetail,
