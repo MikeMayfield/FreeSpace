@@ -50,7 +50,7 @@ class ImageCompressor(context: Context) : ICompressor(context) {
                     if (File(outputFilePath).length() <= maxCompressedSize) {
                         return ExifCopier.copyExifData(inputFilePath, outputFilePath)
                     } else {
-                        DLog.d(tag, "Compressed file larger (${File(outputFilePath).length()}) than original file ($maxCompressedSize)")
+//                        DLog.d(tag, "Compressed file larger (${File(outputFilePath).length()}) than original file ($maxCompressedSize)")
                     }
                 } else {
                     DLog.e(tag, "Image compression failed for $inputFilePath")

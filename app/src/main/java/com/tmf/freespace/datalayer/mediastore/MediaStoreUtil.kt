@@ -12,6 +12,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 
 class MediaStoreUtil {
+    val tag = "MediaStoreUtil"
+
     //region Public methods
 
     /**
@@ -40,28 +42,41 @@ class MediaStoreUtil {
         }
     }
 
+    /**
+     * Determine if media is marked as favorite in the MediaStore
+     *
+     * @param context The application context.
+     * @param mediaFile Media that you want to check in the MediaStore.
+     * @return True if the media is marked as favorite, false otherwise.
+     */
     fun mediaIsFavorite(
         context: Context,
         mediaFile: MediaFile
     ): Boolean {
-        val contentResolver = context.contentResolver
-        val projection = arrayOf(
-            MediaStore.MediaColumns._ID,
-            MediaStore.MediaColumns.IS_FAVORITE
-        )
-        val selection = "${MediaStore.MediaColumns._ID} = ? AND ${MediaStore.MediaColumns.IS_FAVORITE} = 1"
-        val selectionArgs = arrayOf( mediaFile.mediaStoreID.toString() )
+        try {
+            val contentResolver = context.contentResolver
+            val projection = arrayOf(
+                MediaStore.MediaColumns._ID,
+                MediaStore.MediaColumns.IS_FAVORITE
+            )
+            val selection = "${MediaStore.MediaColumns._ID} = ? AND ${MediaStore.MediaColumns.IS_FAVORITE} = 1"
+            val selectionArgs = arrayOf(mediaFile.mediaStoreID.toString())
 
-        val queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
 
-        contentResolver.query(
-            queryUri,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )?.use { cursor ->
-            return (cursor.count != 0)
+            contentResolver.query(
+                queryUri,
+                projection,
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                return (cursor.count != 0)
+            }
+        }
+        catch (e: Exception) {
+//            DLog.e(tag, "Error while checking if media is favorite: ${e.message}")
+            return false
         }
 
         return false

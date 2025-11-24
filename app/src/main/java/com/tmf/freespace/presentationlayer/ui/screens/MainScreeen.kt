@@ -26,7 +26,6 @@ import com.tmf.freespace.presentationlayer.ui.navigation.NavGraph
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
-import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +44,7 @@ fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        val version = if (uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED) "Max" else "Lite (alpha)"
+                        val version = if (viewModel.isSubscribed()) "Max" else "Lite (alpha)"
                         Text(
                             text = "FreeSpace $version",
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)

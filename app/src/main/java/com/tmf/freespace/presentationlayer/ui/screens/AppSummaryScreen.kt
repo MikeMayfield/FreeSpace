@@ -57,7 +57,6 @@ import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcess
 import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
-import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -69,7 +68,6 @@ import kotlin.math.max
 fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
     val tag = "AppSummaryScreen"
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isSubscribed = uiState.subscriptionStatus != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED
     val screenHeightDp = LocalConfiguration.current.screenHeightDp.dp - paddingValues.calculateTopPadding() + paddingValues.calculateBottomPadding()
     val shortScreenHeightDp = 750.dp  //Height of screens too short to show full content
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
@@ -87,7 +85,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
         ) {
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
-            if (screenHeightDp > shortScreenHeightDp || isSubscribed) {
+            if (screenHeightDp > shortScreenHeightDp || viewModel.isSubscribed()) {
                 Text(
                     text = "Ever-expanding space for all your treasured photos and videos",
                     style = MaterialTheme.typography.headlineSmall,
@@ -97,7 +95,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             }
 
             //Grow your memory promo section
-            if (!isSubscribed) {
+            if (!viewModel.isSubscribed()) {
                 if (screenHeightDp > shortScreenHeightDp) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -137,7 +135,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 uiState.availableNowMB,
                 uiState.currentExpansionMB,
                 uiState.expansionAvailableMB,
-                isSubscribed,
+                viewModel.isSubscribed(),
                 smallLayout
             )
 
@@ -178,7 +176,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
 
             Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
 
-            if (!isSubscribed) {
+            if (!viewModel.isSubscribed()) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 SubscribeButton(smallLayout) {

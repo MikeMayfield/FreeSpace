@@ -44,10 +44,9 @@ class CommonViewModel() : ViewModel() {
         ) }
     }
 
-//    fun updateSubscriptionStatus(value: HomeScreenState.SubscriptionStatus) {
-//        propertyBag.setString(SUBSCRIPTION_STATUS, value.name)
-//        _uiState.update { it.copy(subscriptionStatus = value) }
-//    }
+    fun isSubscribed(): Boolean {
+        return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
+    }
 
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
@@ -66,7 +65,6 @@ class CommonViewModel() : ViewModel() {
                 expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromCompressingFreeSpace)  / bytesToMB,
                 status = status(),
                 keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
-                subscriptionStatus = HomeScreenState.SubscriptionStatus.valueOf(PropertyBag.getString(SUBSCRIPTION_STATUS)),
                 physicalMB = physicalMemorySize / bytesToMB,
             )
             delay(10_000L)  //Poll state every n milli-seconds
@@ -114,10 +112,6 @@ class CommonViewModel() : ViewModel() {
         val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         return batterLevelPct <= 33
     }
-
-    private fun isSubscribed(): Boolean {
-        return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
-    }
 }
 
 
@@ -129,7 +123,6 @@ data class HomeScreenState(
     val addedMB: Long = 0L,  //Amount of space added through optimization/compression
     val status: String = "",  //Status, as display string
     val keepFreeOptionIdx: Int = 1,  //Index of keep free option selected by user
-    val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.NOT_SUBSCRIBED,  //Subscription status
     val physicalMB: Long = 64_000L,  //Amount of physical space available
 )
 {
