@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
         var firstScreenRoute: NavRoute = NavRoute.Welcome
         if (Permissions().allPermissionsAreGranted(this)) {
             firstScreenRoute = NavRoute.AppSummary
-            PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Ensure that periodic processing is running, just in case we need to catch up with new files
+            PeriodicBackgroundProcessingWorker.queuePeriodicProcessing()  //Ensure that periodic processing is queued. We seem to lose it sometimes
+            PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Ensure that periodic processing is queued. We seem to lose it sometimes
         }
         setContent {
            MainScreen(viewModel, firstScreenRoute)
