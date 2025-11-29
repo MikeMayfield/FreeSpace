@@ -1,6 +1,7 @@
 package com.tmf.freespace.domainlayer.backgroundworkers
 
 import android.content.Context
+import android.os.Build
 import android.provider.MediaStore
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -41,7 +42,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
      */
     @OptIn(ExperimentalAtomicApi::class)
     override suspend fun doWork(): Result {
-        DLog.d(tag, "Starting periodic background processing")
+        val versionName = appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName
+        DLog.d(tag, "Starting periodic background processing. v${versionName} - API ${Build.VERSION.SDK_INT}")
 
         try {
             //Can't process if permissions have been revoked after setup
