@@ -43,7 +43,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     @OptIn(ExperimentalAtomicApi::class)
     override suspend fun doWork(): Result {
         val versionName = appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName
-        DLog.d(tag, "Starting periodic background processing. v${versionName} - API ${Build.VERSION.SDK_INT}")
+        DLog.d(tag, "--Starting periodic background processing. v${versionName} - API ${Build.VERSION.SDK_INT}")
 
         try {
             //Can't process if permissions have been revoked after setup
