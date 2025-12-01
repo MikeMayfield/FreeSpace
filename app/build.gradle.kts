@@ -14,8 +14,8 @@ android {
         applicationId = "com.tmf.freespace"
         minSdk = 29
         targetSdk = 35
-        versionCode = 10005
-        versionName = "1.0.05"
+        versionCode = 10006
+        versionName = "1.0.06"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
