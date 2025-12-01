@@ -1,6 +1,7 @@
 [versions]
 accompanistPermissions = "0.37.3"
 agp = "8.13.1"
+billingKtx = "8.1.0"
 checkerQual = "3.52.0"
 commonsNet = "3.12.0"
 kotlin = "2.2.20"  #Must match ksp version, below
@@ -39,6 +40,7 @@ androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", versi
 androidx-media3-session = { module = "androidx.media3:media3-session", version.ref = "media3" }
 androidx-media3-transformer = { module = "androidx.media3:media3-transformer", version.ref = "media3" }
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
+billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billingKtx" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerQual" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
