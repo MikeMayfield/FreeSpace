@@ -5,15 +5,21 @@ import com.tmf.freespace.datalayer.repositories.PropertyBagRepository
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
 object PropertyBag {
     private var propertyBagRepository = PropertyBagRepository()
     private val bag: ConcurrentHashMap<String, String> = ConcurrentHashMap()  //Thread-safe property bag in memory, shared by all users of PropertyBag class
+    private val diskWriteQueue = ConcurrentLinkedQueue<PropertyBagEntry>()
+    private var writeJob: Job? = null
+    private val writeMutex = Mutex()
 
     init {
         loadBag(propertyBagRepository)
@@ -23,7 +29,7 @@ object PropertyBag {
      * Returns the value associated with the given key. If the key is not found, returns null.
      */
     fun getString(key: String, defaultValue: String = ""): String {
-        return bag[key] ?: defaultValue
+        return bag.getOrDefault(key, defaultValue)
     }
 
     fun getInt(key: String, defaultValue: Int = 0): Int {
@@ -46,10 +52,8 @@ object PropertyBag {
      */
     fun setString(key: String, value: String) {
         if (!bag.containsKey(key) || bag[key] != value) {
-            bag[key] = value
-            CoroutineScope(Dispatchers.IO).launch {  //Update DB in background I/O thread
-                saveBagEntry(PropertyBagEntry(key, value))
-            }
+            bag.put(key, value)
+            queueForDiskWrite(PropertyBagEntry(key, value))
         }
     }
 
@@ -69,20 +73,16 @@ object PropertyBag {
      * Load property bag from database if it is empty.
      */
     private fun loadBag(propertyBagRepository: PropertyBagRepository) {
-        if (bag.isEmpty()) {
-            runBlocking {  //Stall main thread until bag is loaded the first time. This is not ideal, but works for now since the property bag is only loaded once.
-                val allProperties = CoroutineScope(Dispatchers.IO).async {
-                    propertyBagRepository.allEntries()
-                }
-                    .await()
+        runBlocking {  //Stall main thread until bag is loaded the first time. This is not ideal, but works for now since the property bag is only loaded once.
+            val allProperties = CoroutineScope(Dispatchers.IO).async {
+                propertyBagRepository.allEntries()
+            }.await()
+            if (allProperties.isEmpty()) {
+                initPropertyBag()
+            }
+            else {
                 for (property in allProperties) {
-                    bag[property.key] = property.value
-                }
-
-                if (bag.isEmpty()) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        initPropertyBag()
-                    }
+                    bag.put(property.key, property.value)
                 }
             }
         }
@@ -91,29 +91,45 @@ object PropertyBag {
     /**
      * Initialize the property bag with default values the first time it is used
      */
-    private suspend fun initPropertyBag() {
-        createAndSaveBagEntry(MAX_DATE_ADDED, "0")
-        createAndSaveBagEntry(KEEP_FREE_OPTION_IDX, "1")
-        createAndSaveBagEntry(MIN_FREE_SPACE_GOAL_MB, "5000")
-        createAndSaveBagEntry(IS_IDLE, "true")
-        createAndSaveBagEntry(PRIOR_MEDIA_STORE_VERSION, "0")
-        createAndSaveBagEntry(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())
-        createAndSaveBagEntry(TRIAL_GB_FREE, "10")
-    }
-
-    private suspend fun createAndSaveBagEntry(key: String, value: String) {
-        bag[key] = value
-        saveBagEntry(PropertyBagEntry(key, value))
+    private fun initPropertyBag() {
+        setString(MAX_DATE_ADDED, "0")
+        setString(KEEP_FREE_OPTION_IDX, "1")
+        setString(MIN_FREE_SPACE_GOAL_MB, "5000")
+        setString(IS_IDLE, "true")
+        setString(PRIOR_MEDIA_STORE_VERSION, "0")
+        setString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())
+        setString(TRIAL_GB_FREE, "10")
     }
 
     /**
-     * Save new/changed property bag entry to database
+     * Adds an entry to a thread-safe queue and launches a single coroutine to process the entire queue.
+     * This prevents launching excessive coroutines for rapid updates.
+     *
+     * @param bagEntry The [PropertyBagEntry] to be saved to disk.
      */
-    private suspend fun saveBagEntry(bagEntry: PropertyBagEntry) {
-        withContext(Dispatchers.IO) {
-            propertyBagRepository.saveBagEntry(bagEntry)
+    private fun queueForDiskWrite(bagEntry: PropertyBagEntry) {
+        diskWriteQueue.add(bagEntry)
+
+        // Use a mutex to ensure only one writer coroutine is active at a time.
+        CoroutineScope(Dispatchers.IO).launch {
+            writeMutex.withLock {
+                // If a write job is already active, it will handle the newly queued item.
+                if (writeJob == null || writeJob?.isCompleted == true) {
+                    writeJob = launch {
+                        // Process all items currently in the queue.
+                        while (diskWriteQueue.isNotEmpty()) {
+                            val entryToWrite = diskWriteQueue.poll()
+                            entryToWrite?.let {
+                                propertyBagRepository.saveBagEntry(it)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
+
+
 
 
     //Known properties (KEYS)
