@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.billing.ktx)
+    implementation(libs.google.firebase.auth)
 
     ksp(libs.room.compiler)
 

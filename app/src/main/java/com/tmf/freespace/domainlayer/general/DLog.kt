@@ -3,10 +3,8 @@ package com.tmf.freespace.domainlayer.general
 import android.os.Bundle
 import android.os.Environment
 import android.util.Log
-import com.google.firebase.Firebase
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.analytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tmf.freespace.BaseApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,9 +22,6 @@ object DLog {
 
     private var supportLogFile: File? = null
     private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
-
-    // Get instances of Firebase services
-    private val firebaseAnalytics: FirebaseAnalytics by lazy { Firebase.analytics }
     private val crashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
 
 
@@ -87,7 +82,7 @@ object DLog {
                     // Truncate message to adhere to Analytics parameter value limits (100 chars)
                     putString("log_message", msg.take(100))
                 }
-                firebaseAnalytics.logEvent(eventName, bundle)
+                BaseApplication.firebaseAnalytics.logEvent(eventName, bundle)
             }
         }
     }
