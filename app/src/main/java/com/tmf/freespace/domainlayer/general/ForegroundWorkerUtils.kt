@@ -28,7 +28,7 @@ class ForegroundWorkerUtils {
         val foregroundInfo = createForegroundInfo(worker, context)
         try {
             worker.setForeground(foregroundInfo) // Use suspend version for CoroutineWorker
-            DLog.d(tag, "Foreground service started for worker ${worker.id}")
+//            DLog.d(tag, "Foreground service started for worker ${worker.id}")
             return true
         } catch (e: IllegalStateException) {
             DLog.e(tag, "Error setting foreground service. Does the app have FOREGROUND_SERVICE permission? Or is it running on an older API without appropriate service type?", e)

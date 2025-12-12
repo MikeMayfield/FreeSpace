@@ -32,18 +32,15 @@ class BaseApplication: Application() {
         firebaseAuth.signInAnonymously()
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, get the user ID
+                    //Sign in success, get the user ID
                     val user = firebaseAuth.currentUser
                     val userId = user?.uid
-                    DLog.d(TAG, "Anonymous user ID: $userId")  //TODO comment out
-
-                    // Set the custom user ID for Firebase Analytics
-                    if (userId != null) {
+                    if (userId != null) {  //Set the custom user ID for Firebase Analytics
                         firebaseUserID = userId
                         firebaseAnalytics.setUserId(userId)
                     }
                 } else {
-                    // If sign in fails
+                    //If sign in fails
                     DLog.e(TAG, "signInAnonymously:failure", task.exception)
                 }
             }

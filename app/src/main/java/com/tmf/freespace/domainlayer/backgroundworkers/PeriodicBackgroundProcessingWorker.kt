@@ -32,6 +32,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     private val tag = "PeriodicBackgroundProcessingWorker"
+    private var processingStartTimeMs = 0L
 
     /**
      * Worker: Start of periodic processing of background compression tasks
@@ -43,7 +44,8 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
     @OptIn(ExperimentalAtomicApi::class)
     override suspend fun doWork(): Result {
         val versionName = appContext.packageManager.getPackageInfo(appContext.packageName, 0).versionName
-        DLog.d(tag, "--Starting periodic background processing. v${versionName} - API ${Build.VERSION.SDK_INT}")
+        DLog.d(tag, "--Starting periodic background processing for user '${BaseApplication.firebaseUserID}'. v${versionName}, API ${Build.VERSION.SDK_INT}")
+        processingStartTimeMs = System.currentTimeMillis()
 
         try {
             //Can't process if permissions have been revoked after setup
@@ -93,18 +95,18 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             PropertyBag.setBoolean(IS_IDLE, true)
 
-            DLog.d(tag, "Finished $tag worker processing")
+            DLog.d(tag, "Finished $tag worker processing after ${System.currentTimeMillis() - processingStartTimeMs} ms")
             currentlyRunning = false
             return Result.success()
         }
         catch (e: Exception) {
             PropertyBag.setString(IS_IDLE, "true")
             if (e is CancellationException) {
-                DLog.d(tag, "User cancelled $tag worker")
+                DLog.d(tag, "User cancelled $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms")
                 currentlyRunning = false
                 return Result.success()
             } else {
-                DLog.e(tag, "Error in $tag worker: ${e.message}")
+                DLog.e(tag, "Error in $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms: ${e.message}")
                 currentlyRunning = false
                 return Result.failure()
             }
