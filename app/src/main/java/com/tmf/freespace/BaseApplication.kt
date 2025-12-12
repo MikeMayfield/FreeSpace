@@ -24,7 +24,7 @@ class BaseApplication: Application() {
         super.onCreate()
         instance = this
 
-        enableStrictModeForDebugging()  //Enable strict mode for debugging
+        enableStrictModeForDebugging()
 
         //Initialize Firebase
         FirebaseApp.initializeApp(this)
