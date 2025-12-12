@@ -1,6 +1,8 @@
 package com.tmf.freespace
 
 import android.app.Application
+import android.os.Debug
+import android.os.StrictMode
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -21,11 +23,34 @@ class BaseApplication: Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
-        FirebaseApp.initializeApp(this)
 
+        enableStrictModeForDebugging()  //Enable strict mode for debugging
+
+        //Initialize Firebase
+        FirebaseApp.initializeApp(this)
         firebaseAnalytics = FirebaseAnalytics.getInstance(this)
         firebaseAuth = Firebase.auth
         signInAnonymously()
+    }
+
+    private fun enableStrictModeForDebugging() {
+        if (Debug.isDebuggerConnected()) {
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectNetwork() // or .detectAll() for all detectable problems
+                    .penaltyLog()
+                    .build()
+            )
+            StrictMode.setVmPolicy(
+                StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build()
+            )
+        }
     }
 
     private fun signInAnonymously() {
