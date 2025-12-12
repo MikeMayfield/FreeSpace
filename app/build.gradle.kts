@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp) // Apply the KSP plugin replacement for KAPT
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -77,6 +79,13 @@ dependencies {
     implementation(libs.billing.ktx)
 
     ksp(libs.room.compiler)
+
+    //FireBase (https://console.firebase.google.com/)
+    implementation(platform(libs.firebase.bom))  //Import the Firebase BoM (Bill of Materials). This will manage the versions of all Firebase libraries
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+
 
     //region Tests
     testImplementation(libs.junit)

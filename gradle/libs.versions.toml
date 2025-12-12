@@ -1,9 +1,10 @@
 [versions]
 accompanistPermissions = "0.37.3"
-agp = "8.13.1"
+agp = "8.13.2"
 billingKtx = "8.1.0"
 checkerQual = "3.52.0"
 commonsNet = "3.12.0"
+firebaseBom = "34.7.0"
 kotlin = "2.2.20"  #Must match ksp version, below
 ksp = "2.2.20-2.0.2" #Must match kotlin version, above
 junit = "4.13.2"
@@ -42,6 +43,9 @@ androidx-media3-transformer = { module = "androidx.media3:media3-transformer", v
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billingKtx" }
 checker-qual = { module = "org.checkerframework:checker-qual", version.ref = "checkerQual" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }

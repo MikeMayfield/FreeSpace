@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660020020634",
+    "project_id": "freespace-e851b",
+    "storage_bucket": "freespace-e851b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660020020634:android:e3aad063dcd6e777602623",
+        "android_client_info": {
+          "package_name": "com.tmf.freespace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEKiHfeY69Lve3ZmEUFV0zWiPm6ziGS4U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
