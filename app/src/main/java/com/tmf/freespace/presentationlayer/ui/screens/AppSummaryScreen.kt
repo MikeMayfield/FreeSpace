@@ -77,8 +77,8 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .background(Color.White)
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally

@@ -14,7 +14,7 @@ class Permissions {
                 return false
             }
         }
-        return true  //TODO Change to FALSE to force UI to always start on first screen.
+        return true  //NOTE Change to FALSE to force UI to always start on first screen.
     }
 
     companion object {

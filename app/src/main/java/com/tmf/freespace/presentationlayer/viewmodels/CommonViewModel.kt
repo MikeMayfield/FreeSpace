@@ -13,6 +13,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTIO
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,7 @@ class CommonViewModel() : ViewModel() {
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             periodicallyPopulateHomeScreenState()
         }
     }

@@ -47,7 +47,7 @@ object DLog {
 
 
     private fun log(level: Int, tag: String, msg: String, throwable: Throwable? = null) {
-        val fullTag = "$APP_TAG.$tag"
+        val fullTag = tag// "$APP_TAG.$tag"
 
         // 1. Log to Android Logcat
         logToLogcat(level, fullTag, msg)

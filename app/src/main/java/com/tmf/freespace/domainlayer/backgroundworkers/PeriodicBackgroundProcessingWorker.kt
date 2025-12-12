@@ -95,18 +95,18 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             PropertyBag.setBoolean(IS_IDLE, true)
 
-            DLog.d(tag, "Finished $tag worker processing after ${System.currentTimeMillis() - processingStartTimeMs} ms")
+            DLog.d(tag, "--Finished $tag worker processing after ${System.currentTimeMillis() - processingStartTimeMs} ms")
             currentlyRunning = false
             return Result.success()
         }
         catch (e: Exception) {
             PropertyBag.setString(IS_IDLE, "true")
             if (e is CancellationException) {
-                DLog.d(tag, "User cancelled $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms")
+                DLog.d(tag, "--User cancelled $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms")
                 currentlyRunning = false
                 return Result.success()
             } else {
-                DLog.e(tag, "Error in $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms: ${e.message}")
+                DLog.e(tag, "--Error in $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms: ${e.message}")
                 currentlyRunning = false
                 return Result.failure()
             }

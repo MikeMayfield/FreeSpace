@@ -45,7 +45,7 @@ class MediaReader(
             selection,
             selectionArgs,
             "${MediaStore.MediaColumns.DATE_ADDED} ASC" // Order by date added
-        )?.use { cursor -> // Use 'use' to ensure the cursor is closed
+        )?.use { cursor ->  // Use 'use' to ensure the cursor is closed
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.IMAGE)
                 if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
@@ -61,7 +61,7 @@ class MediaReader(
             selection,
             selectionArgs,
             "${MediaStore.MediaColumns.DATE_ADDED} ASC"
-        )?.use { cursor ->
+        )?.use { cursor ->  // Use 'use' to ensure the cursor is closed
             while (cursor.moveToNext()) {
                 val mediaFile = createMediaFile(cursor, MediaType.VIDEO)
                 if (mediaFile.originalSize > 0) {  //TODO See why file size is sometimes 0. Possibly because file was in progress being created when found
