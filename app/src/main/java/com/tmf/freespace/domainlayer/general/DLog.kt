@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter
 
 object DLog {
     private const val TAG = "DLog"
-    private const val APP_TAG = "FreeSpace"
     private const val MAX_LOG_LENGTH = 4000  //Max size of LogCat entry (break into multiple segments if longer)
 
     private var supportLogFile: File? = null

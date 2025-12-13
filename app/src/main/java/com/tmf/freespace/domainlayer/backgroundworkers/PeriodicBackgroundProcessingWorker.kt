@@ -51,7 +51,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             //Can't process if permissions have been revoked after setup
             if (!Permissions().allPermissionsAreGranted(appContext)) {
                 DLog.e(tag, "Permissions not granted")
-                return Result.failure()
+                return stopRunningWithResult(Result.failure())
             }
 
             //If we are currently running when this worker is queued, restart it ASAP
@@ -60,12 +60,13 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 DLog.d(tag, "Requested restart of $tag processing")
                 return Result.success()  //Don't start another service if one is already running
             }
+
             currentlyRunning = true
 
             //Run worker in foreground service to allow to run for up to 6 hours
             if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
                 DLog.e(tag, "Failed to start periodic background processing as foreground service")
-                return Result.failure()
+                return stopRunningWithResult(Result.failure())
             }
 
             PropertyBag.setBoolean(IS_IDLE, false)
@@ -79,10 +80,10 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 //If this happened, update the MediaStore ID GUIDs in the database, based on the full path to the media
                 updateMediaStoreIDsIfRebuilt(mediaFileRepository)
 
-                val maxDateAddedFound = PropertyBag.getLong(MAX_DATE_ADDED)
-                val newMaxDateAddedFound = updateMediaFilesFromMediaStore(maxDateAddedFound, mediaFileRepository, false)  //Add all new media files to DB
-                if (newMaxDateAddedFound > maxDateAddedFound) {
-                    PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAddedFound)
+                val priorMaxDateAdded = PropertyBag.getLong(MAX_DATE_ADDED)
+                val newMaxDateAdded = updateMediaFilesFromMediaStore(priorMaxDateAdded, mediaFileRepository, false)  //Add all new media files to DB
+                if (newMaxDateAdded > priorMaxDateAdded) {
+                    PropertyBag.setLong(MAX_DATE_ADDED, newMaxDateAdded)
                 }
 
                 updateDesiredCompressionLevelsInDB(mediaFileRepository)  //Update potential compression level for all files
@@ -96,25 +97,27 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             PropertyBag.setBoolean(IS_IDLE, true)
 
             DLog.d(tag, "--Finished $tag worker processing after ${System.currentTimeMillis() - processingStartTimeMs} ms")
-            currentlyRunning = false
-            return Result.success()
+            return stopRunningWithResult(Result.success())
         }
         catch (e: Exception) {
             PropertyBag.setString(IS_IDLE, "true")
             if (e is CancellationException) {
                 DLog.d(tag, "--User cancelled $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms")
-                currentlyRunning = false
-                return Result.success()
+                return stopRunningWithResult(Result.success())
             } else {
                 DLog.e(tag, "--Error in $tag worker after ${System.currentTimeMillis() - processingStartTimeMs} ms: ${e.message}")
-                currentlyRunning = false
-                return Result.failure()
+                return stopRunningWithResult(Result.failure())
             }
         }
     }
 
 
     //region Private Methods
+
+    private fun stopRunningWithResult(result: Result): Result {
+        currentlyRunning = false
+        return result
+    }
 
     /*
      * If the real MediaStore IDs may have changed, update the MediaStore ID GUIDs in the database, based on the full path to the media

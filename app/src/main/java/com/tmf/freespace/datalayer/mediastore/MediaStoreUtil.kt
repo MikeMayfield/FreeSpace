@@ -75,7 +75,7 @@ class MediaStoreUtil {
             }
         }
         catch (e: Exception) {
-//            DLog.e(tag, "Error while checking if media is favorite: ${e.message}")
+            DLog.e(tag, "Error while checking if media is favorite: ${e.message}")
             return false
         }
 
