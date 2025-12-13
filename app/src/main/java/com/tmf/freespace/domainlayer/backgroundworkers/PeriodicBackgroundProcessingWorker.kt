@@ -114,6 +114,13 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
     //region Private Methods
 
+    /**
+     * Sets the 'currentlyRunning' flag to false and returns the provided work result.
+     * This is a helper method to ensure the running state is always reset before exiting the worker.
+     *
+     * @param result The [Result] to be returned by the worker (e.g., Result.success(), Result.failure()).
+     * @return The same [Result] object that was passed in.
+     */
     private fun stopRunningWithResult(result: Result): Result {
         currentlyRunning = false
         return result
