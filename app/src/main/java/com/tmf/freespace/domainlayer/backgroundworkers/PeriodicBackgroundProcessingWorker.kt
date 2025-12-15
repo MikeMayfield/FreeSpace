@@ -57,7 +57,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             //If we are currently running when this worker is queued, restart it ASAP
             if (currentlyRunning) {
                 incrementRestartRequests()
-                DLog.d(tag, "Requested restart of $tag processing")
+                DLog.d(tag, "Requested restart of $tag processing with $restartRequestCount restart requests pending")
                 return Result.success()  //Don't start another service if one is already running
             }
 

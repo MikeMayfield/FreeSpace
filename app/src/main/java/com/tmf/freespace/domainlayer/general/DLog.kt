@@ -75,7 +75,7 @@ object DLog {
             }
             else -> {
                 // Send other logs as custom Analytics events
-                val eventName = "DLog_${getEventNameForLevel(level)}"
+                val eventName = "DL_${getEventNameForLevel(level)}"
                 val bundle = Bundle().apply {
                     putString("log_tag", tag) // Use original tag for cleaner analytics
                     // Truncate message to adhere to Analytics parameter value limits (100 chars)

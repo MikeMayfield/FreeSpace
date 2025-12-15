@@ -1,5 +1,6 @@
 package com.tmf.freespace.presentationlayer.viewmodels
 
+import android.app.Activity
 import android.content.Context.BATTERY_SERVICE
 import android.os.BatteryManager
 import android.os.Environment
@@ -45,9 +46,22 @@ class CommonViewModel() : ViewModel() {
         ) }
     }
 
+    /**
+     * Launches the billing flow for a given product ID.
+     *
+     * @param activity The activity to launch the billing flow from.
+     * @param productId The ID of the product to purchase.
+     */
+    fun launchPurchaseFlow(activity: Activity, productId: String) {
+        BaseApplication.billingClient.launchPurchaseFlow(activity, productId)
+    }
+
     fun isSubscribed(): Boolean {
         return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
     }
+
+
+    //region Private methods
 
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
@@ -113,6 +127,8 @@ class CommonViewModel() : ViewModel() {
         val batterLevelPct = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         return batterLevelPct <= 33
     }
+
+    //endregion
 }
 
 

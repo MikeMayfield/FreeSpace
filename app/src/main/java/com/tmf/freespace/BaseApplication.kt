@@ -8,6 +8,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.tmf.freespace.domainlayer.general.BillingClientWrapper
 import com.tmf.freespace.domainlayer.general.DLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,9 @@ class BaseApplication: Application() {
         lateinit var firebaseAnalytics: FirebaseAnalytics
         lateinit var firebaseAuth: FirebaseAuth
         var firebaseUserID: String = "N/A"
+        val billingClient: BillingClientWrapper by lazy {  //Shared purchase support for subscriptions
+            BillingClientWrapper(instance, CoroutineScope(Dispatchers.Default))
+        }
     }
 
     override fun onCreate() {
@@ -35,6 +39,7 @@ class BaseApplication: Application() {
         CoroutineScope(Dispatchers.Default).launch {
             firebaseAuth = Firebase.auth
             signInAnonymously()
+            billingClient.  //Force billing client to preload products so they are ready for screens sooner
         }
     }
 
