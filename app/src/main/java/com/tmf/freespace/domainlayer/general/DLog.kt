@@ -4,16 +4,11 @@ import android.os.Bundle
 import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tmf.freespace.BaseApplication
-import java.io.File
-import java.time.format.DateTimeFormatter
 
 
 object DLog {
-    private const val TAG = "DLog"
     private const val MAX_LOG_LENGTH = 4000  //Max size of LogCat entry (break into multiple segments if longer)
 
-    private var supportLogFile: File? = null
-    private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
     private val crashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
 
 

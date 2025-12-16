@@ -47,7 +47,7 @@ class BillingClientWrapper(
     // Define the product IDs. These must match the IDs you create in the Google Play Console.
     object ProductIds {
         const val MONTHLY_200 = "monthly_200"  //Monthly subscription, $2.00
-        const val YEARLY_2000 = "yearly_2000"  //Yearly subscription, $20.00
+//        const val YEARLY_2000 = "yearly_2000"  //Yearly subscription, $20.00
         const val LIFETIME_6000 = "lifetime_6000"  //Lifetime subscription, $60.00
     }
 
