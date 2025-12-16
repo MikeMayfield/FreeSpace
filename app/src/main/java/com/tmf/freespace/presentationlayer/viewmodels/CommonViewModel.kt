@@ -7,6 +7,7 @@ import android.os.Environment
 import android.os.StatFs
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.billingclient.api.ProductDetails
 import com.tmf.freespace.BaseApplication
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
@@ -14,6 +15,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTIO
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState.SubscriptionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,9 +30,13 @@ class CommonViewModel() : ViewModel() {
 
     private val appContext = BaseApplication.instance.applicationContext
     private val mediaFileRepository = MediaFileRepository()
-    private val _uiState = MutableStateFlow(HomeScreenState())
 
+    private val _uiState = MutableStateFlow(HomeScreenState())
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
+
+    val products: StateFlow<Map<String, ProductDetails>> = BaseApplication.billingClient.productDetails
+
+
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -56,39 +62,54 @@ class CommonViewModel() : ViewModel() {
         BaseApplication.billingClient.launchPurchaseFlow(activity, productId)
     }
 
-    fun isSubscribed(): Boolean {
-        return PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.name
-    }
+    var isSubscribed: Boolean
+        get() = PropertyBag.getString(SUBSCRIPTION_STATUS) != SubscriptionStatus.NOT_SUBSCRIBED.name
+        set(value) {
+            PropertyBag.setString(SUBSCRIPTION_STATUS, if (value) SubscriptionStatus.SUBSCRIBED.name else SubscriptionStatus.NOT_SUBSCRIBED.name)
+            viewModelScope.launch {
+                populateHomeScreenState()
+            }
+        }
 
 
     //region Private methods
 
     private suspend fun periodicallyPopulateHomeScreenState() {
         while (true) {
-            val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
-            val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
-            val physicalMemorySize = physicalMemorySize()
-            val freeSpace = physicalFreeSpaceSize()
-            val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
-            val addedSize = mediaFileRepository.getBytesRecovered()
-            val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize * 10L) - (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize)  //10:1 media compression, minus amount already recovered
-            val expansionAvailableFromCompressingFreeSpace = freeSpace * 10L  //Assuming 10:1 total expansion from optimizing future media, as added
-            _uiState.value = _uiState.value.copy(
-                usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
-                availableNowMB = freeSpace / bytesToMB,
-                currentExpansionMB = addedSize / bytesToMB,
-                expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromCompressingFreeSpace)  / bytesToMB,
-                status = status(),
-                keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
-                physicalMB = physicalMemorySize / bytesToMB,
-            )
-            delay(10_000L)  //Poll state every n milli-seconds
+            populateHomeScreenState()
+            delay(5_000L)  //Poll state every n milli-seconds
         }
+    }
+
+    suspend fun populateHomeScreenState() {
+        BaseApplication.billingClient.querySubscriptionStatus() {
+            viewModelScope.launch {
+                populateHomeScreenState()  //Force isSubscribed state to update ASAP
+            }
+        }
+        val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
+        val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
+        val physicalMemorySize = physicalMemorySize()
+        val freeSpace = physicalFreeSpaceSize()
+        val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
+        val addedSize = mediaFileRepository.getBytesRecovered()
+        val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize * 10L) - (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize)  //10:1 media compression, minus amount already recovered
+        val expansionAvailableFromCompressingFreeSpace = freeSpace * 10L  //Assuming 10:1 total expansion from optimizing future media, as added
+        _uiState.value = _uiState.value.copy(
+            usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
+            availableNowMB = freeSpace / bytesToMB,
+            currentExpansionMB = addedSize / bytesToMB,
+            expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromCompressingFreeSpace)  / bytesToMB,
+            status = status(),
+            keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
+            physicalMB = physicalMemorySize / bytesToMB,
+            isSubscribed = isSubscribed
+        )
     }
 
     private suspend fun status(): String {
         val addedSize = mediaFileRepository.getBytesRecovered()
-        if (addedSize >= PropertyBag.getInt(TRIAL_GB_FREE) * 1_000_000_000L && !isSubscribed()) {
+        if (addedSize >= PropertyBag.getInt(TRIAL_GB_FREE) * 1_000_000_000L && !isSubscribed) {
             return "TRIAL LIMIT — Free expansion limit reached. Subscribe now and get almost unlimited memory"
         }
 
@@ -141,6 +162,7 @@ data class HomeScreenState(
     val status: String = "",  //Status, as display string
     val keepFreeOptionIdx: Int = 1,  //Index of keep free option selected by user
     val physicalMB: Long = 64_000L,  //Amount of physical space available
+    val isSubscribed: Boolean = false,
 )
 {
 

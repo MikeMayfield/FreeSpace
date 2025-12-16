@@ -23,7 +23,7 @@ import com.tmf.freespace.presentationlayer.ui.screens.WelcomeScreen
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 
 @Composable
-fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryViewModel: CommonViewModel, paddingValues: PaddingValues) {
+fun NavGraph(navController: NavHostController, startRoute: NavRoute, commonViewModel: CommonViewModel, paddingValues: PaddingValues) {
 
     //Overall navigation graph:
     //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> SubscriptionPromo -> Start -> AppSummary
@@ -57,9 +57,9 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, appSummaryV
 
         addStart(navController, this, paddingValues)
 
-        addAppSummaryScreen(navController, this, appSummaryViewModel, paddingValues)
+        addAppSummaryScreen(navController, this, commonViewModel, paddingValues)
 
-        addSubscriptionScreen(navController, this, paddingValues)
+        addSubscriptionScreen(navController, this, paddingValues, commonViewModel)
     }
 }
 
@@ -157,9 +157,10 @@ private fun addAppSummaryScreen(
 private fun addSubscriptionScreen(
     navController: NavHostController,
     navGraphBuilder: NavGraphBuilder,
-    paddingValues: PaddingValues
+    paddingValues: PaddingValues,
+    viewModel: CommonViewModel
 ) {
     navGraphBuilder.composable(route = NavRoute.Subscription.path) {
-        SubscriptionScreen(navController, paddingValues)
+        SubscriptionScreen(viewModel, navController, paddingValues)
     }
 }

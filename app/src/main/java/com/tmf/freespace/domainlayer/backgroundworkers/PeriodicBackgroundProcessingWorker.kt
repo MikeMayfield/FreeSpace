@@ -72,6 +72,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             PropertyBag.setBoolean(IS_IDLE, false)
 
             val mediaFileRepository = MediaFileRepository()
+            BaseApplication.billingClient.querySubscriptionStatus()
 
             do {
                 decrementRestartRequests()

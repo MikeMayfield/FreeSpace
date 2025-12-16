@@ -1,6 +1,7 @@
 package com.tmf.freespace.presentationlayer.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -49,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
@@ -85,7 +88,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
         ) {
             Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
 
-            if (screenHeightDp > shortScreenHeightDp || viewModel.isSubscribed()) {
+            if (screenHeightDp > shortScreenHeightDp || uiState.isSubscribed) {
                 Text(
                     text = "Ever-expanding space for all your treasured photos and videos",
                     style = MaterialTheme.typography.headlineSmall,
@@ -95,7 +98,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             }
 
             //Grow your memory promo section
-            if (!viewModel.isSubscribed()) {
+            if (!uiState.isSubscribed) {
                 if (screenHeightDp > shortScreenHeightDp) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -135,7 +138,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 uiState.availableNowMB,
                 uiState.currentExpansionMB,
                 uiState.expansionAvailableMB,
-                viewModel.isSubscribed(),
+                uiState.isSubscribed,
                 smallLayout
             )
 
@@ -176,15 +179,27 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
 
             Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes button to bottom
 
-            if (!viewModel.isSubscribed()) {
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            if (!uiState.isSubscribed) {
                 SubscribeButton(smallLayout) {
                     navController.navigate("subscription")
                 }
-
-                Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
             }
+            else {
+                val context = LocalContext.current
+                ManageSubscriptionButton() {
+                    try {
+                        val uri = "https://play.google.com/store/account/subscriptions".toUri()
+                        val webIntent = Intent(Intent.ACTION_VIEW, uri)
+                        context.startActivity(webIntent)
+                    } catch(e: Exception) {
+                        DLog.e(tag, "Failed to open subscription page: ${e.message}")
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
         }
     }
 }
@@ -214,10 +229,11 @@ fun StorageBar(usedMB: Long, availableNowMB: Long, currentExpansionMB: Long, fut
                 .weight((currentExpansionMB + 1f) / totalMemoryMB)
                 .fillMaxHeight()
                 .background(Color(0xFF02EA62)))
-            Box(modifier = Modifier  //Future expansion space available bar
+            Box(
+                modifier = Modifier  //Future expansion space available bar
                     .weight((futureExpansionMB + 1f) / totalMemoryMB)
-                .fillMaxHeight()
-                .background(Color(0xFF00C752)),
+                    .fillMaxHeight()
+                    .background(Color(0xFF00C752)),
             )
         }
 
@@ -373,10 +389,31 @@ fun SubscribeButton(smallLayout: Boolean, onClick: () -> Unit) {
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
+        }
+    }
+}
+
+@Composable
+fun ManageSubscriptionButton(onClick: () -> Unit) {
+    Button(
+        onClick = {
+            onClick()
+        },
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+        modifier = Modifier
+            .fillMaxWidth(.7f)
+            .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 4.dp)
+        ) {
             Text(
-                text = "$2.00",
+                text = "Manage Subscription",
                 color = Color.White,
-                fontSize = 12.sp
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
             )
         }
     }

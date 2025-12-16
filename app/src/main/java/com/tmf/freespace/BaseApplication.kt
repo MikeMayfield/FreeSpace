@@ -1,5 +1,6 @@
 package com.tmf.freespace
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.os.Debug
 import android.os.StrictMode
@@ -19,28 +20,43 @@ class BaseApplication: Application() {
         private const val TAG = "BaseApplication"
         lateinit var instance: BaseApplication
             private set
-        lateinit var firebaseAnalytics: FirebaseAnalytics
+        @SuppressLint("StaticFieldLeak")
+        lateinit var billingClient: BillingClientWrapper
+        var firebaseAnalytics: FirebaseAnalytics? = null
         lateinit var firebaseAuth: FirebaseAuth
         var firebaseUserID: String = "N/A"
-        val billingClient: BillingClientWrapper by lazy {  //Shared purchase support for subscriptions
-            BillingClientWrapper(instance, CoroutineScope(Dispatchers.Default))
-        }
     }
 
     override fun onCreate() {
         super.onCreate()
+
         instance = this
 
         enableStrictModeForDebugging()
 
-        //Initialize Firebase
-        FirebaseApp.initializeApp(this)
-        firebaseAnalytics = FirebaseAnalytics.getInstance(this)
+        //Init Firebase in background
         CoroutineScope(Dispatchers.Default).launch {
+            DLog.d(TAG, "Starting Firebase authentication")
+
+            //Initialize Firebase
+            FirebaseApp.initializeApp(this@BaseApplication.applicationContext)
+            firebaseAnalytics = FirebaseAnalytics.getInstance(this@BaseApplication.applicationContext)
             firebaseAuth = Firebase.auth
             signInAnonymously()
-            billingClient.  //Force billing client to preload products so they are ready for screens sooner
         }
+
+        //Start billing client in background
+        CoroutineScope(Dispatchers.IO).launch {
+            DLog.d(TAG, "Starting billing client")
+            billingClient = BillingClientWrapper(instance, CoroutineScope(Dispatchers.Default))
+            billingClient.startConnection()
+        }
+    }
+
+    override fun onTerminate() {
+        billingClient.endConnection()
+
+        super.onTerminate()
     }
 
     private fun enableStrictModeForDebugging() {
@@ -72,7 +88,7 @@ class BaseApplication: Application() {
                     val userId = user?.uid
                     if (userId != null) {  //Set the custom user ID for Firebase Analytics
                         firebaseUserID = userId
-                        firebaseAnalytics.setUserId(userId)
+                        firebaseAnalytics?.setUserId(userId)
                     }
                 } else {
                     //If sign in fails
