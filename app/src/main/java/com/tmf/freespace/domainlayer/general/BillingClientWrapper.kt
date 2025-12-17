@@ -135,6 +135,7 @@ class BillingClientWrapper(
      * Starts the connection to the Google Play Billing library
      */
     fun startConnection() {
+        DLog.i(tag, "Starting billing client")
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingResponseCode.OK) {
@@ -187,7 +188,7 @@ class BillingClientWrapper(
         }
         catch (e: Exception) {
             DLog.e(tag, "Failed to query product details: ${e.message}")
-}
+        }
     }
 
     /**
