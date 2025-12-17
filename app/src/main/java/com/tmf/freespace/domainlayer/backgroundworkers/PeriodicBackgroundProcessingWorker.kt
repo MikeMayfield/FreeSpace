@@ -72,7 +72,7 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
             PropertyBag.setBoolean(IS_IDLE, false)
 
             val mediaFileRepository = MediaFileRepository()
-            BaseApplication.billingClient.querySubscriptionStatus()  //Get current subscription status  NOTE: May not become valid until next processing period due to background processing delay
+            BaseApplication.billingClient?.querySubscriptionStatus()  //Get current subscription status  NOTE: May not become valid until next processing period due to background processing delay
 
             do {
                 decrementRestartRequests()

@@ -34,7 +34,7 @@ class CommonViewModel() : ViewModel() {
     private val _uiState = MutableStateFlow(HomeScreenState())
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
 
-    val products: StateFlow<Map<String, ProductDetails>> = BaseApplication.billingClient.productDetails
+    val products: StateFlow<Map<String, ProductDetails>> = BaseApplication.billingClient!!.productDetails
 
 
 
@@ -59,7 +59,7 @@ class CommonViewModel() : ViewModel() {
      * @param productId The ID of the product to purchase.
      */
     fun launchPurchaseFlow(activity: Activity, productId: String) {
-        BaseApplication.billingClient.launchPurchaseFlow(activity, productId)
+        BaseApplication.billingClient?.launchPurchaseFlow(activity, productId)
     }
 
     var isSubscribed: Boolean
@@ -82,7 +82,7 @@ class CommonViewModel() : ViewModel() {
     }
 
     suspend fun populateHomeScreenState() {
-        BaseApplication.billingClient.querySubscriptionStatus() {
+        BaseApplication.billingClient?.querySubscriptionStatus() {
             viewModelScope.launch {
                 populateHomeScreenState()  //Force isSubscribed state to update ASAP
             }

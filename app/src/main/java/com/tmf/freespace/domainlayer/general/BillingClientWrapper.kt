@@ -54,6 +54,7 @@ class BillingClientWrapper(
     //All product details, keyed by product ID.
     private val _productDetails = MutableStateFlow<Map<String, ProductDetails>>(emptyMap())
     val productDetails = _productDetails.asStateFlow()  //Public Flow of product details, reflecting any changes from Google Play
+    var billingIsStarted = false
 
     /**
      * Launches the billing flow for a given product ID.
@@ -135,11 +136,15 @@ class BillingClientWrapper(
      * Starts the connection to the Google Play Billing library
      */
     fun startConnection() {
+        DLog.i(tag, "billingClient.isReady: $billingIsStarted")
         DLog.i(tag, "Starting billing client")
+        if (billingIsStarted) return
+
         billingClient.startConnection(object : BillingClientStateListener {
             override fun onBillingSetupFinished(billingResult: BillingResult) {
                 if (billingResult.responseCode == BillingResponseCode.OK) {
                     DLog.i(tag, "BillingClient setup finished successfully.")
+                    billingIsStarted = true
                     // The client is ready. Query for products and existing purchases.
                     coroutineScope.launch {
                         try {
@@ -158,6 +163,7 @@ class BillingClientWrapper(
             override fun onBillingServiceDisconnected() {
                 // The auto-reconnect feature will handle this, but you can log it.
                 DLog.w(tag, "Billing service disconnected.")
+                billingIsStarted = false
             }
         })
     }
@@ -167,6 +173,9 @@ class BillingClientWrapper(
     }
 
     private suspend fun queryProductDetails() {
+        DLog.i(tag, "Querying product details")
+        if (!billingIsStarted) return
+
         try {
             val productList = listOf(
                 QueryProductDetailsParams.Product.newBuilder()
@@ -196,6 +205,8 @@ class BillingClientWrapper(
      * This is crucial for restoring purchases and verifying status on app or service start.
      */
     suspend fun querySubscriptionStatus(onStatusChanged: () -> Unit = {}) {
+        if (!billingIsStarted) return
+
         try {
             val subsParams = QueryPurchasesParams.newBuilder().setProductType(ProductType.SUBS).build()
             val inAppParams = QueryPurchasesParams.newBuilder().setProductType(ProductType.INAPP).build()

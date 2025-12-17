@@ -21,7 +21,7 @@ class BaseApplication: Application() {
         lateinit var instance: BaseApplication
             private set
         @SuppressLint("StaticFieldLeak")
-        lateinit var billingClient: BillingClientWrapper
+        var billingClient: BillingClientWrapper? = null
         var firebaseAnalytics: FirebaseAnalytics? = null
         lateinit var firebaseAuth: FirebaseAuth
         var firebaseUserID: String = "N/A"
@@ -49,12 +49,12 @@ class BaseApplication: Application() {
         CoroutineScope(Dispatchers.IO).launch {
             DLog.d(TAG, "Starting billing client")
             billingClient = BillingClientWrapper(instance, CoroutineScope(Dispatchers.Default))
-            billingClient.startConnection()
+            billingClient!!.startConnection()
         }
     }
 
     override fun onTerminate() {
-        billingClient.endConnection()
+        billingClient?.endConnection()
 
         super.onTerminate()
     }
