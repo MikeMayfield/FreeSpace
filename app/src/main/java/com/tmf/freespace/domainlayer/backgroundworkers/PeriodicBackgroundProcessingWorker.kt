@@ -5,6 +5,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ForegroundInfo
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -33,6 +34,10 @@ import kotlin.coroutines.cancellation.CancellationException
 class PeriodicBackgroundProcessingWorker(val appContext: Context, params: WorkerParameters): CoroutineWorker(appContext, params) {
     private val tag = "PeriodicBackgroundProcessingWorker"
     private var processingStartTimeMs = 0L
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return ForegroundWorkerUtils().createForegroundInfo(this, appContext)
+    }
 
     /**
      * Worker: Start of periodic processing of background compression tasks
@@ -63,11 +68,11 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
 
             currentlyRunning = true
 
-            //Run worker in foreground service to allow to run for up to 6 hours
-            if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
-                DLog.e(tag, "Failed to start periodic background processing as foreground service")
-                return stopRunningWithResult(Result.failure())
-            }
+//            //Run worker in foreground service to allow to run for up to 6 hours
+//            if (!ForegroundWorkerUtils().runWorkerAsForegroundService(this, appContext)) {
+//                DLog.e(tag, "Failed to start periodic background processing as foreground service")
+//                return stopRunningWithResult(Result.failure())
+//            }
 
             PropertyBag.setBoolean(IS_IDLE, false)
 

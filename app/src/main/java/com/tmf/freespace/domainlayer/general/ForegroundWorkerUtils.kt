@@ -1,11 +1,10 @@
 package com.tmf.freespace.domainlayer.general
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING
+import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -40,8 +39,7 @@ class ForegroundWorkerUtils {
      * Create the ForegroundInfo for this Worker.
      * This involves creating a notification that will be shown to the user.
      */
-    @SuppressLint("InlinedApi")
-    private fun createForegroundInfo(worker: CoroutineWorker, context: Context): ForegroundInfo {
+    fun createForegroundInfo(worker: CoroutineWorker, context: Context): ForegroundInfo {
         val title = context.getString(R.string.file_optimization_notification_title) // Define in strings.xml
         val cancel = context.getString(R.string.file_optimization_notification_cancel) // Define in strings.xml
         // This PendingIntent can be used to cancel the worker
@@ -68,7 +66,18 @@ class ForegroundWorkerUtils {
         // However, WorkManager often handles this. If you encounter issues on API 31+,
         // you might need to look into this more.
         // The foreground service type for dataSync or similar might be appropriate if explicitly needed.
-        val foregroundServiceType = FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING or FOREGROUND_SERVICE_TYPE_DATA_SYNC // Or your relevant type
+        val foregroundServiceType = when {
+            // FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING is available from Android 15 (API 35)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM -> {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROCESSING
+            }
+            // For older versions that still require a type (Android 12+), fallback to dataSync.
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            }
+            // No type is needed for versions below Android 12.
+            else -> 0
+        }
 
         return ForegroundInfo(notificationID, notification, foregroundServiceType)
     }
@@ -87,5 +96,4 @@ class ForegroundWorkerUtils {
         val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
-
 }
