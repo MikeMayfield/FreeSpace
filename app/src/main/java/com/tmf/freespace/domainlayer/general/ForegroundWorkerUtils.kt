@@ -12,7 +12,7 @@ import androidx.work.WorkManager
 import com.tmf.freespace.R
 
 class ForegroundWorkerUtils {
-    private val tag = "ForegroundWorkerUtils"
+//    private val tag = "ForegroundWorkerUtils"
 
     // Notification constants
     private val notificationID = 1001 // Unique ID for the notification
