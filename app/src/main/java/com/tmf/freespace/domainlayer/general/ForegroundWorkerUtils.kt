@@ -19,23 +19,6 @@ class ForegroundWorkerUtils {
     private val notificationChannelID = "FileOptimizationChannel" // Unique channel ID
 
     /**
-     * Set the worker as a ForeGround service to allow it to run up to 6 hours in the background
-     *
-     * @return TRUE if processed successfully, FALSE if not
-     */
-    suspend fun runWorkerAsForegroundService(worker: CoroutineWorker, context: Context): Boolean {
-        val foregroundInfo = createForegroundInfo(worker, context)
-        try {
-            worker.setForeground(foregroundInfo) // Use suspend version for CoroutineWorker
-//            DLog.d(tag, "Foreground service started for worker ${worker.id}")
-            return true
-        } catch (e: IllegalStateException) {
-            DLog.e(tag, "Error setting foreground service. Does the app have FOREGROUND_SERVICE permission? Or is it running on an older API without appropriate service type?", e)
-            return false
-        }
-    }
-
-    /**
      * Create the ForegroundInfo for this Worker.
      * This involves creating a notification that will be shown to the user.
      */
