@@ -136,7 +136,6 @@ class BillingClientWrapper(
      * Starts the connection to the Google Play Billing library
      */
     fun startConnection() {
-        DLog.i(tag, "billingClient.isReady: $billingIsStarted")
         DLog.i(tag, "Starting billing client")
         if (billingIsStarted) return
 
