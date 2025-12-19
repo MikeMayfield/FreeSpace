@@ -15,6 +15,7 @@ import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcess
 import com.tmf.freespace.domainlayer.compression.Compressor
 import com.tmf.freespace.domainlayer.general.DLog
 import java.io.File
+import kotlin.math.max
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -38,7 +39,7 @@ class FileOptimizationWorker() {
         var bytesToRecover = bytesToRecover()  //Optimal bytes is based on space needed to reach system free space goal (see Preferences, typically 5GB), but not limited when processing older files
         val mediaStoreUtil = MediaStoreUtil()
 
-        //Repeat while not over FREE plan limit and not enough space recovered. Allow as many old, high compression files as available
+        //Repeat while less than free space goal is available
         var fileToCompress = getFileToCompress()
         if (fileToCompress == null) {
             DLog.v(tag, "No files need optimization")
@@ -84,19 +85,16 @@ class FileOptimizationWorker() {
      * Get the amount of memory to recover to reach free space goal
      */
     private suspend fun bytesToRecover(): Long {
-        //If trial, always try to recover full trial amount remaining to emphasize value of product during trial
-        if (PropertyBag.getString(PropertyBag.SUBSCRIPTION_STATUS) == "NOT_SUBSCRIBED") {
-            val trialFreeBytesToRecover = PropertyBag.getLong(TRIAL_GB_FREE) * 1_000_000_000 - getBytesRecovered()
-            if (trialFreeBytesToRecover > 0) {
-                return trialFreeBytesToRecover
-            }
-        }
+        //Get goal of space to leave free at all times (at least TRIAL_GB_FREE free, even if subscribed and min set to 2 or 5GB)
+        val trialFreeBytesToRecover = PropertyBag.getLong(TRIAL_GB_FREE) * 1_000_000_000L - getBytesRecovered()  //Always recover at least 10GB trial amount
 
-        //Get goal of space to leave free at all times
         val statFs = StatFs(Environment.getExternalStorageDirectory().path)
         val bytesAvailable = statFs.blockSizeLong * statFs.availableBlocksLong
-        val minFreeSpaceGoalMB = PropertyBag.getLong(MIN_FREE_SPACE_GOAL_MB)
-        return minFreeSpaceGoalMB * 1_000_000L - bytesAvailable
+        val subscribedFreeBytesToRecover = if (PropertyBag.getString(PropertyBag.SUBSCRIPTION_STATUS) == "NOT_SUBSCRIBED")
+            0L
+            else (PropertyBag.getLong(MIN_FREE_SPACE_GOAL_MB) * 1_000_000L - bytesAvailable)
+
+        return max(max(trialFreeBytesToRecover, subscribedFreeBytesToRecover), 0L)  //Recover the largest non-subscribed or subscribed free space goal
     }
 
     private suspend fun getFileToCompress() : MediaFile? {
