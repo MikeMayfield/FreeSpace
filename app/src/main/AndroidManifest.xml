@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
-    <!-- Need MANAGE_EXTERNAL_STORAGE to allow us to backup and optimize media for all apps (e.g. photos/videos)
+    <!-- Need MANAGE_EXTERNAL_STORAGE permission to allow us to backup and optimize media for all apps (e.g. photos/videos)
         This requires approval from Google as a backup/file maintenance app.
         See https://developer.android.com/training/data-storage/manage-all-files
         After installing app for debugging, execute: adb shell appops set dash-dash uid com.tmf.freespace MANAGE_EXTERNAL_STORAGE allow  (replace dash-dash-space with two dashes)
     -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
 
     <!-- Permissions for accessing media files from MediaStore -->
-    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:ignore="PhotoAndVideoPolicy,SelectedPhotoAccess" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:ignore="PhotoAndVideoPolicy,SelectedPhotoAccess" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:ignore="PhotoAndVideoPolicy" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"
+        tools:ignore="PhotoAndVideoPolicy" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="SelectedPhotoAccess" />
 
     <!-- Permissions for launching foreground service with our WorkManager task to optimize media in the background -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"
@@ -21,7 +25,8 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.android.vending.BILLING" />
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:ignore="AdvertisingIdPolicy" />
 
 
     <application

@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Environment
 import androidx.core.content.ContextCompat
+
 
 class Permissions {
 
@@ -14,6 +16,11 @@ class Permissions {
                 return false
             }
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return (Environment.isExternalStorageManager())
+        }
+
         return true  //NOTE Change to FALSE to force UI to always start on first screen.
     }
 
