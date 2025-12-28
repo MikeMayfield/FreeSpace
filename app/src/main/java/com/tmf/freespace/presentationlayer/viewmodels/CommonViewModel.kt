@@ -89,7 +89,16 @@ class CommonViewModel() : ViewModel() {
         }
         val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
         val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
-        val physicalMemorySize = physicalMemorySize()
+        val actualPhysicalMemorySize = physicalMemorySize()
+        val physicalMemorySize = when {
+            actualPhysicalMemorySize < 35_000_000_000L -> 32_000_000_000L
+            actualPhysicalMemorySize < 65_000_000_000L -> 64_000_000_000L
+            actualPhysicalMemorySize < 130_000_000_000L -> 128_000_000_000L
+            actualPhysicalMemorySize < 260_000_000_000L -> 256_000_000_000L
+            actualPhysicalMemorySize < 520_000_000_000L -> 512_000_000_000L
+            actualPhysicalMemorySize < 1_048_576_000_000L -> 1_024_000_000_000L
+            else -> 2_048_000_000L
+        }
         val freeSpace = physicalFreeSpaceSize()
         val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
         val addedSize = mediaFileRepository.getBytesRecovered()
@@ -132,7 +141,7 @@ class CommonViewModel() : ViewModel() {
         val totalBlocks = stat.blockCountLong
         val blockSize = stat.blockSizeLong
 
-        return  totalBlocks * blockSize
+        return totalBlocks * blockSize
     }
 
     private fun physicalFreeSpaceSize(): Long {
