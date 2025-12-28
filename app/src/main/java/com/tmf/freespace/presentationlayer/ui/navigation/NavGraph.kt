@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tmf.freespace.presentationlayer.ui.screens.AppSummaryScreen
 import com.tmf.freespace.presentationlayer.ui.screens.CloudBackupScreen
+import com.tmf.freespace.presentationlayer.ui.screens.HowDoesItWorkScreen
 import com.tmf.freespace.presentationlayer.ui.screens.LicenseAgreementScreen
 import com.tmf.freespace.presentationlayer.ui.screens.LicenseScreen
 import com.tmf.freespace.presentationlayer.ui.screens.PermissionsScreen
@@ -43,6 +44,8 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, commonViewM
         ) {
         addWelcomeScreen(navController, this, paddingValues)
 
+        addHowDoesItWorkScreen(navController, this, paddingValues)
+
         addSetItForgetIt(navController, this, paddingValues)
 
         addCloudBackup(navController, this, paddingValues)
@@ -70,6 +73,16 @@ private fun addWelcomeScreen(
 ) {
     navGraphBuilder.composable(route = NavRoute.Welcome.path) {
         WelcomeScreen(navController, paddingValues)
+    }
+}
+
+private fun addHowDoesItWorkScreen(
+    navController: NavHostController,
+    navGraphBuilder: NavGraphBuilder,
+    paddingValues: PaddingValues
+) {
+    navGraphBuilder.composable(route = NavRoute.HowDoesItWork.path) {
+        HowDoesItWorkScreen(navController, paddingValues)
     }
 }
 

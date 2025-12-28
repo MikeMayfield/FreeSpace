@@ -4,6 +4,7 @@ package com.tmf.freespace.presentationlayer.ui.navigation
 sealed class NavRoute(val path: String) {
 
     object Welcome: NavRoute("welcome")
+    object HowDoesItWork: NavRoute("howDoesItWork")
     object SetItForgetIt: NavRoute("setItForgetIt")
     object CloudBackup: NavRoute("cloudBackup")
     object License: NavRoute("license")

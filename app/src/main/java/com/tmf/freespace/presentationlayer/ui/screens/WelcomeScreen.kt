@@ -24,12 +24,11 @@ fun WelcomeScreen(navController: NavHostController, paddingValues: PaddingValues
             imageID = R.drawable.welcome_screen,
             title = "WELCOME TO FREESPACE",
             bodyHtml =
-                "Picture this: you’re on that once-in-a-lifetime trip. Every view is breathtaking, every moment worth capturing — but suddenly, your phone flashes that dreaded message: “<b>Storage Full</b>.” Now you’re stuck deleting old memories just to make room for new ones.<br><br>" +
-                        "Not anymore.<br><br>" +
-                        "With FreeSpace, you’ll always have room for every photo, every video, every memory. No more deleting. No more “Storage Full” alerts. Just endless space for the moments that matter most.<br>",
+                "Turn your phone into a powerful, private memory machine. Store over <b>1,000GB of photos and videos on your 128GB phone</b> and capture life without limits.<br><br>It’s like having a phone that’s bigger on the inside than the outside. Take more photos, record more videos, and save every moment without ever running out of space.<br><br>" +
+                "Put privacy first and keep your photos on your phone at all times. <b>No cloud. No servers. No data collection.</b> You stay in control, your memories stay yours, and your phone finally keeps up with the way you live and create.",
             paddingValues = paddingValues,
         ) {
-            navController.navigate(NavRoute.SetItForgetIt.path)
+            navController.navigate(NavRoute.HowDoesItWork.path)
         }
     }
 }

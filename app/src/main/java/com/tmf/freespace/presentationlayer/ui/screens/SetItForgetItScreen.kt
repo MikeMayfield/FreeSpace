@@ -12,8 +12,10 @@ fun SetItForgetItScreen(navController: NavHostController, paddingValues: Padding
     GenericTextBody(
         imageID = R.drawable.set_it_and_forget_it,
         title = "SET IT AND FORGET IT",
-        bodyHtml = "FreeSpace works the way every app <em>should</em> — simple, effortless, and totally hands-off. Just set it up once and it takes care of the rest. Whenever your phone starts running low on memory, FreeSpace quietly steps in to make more room for your photos and videos.<br><br>" +
-                "It’s kind of like magic — making your phone feel bigger on the inside than it is on the outside and removing the worry.",
+        bodyHtml =
+            "FreeSpace works the way every app <em>should</em> — simple, effortless, and totally hands-off. Just set it up once and it takes care of everything for you.<br><br>" +
+            "Whenever your phone starts running low on memory, FreeSpace quietly steps in to make more room for your photos and videos.<br><br>" +
+            "Go ahead, take all the photos and videos you want. You've got all the memory you need. You've got FreeSpace.",
         navButtonText = "NEXT",
         paddingValues = paddingValues,
     ) {
