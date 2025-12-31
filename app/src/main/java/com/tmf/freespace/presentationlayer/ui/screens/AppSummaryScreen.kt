@@ -94,7 +94,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Grow your ${formatter.format(uiState.physicalMB / mbToGb)} GB of physical memory to ${formatter.format(uiState.expansionAvailableMB / 1000L)} GB with FreeSpace Max")
+                        append("Grow your ${formatter.format(uiState.physicalMB / mbToGb)} GB of built-in memory to ${formatter.format(uiState.expansionAvailableMB / 1000L)} GB with FreeSpace Max")
                     }
                 },
                 fontSize = 24.sp,
@@ -236,11 +236,11 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
 
         StorageDetailItem(
             color = Color(0xFFFA79F6),
-            storageAmount = "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB of ${formatter.format(physicalMB / mbToGb)} GB physical memory used",
+            storageAmount = "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB of ${formatter.format(physicalMB / mbToGb)} GB built-in memory used",
             description = if (uncompressedMB < physicalMB)
-                "Your physical memory still has room for more photos and videos"
+                "Your built-in memory still has room for more photos and videos"
             else
-                "All of your physical memory has been used, but will automatically expand with FreeSpace",
+                "All of your built-in memory has been used, but will automatically expand with FreeSpace",
             smallLayout
         )
 
@@ -261,7 +261,7 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
 
         StorageDetailItem(
             color = Color(0xFFACFACC),
-            storageAmount = "${formatter.format(availableNowMB / mbToGb)} GB of physical free memory currently available",
+            storageAmount = "${formatter.format(availableNowMB / mbToGb)} GB of built-in free memory currently available",
             description = "More free memory will be added when needed",
             smallLayout
         )
