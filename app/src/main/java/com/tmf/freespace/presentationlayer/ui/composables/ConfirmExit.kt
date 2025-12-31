@@ -24,7 +24,7 @@ fun ConfirmExit(navController: NavHostController, paddingValues: PaddingValues, 
 
     if (showExitDialog) {
         AlertDialog(
-            onDismissRequest = { showExitDialog = false },
+            onDismissRequest = { showExitDialog = true },
             title = { Text("Confirm Exit") },
             text = { Text("Are you sure you want to exit FreeSpace?") },
             confirmButton = {
