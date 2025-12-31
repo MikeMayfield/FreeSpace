@@ -62,12 +62,12 @@ class BillingClientWrapper(
      * @param activity The activity to launch the billing flow from.
      * @param productId The ID of the product to purchase.
      */
-    fun launchPurchaseFlow(activity: Activity, productId: String) {
+    fun launchPurchaseFlow(activity: Activity, productId: String): Boolean {
         try {
             val productDetails = _productDetails.value[productId]
                 ?: run {
                     DLog.e(tag, "Cannot launch purchase flow, product details not found for $productId")
-                    return
+                    return false
                 }
 
             val offerToken = productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
@@ -75,7 +75,7 @@ class BillingClientWrapper(
 
             if (isSubscription && offerToken == null) {
                 DLog.e(tag, "Cannot launch subscription, no valid offer token found for $productId")
-                return
+                return false
             }
 
             val productDetailsParams = BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -95,7 +95,10 @@ class BillingClientWrapper(
         }
         catch (e: Exception) {
             DLog.e(tag, "Failed to launch purchase flow: ${e.message}")
+            return false
         }
+
+        return true
     }
 
 

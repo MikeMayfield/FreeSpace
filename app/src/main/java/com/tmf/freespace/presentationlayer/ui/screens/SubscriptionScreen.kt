@@ -1,6 +1,7 @@
 package com.tmf.freespace.presentationlayer.ui.screens
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -47,7 +48,9 @@ private fun handleSubscription(
     navController: NavHostController,
 ): () -> Unit = {
     // Launch the purchase flow for the $2/mon subscription
-    viewModel.launchPurchaseFlow(activity, ProductIds.MONTHLY_200)  //TODO *** Use ViewModel for launch
+    if (!viewModel.launchPurchaseFlow(activity, ProductIds.MONTHLY_200)) {
+        Toast.makeText(activity, "Unable to process your subscription request. You may not have Internet access or your phone may not have Google Play Services installed.", Toast.LENGTH_LONG).show()
+    }
 
     // The result of the purchase will be handled by the PurchasesUpdatedListener.
     // We no longer need to manually set the subscription status here.

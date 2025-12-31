@@ -60,8 +60,8 @@ class CommonViewModel() : ViewModel() {
      * @param activity The activity to launch the billing flow from.
      * @param productId The ID of the product to purchase.
      */
-    fun launchPurchaseFlow(activity: Activity, productId: String) {
-        BaseApplication.billingClient?.launchPurchaseFlow(activity, productId)
+    fun launchPurchaseFlow(activity: Activity, productId: String): Boolean {
+        return BaseApplication.billingClient?.launchPurchaseFlow(activity, productId) ?: false
     }
 
     var isSubscribed: Boolean
