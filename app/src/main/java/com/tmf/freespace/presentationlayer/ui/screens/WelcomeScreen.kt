@@ -24,8 +24,9 @@ fun WelcomeScreen(navController: NavHostController, paddingValues: PaddingValues
             imageID = R.drawable.welcome_screen,
             title = "WELCOME TO FREESPACE",
             bodyHtml =
-                "Turn your phone into a powerful, private memory machine. Store over <b>1,000GB of photos and videos on your 128GB phone</b> and capture life without limits.<br><br>It’s like having a phone that’s bigger on the inside than the outside. Take more photos, record more videos, and save every moment without ever running out of space.<br><br>" +
-                "Put privacy first and keep your photos on your phone at all times. <b>No cloud. No servers. No data collection.</b> You stay in control, your memories stay yours, and your phone finally keeps up with the way you live and create.",
+                "Now your phone can hold an almost unlimited number photos and videos. Store over <b>1,000 GB of photos and videos on a 128 GB phone</b> and capture life without limits.<br><br>" +
+                "It's like having a phone that's bigger on the inside than the outside. Take more photos, record more videos, and save every moment without ever running out of space.<br><br>" +
+                "Put privacy first and keep your photos on your phone at all times. <b>No cloud. No servers. No data collection. No ads.</b> You stay in control, your memories stay yours, and your phone finally keeps up with the way you live and create.",
             paddingValues = paddingValues,
         ) {
             navController.navigate(NavRoute.HowDoesItWork.path)

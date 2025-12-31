@@ -1,10 +1,11 @@
 package com.tmf.freespace.presentationlayer.viewmodels
 
 import android.app.Activity
+import android.app.usage.StorageStatsManager
+import android.content.Context
 import android.content.Context.BATTERY_SERVICE
 import android.os.BatteryManager
-import android.os.Environment
-import android.os.StatFs
+import android.os.storage.StorageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.billingclient.api.ProductDetails
@@ -15,6 +16,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag.KEEP_FREE_OPTIO
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.TRIAL_GB_FREE
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
+import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState.SubscriptionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -23,9 +25,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 
 class CommonViewModel() : ViewModel() {
+    val tag = "CommonViewModel"
     val bytesToMB = 1_000_000L
 
     private val appContext = BaseApplication.instance.applicationContext
@@ -35,8 +39,6 @@ class CommonViewModel() : ViewModel() {
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
 
     val products: StateFlow<Map<String, ProductDetails>> = BaseApplication.billingClient!!.productDetails
-
-
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -87,28 +89,19 @@ class CommonViewModel() : ViewModel() {
                 populateHomeScreenState()  //Force isSubscribed state to update ASAP
             }
         }
+
         val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
         val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
-        val actualPhysicalMemorySize = physicalMemorySize()
-        val physicalMemorySize = when {
-            actualPhysicalMemorySize < 35_000_000_000L -> 32_000_000_000L
-            actualPhysicalMemorySize < 65_000_000_000L -> 64_000_000_000L
-            actualPhysicalMemorySize < 130_000_000_000L -> 128_000_000_000L
-            actualPhysicalMemorySize < 260_000_000_000L -> 256_000_000_000L
-            actualPhysicalMemorySize < 520_000_000_000L -> 512_000_000_000L
-            actualPhysicalMemorySize < 1_048_576_000_000L -> 1_024_000_000_000L
-            else -> 2_048_000_000L
-        }
-        val freeSpace = physicalFreeSpaceSize()
-        val appsEtcSize = physicalMemorySize - freeSpace - uncompressedPhotosAndVideosSize
-        val addedSize = mediaFileRepository.getBytesRecovered()
-        val expansionAvailableFromCompression = (uncompressedPhotosAndVideosSize * 10L) - (uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize)  //10:1 media compression, minus amount already recovered
-        val expansionAvailableFromCompressingFreeSpace = freeSpace * 10L  //Assuming 10:1 total expansion from optimizing future media, as added
+        val physicalMemorySize = physicalMemorySize()
+        val freeSpace = freeMemorySize()
+        val appsEtcSize = physicalMemorySize - freeSpace - compressedPhotosAndVideosSize
+        val bytesRecovered = mediaFileRepository.getBytesRecovered()
+        val expansionAvailableMB = (physicalMemorySize - appsEtcSize) * 10L - compressedPhotosAndVideosSize
         _uiState.value = _uiState.value.copy(
-            usedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
+            uncompressedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
             availableNowMB = freeSpace / bytesToMB,
-            currentExpansionMB = addedSize / bytesToMB,
-            expansionAvailableMB = (expansionAvailableFromCompression + expansionAvailableFromCompressingFreeSpace)  / bytesToMB,
+            currentExpansionMB = bytesRecovered / bytesToMB,
+            expansionAvailableMB = expansionAvailableMB / bytesToMB,
             status = status(),
             keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
             physicalMB = physicalMemorySize / bytesToMB,
@@ -136,20 +129,63 @@ class CommonViewModel() : ViewModel() {
         }
     }
 
-    private fun physicalMemorySize(): Long {
-        val stat = StatFs(Environment.getExternalStorageDirectory().path)
-        val totalBlocks = stat.blockCountLong
-        val blockSize = stat.blockSizeLong
+    /**
+     * Returns the total amount of storage on the primary disk, adjusted to standardized memory sizes (e.g. 128GB, 256GB, etc.)
+     */
+    fun physicalMemorySize(): Long {
+        val storageManager = appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+        val statsManager = appContext.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
 
-        return totalBlocks * blockSize
+        var actualPhysicalMemorySize = 0L
+
+        for (volume in storageManager.storageVolumes) {
+            try {
+                if (volume.isPrimary) {
+                    val uuid = volume.uuid?.let { UUID.fromString(it) } ?: StorageManager.UUID_DEFAULT
+                    actualPhysicalMemorySize = statsManager.getTotalBytes(uuid)
+                    break
+                }
+            }
+            catch (e: Exception) {
+                DLog.e(tag, "Error in physicalMemorySize: ${e.message}")
+            }
+        }
+
+        //Standardize memory sizes to 1GB, 2GB, 4GB, 8GB, 16GB, etc.)
+        return when {
+            actualPhysicalMemorySize % 1_000_000_000L == 0L -> actualPhysicalMemorySize  //Use actual size if it's a multiple of 1GB
+            actualPhysicalMemorySize < 10_000_000_000L -> actualPhysicalMemorySize
+            actualPhysicalMemorySize < 18_000_000_000L -> 16_000_000_000L
+            actualPhysicalMemorySize < 35_000_000_000L -> 32_000_000_000L
+            actualPhysicalMemorySize < 65_000_000_000L -> 64_000_000_000L
+            actualPhysicalMemorySize < 130_000_000_000L -> 128_000_000_000L
+            actualPhysicalMemorySize < 260_000_000_000L -> 256_000_000_000L
+            actualPhysicalMemorySize < 520_000_000_000L -> 512_000_000_000L
+            actualPhysicalMemorySize < 1_048_576_000_000L -> 1_024_000_000_000L
+            else -> 2_048_000_000L
+        }
     }
 
-    private fun physicalFreeSpaceSize(): Long {
-        val stat = StatFs(Environment.getExternalStorageDirectory().path)
-        val availableBlocks = stat.availableBlocksLong
-        val blockSize = stat.blockSizeLong
+    /*
+     * Returns the amount of free space on the primary disk
+     */
+    fun freeMemorySize(): Long {
+        val storageManager = appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+        val statsManager = appContext.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
 
-        return availableBlocks * blockSize
+        for (volume in storageManager.storageVolumes) {
+            try {
+                if (volume.isPrimary) {
+                    val uuid = volume.uuid?.let { UUID.fromString(it) } ?: StorageManager.UUID_DEFAULT
+                    return statsManager.getFreeBytes(uuid)
+                }
+            }
+            catch (e: Exception) {
+                DLog.e(tag, "Error in freeMemorySize: ${e.message}")
+            }
+        }
+
+        return 0L
     }
 
     private fun batteryLow(): Boolean {
@@ -163,7 +199,7 @@ class CommonViewModel() : ViewModel() {
 
 
 data class HomeScreenState(
-    val usedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)
+    val uncompressedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)
     val availableNowMB: Long = 0L,  //Amount of space available now
     val currentExpansionMB: Long = 0L,  //Amount of space already added by FreeSpace
     val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion
