@@ -96,7 +96,8 @@ class CommonViewModel() : ViewModel() {
         val freeSpace = freeMemorySize()
         val appsEtcSize = physicalMemorySize - freeSpace - compressedPhotosAndVideosSize
         val bytesRecovered = mediaFileRepository.getBytesRecovered()
-        val expansionAvailableMB = (physicalMemorySize - appsEtcSize) * 10L - compressedPhotosAndVideosSize
+        val alreadyExpandedMB = uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize
+        val expansionAvailableMB = (freeSpace * 10L) + (alreadyExpandedMB * 5L)
         _uiState.value = _uiState.value.copy(
             uncompressedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
             availableNowMB = freeSpace / bytesToMB,
