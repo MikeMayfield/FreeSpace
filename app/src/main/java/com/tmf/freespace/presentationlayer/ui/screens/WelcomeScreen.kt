@@ -19,7 +19,7 @@ fun WelcomeScreen(navController: NavHostController, paddingValues: PaddingValues
         navController.navigate(NavRoute.AppSummary.path)
     }
 
-    ConfirmExit(navController, paddingValues) {
+    ConfirmExit() {
         GenericTextBody(
             imageID = R.drawable.welcome_screen,
             title = "WELCOME TO FREESPACE",

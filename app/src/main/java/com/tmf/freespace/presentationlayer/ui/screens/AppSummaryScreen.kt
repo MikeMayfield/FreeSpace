@@ -76,7 +76,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
     val smallLayout = screenWidthDp < 370.dp
 
-    ConfirmExit(navController, paddingValues) {
+    ConfirmExit() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
