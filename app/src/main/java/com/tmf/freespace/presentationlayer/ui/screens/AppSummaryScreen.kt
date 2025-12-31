@@ -231,7 +231,6 @@ fun StorageBar(uncompressedMB: Long, expandedMB: Long, availableNowMB: Long, fut
 fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: Long, availableNowMB: Long = 0, futureExpansionMB: Long, isSubscribed: Boolean, smallLayout: Boolean) {
     val mbToGb = 1000L
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
-    val totalExpansionMB = expandedMB + futureExpansionMB
 
     Column(verticalArrangement = Arrangement.spacedBy(if (smallLayout) 12.dp else 24.dp)) {
 
