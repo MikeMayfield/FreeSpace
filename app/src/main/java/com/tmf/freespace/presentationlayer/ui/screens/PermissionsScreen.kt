@@ -62,7 +62,7 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
         title = "PERMISSIONS",
         bodyHtml =
             "We need your permission to work for you.<br><br>" +
-                    "FreeSpace works a lot like your cloud backup app — It needs access to all your photos and videos so it can safely optimize older ones to make room for new memories. It also needs to display a small icon on the notifications bar when processing in the background to give you more control.<br><br>" +
+                    "FreeSpace works a lot like your regular backup app — It needs access to all your photos and videos so it can safely optimize older ones to make room for new memories. It also needs to display a small icon on the notifications bar when processing in the background to give you more control.<br><br>" +
                     "On the next screens, tap “Allow” or “Allow All” to confirm your permission. This access is required for FreeSpace to create more memory for you.",
         paddingValues = paddingValues,
     ) {
