@@ -50,6 +50,7 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, commonViewM
 
         addCloudBackup(navController, this, paddingValues)
 
+
         addLicense(navController, this, paddingValues)
 
         addLicenseAgreement(navController, this, paddingValues)

@@ -29,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -236,7 +237,7 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
 
         StorageDetailItem(
             color = Color(0xFFFA79F6),
-            storageAmount = "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB of ${formatter.format(physicalMB / mbToGb)} GB built-in memory used",
+            storageAmount = "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB of ${formatter.format(physicalMB / mbToGb)} GB built-in SD memory used",
             description = if (uncompressedMB < physicalMB)
                 "Your built-in memory still has room for more photos and videos"
             else
@@ -245,9 +246,9 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
         )
 
         val storageAmountDetail = if (expandedMB < mbToGb)
-                "${formatter.format(expandedMB)} MB of memory added by FreeSpace" + if (isSubscribed) " Max" else ""
+                "${formatter.format(expandedMB)} MB more SD memory was added by FreeSpace" + if (isSubscribed) " Max" else ""
             else
-                "${formatter.format(expandedMB / mbToGb)} GB of memory added by FreeSpace" + if (isSubscribed) " Max" else ""
+                "${formatter.format(expandedMB / mbToGb)} GB more SD memory was added by FreeSpace" + if (isSubscribed) " Max" else ""
         val description = if (uncompressedMB < physicalMB)
             "FreeSpace Lite will add up to 10 GB"
         else
@@ -261,17 +262,17 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
 
         StorageDetailItem(
             color = Color(0xFFACFACC),
-            storageAmount = "${formatter.format(availableNowMB / mbToGb)} GB of built-in free memory currently available",
-            description = "More free memory will be added when needed",
+            storageAmount = "${formatter.format(availableNowMB / mbToGb)} GB of built-in SD memory is currently free",
+            description = "More free memory will be added when needed to store more photos and videos",
             smallLayout
         )
 
-        val storageAmountGB  = (futureExpansionMB / mbToGb) - PropertyBag.getLong(PropertyBag.TRIAL_GB_FREE)  //Excludes trial space from total expansion so that totals add up
+        val storageAmountGB  = (futureExpansionMB - expandedMB) / mbToGb  //Excludes trial space from total expansion so that totals add up
         StorageDetailItem(
             color = Color(0xFF00C752),
-            storageAmount = "${formatter.format(storageAmountGB)} GB more memory can be added with FreeSpace Max",
+            storageAmount = "${formatter.format(storageAmountGB)} GB more SD memory can be added with FreeSpace Max",
             description = if (isSubscribed) "Relax - With FreeSpace Max you have all the memory you need for all your favorite photos and videos"
-                else "Subscribe now and stop worrying about running out of memory forever",
+                else "Subscribe to FreeSpace Max now and stop worrying about running out of memory forever",
             smallLayout
         )
     }
@@ -295,7 +296,7 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String, 
                 text = storageAmount,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = if (smallLayout) 12.sp else 16.sp,
-                color = Color.Black
+                color = Color(0xFF010373)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -390,26 +391,17 @@ fun SubscribeButton(smallLayout: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun ManageSubscriptionButton(onClick: () -> Unit) {
-    Button(
+    TextButton(
         onClick = {
             onClick()
         },
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
-        modifier = Modifier
-            .fillMaxWidth(.7f)
-            .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(vertical = 4.dp)
-        ) {
-            Text(
-                text = "Manage Subscription",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-        }
+        Text(
+            text = "Manage Subscription",
+            color = Color.LightGray,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
     }
 }
