@@ -95,7 +95,7 @@ class CommonViewModel() : ViewModel() {
         val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
         val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
         val bytesRecovered = uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize
-        val freeMemory = freeMemorySize()  //6GB
+        val freeMemory = freeMemorySize()
         val appsEtcSize = min((physicalMemorySize / 5L), (physicalMemorySize - freeMemory))  //No API to return total app usage. Use estimate based on physical memory size on the assumption that bigger phones end up with more apps. 20% of physical memory, but no more than actual physical usage
         _uiState.value = _uiState.value.copy(
             uncompressedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
