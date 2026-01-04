@@ -85,24 +85,40 @@ class MediaFileRepository() {
     }
 
     /**
-     *
+     *  Delete all files from DB that have been marked as not updated, since no longer exist on disk
      */
     suspend fun deleteFilesDeletedFromMediaStore() {
         mediaFileDao.deleteMediaFilesMarkedAsNotUpdated()
     }
 
+    /**
+     * Get media file by full path
+     *
+     * @param fullPath Full path of media file to get
+     */
     suspend fun getMediaFileByFullPath(fullPath: String) : MediaFile? {
         return mediaFileDao.getMediaFileByFullPath(fullPath)
     }
 
+    /**
+     * Calculate total bytes recovered from compression
+     *
+     * @return Total bytes recovered from compression
+     */
     suspend fun getBytesRecovered(): Long {
-        return mediaFileDao.getBytesRecovered()
+        return getTotalUncompressedMediaSize() - getTotalCompressedMediaSize()
     }
 
+    /**
+     * Get total uncompressed media size on bytes (bytes)
+     */
     suspend fun getTotalUncompressedMediaSize(): Long {
         return mediaFileDao.getTotalUncompressedSize()
     }
 
+    /**
+     * Get total compressed media size on disk (bytes)
+     */
     suspend fun getTotalCompressedMediaSize(): Long {
         return mediaFileDao.getTotalCompressedMediaSize()
     }

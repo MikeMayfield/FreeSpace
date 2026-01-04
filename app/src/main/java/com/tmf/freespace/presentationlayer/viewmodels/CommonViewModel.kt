@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.math.min
 
 
 class CommonViewModel() : ViewModel() {
@@ -90,24 +91,34 @@ class CommonViewModel() : ViewModel() {
             }
         }
 
+        val physicalMemorySize = physicalMemorySize()
         val uncompressedPhotosAndVideosSize = mediaFileRepository.getTotalUncompressedMediaSize()
         val compressedPhotosAndVideosSize = mediaFileRepository.getTotalCompressedMediaSize()
-        val physicalMemorySize = physicalMemorySize()
-        val freeSpace = freeMemorySize()
-        val appsEtcSize = physicalMemorySize - freeSpace - compressedPhotosAndVideosSize
-        val bytesRecovered = mediaFileRepository.getBytesRecovered()
-        val alreadyExpandedMB = uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize
-        val expansionAvailableMB = (freeSpace * 10L) + (alreadyExpandedMB * 5L)
+        val bytesRecovered = uncompressedPhotosAndVideosSize - compressedPhotosAndVideosSize
+        val freeMemory = freeMemorySize()  //6GB
+        val appsEtcSize = min((physicalMemorySize / 5L), (physicalMemorySize - freeMemory))  //No API to return total app usage. Use estimate based on physical memory size on the assumption that bigger phones end up with more apps. 20% of physical memory, but no more than actual physical usage
         _uiState.value = _uiState.value.copy(
             uncompressedMB = (uncompressedPhotosAndVideosSize + appsEtcSize) / bytesToMB,
-            availableNowMB = freeSpace / bytesToMB,
+            freeMemoryMB = freeMemory / bytesToMB,
             currentExpansionMB = bytesRecovered / bytesToMB,
-            expansionAvailableMB = expansionAvailableMB / bytesToMB,
+            expansionAvailableMB = expansionAvailableMB(freeMemory, uncompressedPhotosAndVideosSize, compressedPhotosAndVideosSize),
+            addedMB = (bytesRecovered - compressedPhotosAndVideosSize),
             status = status(),
             keepFreeOptionIdx = PropertyBag.getInt(KEEP_FREE_OPTION_IDX),
             physicalMB = physicalMemorySize / bytesToMB,
             isSubscribed = isSubscribed
         )
+    }
+
+    private fun expansionAvailableMB(freeMemory: Long, uncompressedPhotosAndVideosSize: Long, compressedPhotosAndVideosSize: Long): Long {
+        val freeMemoryExpansion = freeMemory * 10L  //Expansion of free memory is estimated at at least 10x
+
+        //Existing media may be able to be compressed more than it already is, up to at least 10x, based on how much it has already been compressed. Most media typically hasn't been compressed at all
+        val compressionRatio = uncompressedPhotosAndVideosSize / (compressedPhotosAndVideosSize + 1f)  //NOTE: Add 1 to divisor to ensure no divide-by-zero
+        val remainingCompressionRatio = min(11f - compressionRatio, 11f)  //Change 1..11 current ratio to 11..1 remaining ratio (approximate)
+        val additionalExpansion = (compressedPhotosAndVideosSize * remainingCompressionRatio).toLong()
+
+        return (freeMemoryExpansion + additionalExpansion) / bytesToMB
     }
 
     private suspend fun status(): String {
@@ -132,40 +143,47 @@ class CommonViewModel() : ViewModel() {
 
     /**
      * Returns the total amount of storage on the primary disk, adjusted to standardized memory sizes (e.g. 128GB, 256GB, etc.)
+     *
+     * @return Total amount of storage on the primary disk, in bytes
      */
     fun physicalMemorySize(): Long {
-        val storageManager = appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
-        val statsManager = appContext.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
+        if (savedPhysicalMemorySize == 0L) {
+            val storageManager = appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+            val statsManager = appContext.getSystemService(Context.STORAGE_STATS_SERVICE) as StorageStatsManager
 
-        var actualPhysicalMemorySize = 0L
+            var actualPhysicalMemorySize = 0L
 
-        for (volume in storageManager.storageVolumes) {
-            try {
-                if (volume.isPrimary) {
-                    val uuid = volume.uuid?.let { UUID.fromString(it) } ?: StorageManager.UUID_DEFAULT
-                    actualPhysicalMemorySize = statsManager.getTotalBytes(uuid)
-                    break
+            for (volume in storageManager.storageVolumes) {
+                try {
+                    if (volume.isPrimary) {
+                        val uuid = volume.uuid?.let { UUID.fromString(it) } ?: StorageManager.UUID_DEFAULT
+                        actualPhysicalMemorySize = statsManager.getTotalBytes(uuid)
+                        break
+                    }
+                }
+                catch (e: Exception) {
+                    DLog.e(tag, "Error in physicalMemorySize: ${e.message}")
                 }
             }
-            catch (e: Exception) {
-                DLog.e(tag, "Error in physicalMemorySize: ${e.message}")
+
+            //Standardize memory sizes to 1GB, 2GB, 4GB, 8GB, 16GB, etc.)
+            savedPhysicalMemorySize = when {
+                actualPhysicalMemorySize % 1_000_000_000L == 0L -> actualPhysicalMemorySize  //Use actual size if it's a multiple of 1GB
+                actualPhysicalMemorySize < 10_000_000_000L -> actualPhysicalMemorySize
+                actualPhysicalMemorySize < 18_000_000_000L -> 16_000_000_000L
+                actualPhysicalMemorySize < 35_000_000_000L -> 32_000_000_000L
+                actualPhysicalMemorySize < 65_000_000_000L -> 64_000_000_000L
+                actualPhysicalMemorySize < 130_000_000_000L -> 128_000_000_000L
+                actualPhysicalMemorySize < 260_000_000_000L -> 256_000_000_000L
+                actualPhysicalMemorySize < 520_000_000_000L -> 512_000_000_000L
+                actualPhysicalMemorySize < 1_048_576_000_000L -> 1_024_000_000_000L
+                else -> 2_048_000_000L
             }
         }
 
-        //Standardize memory sizes to 1GB, 2GB, 4GB, 8GB, 16GB, etc.)
-        return when {
-            actualPhysicalMemorySize % 1_000_000_000L == 0L -> actualPhysicalMemorySize  //Use actual size if it's a multiple of 1GB
-            actualPhysicalMemorySize < 10_000_000_000L -> actualPhysicalMemorySize
-            actualPhysicalMemorySize < 18_000_000_000L -> 16_000_000_000L
-            actualPhysicalMemorySize < 35_000_000_000L -> 32_000_000_000L
-            actualPhysicalMemorySize < 65_000_000_000L -> 64_000_000_000L
-            actualPhysicalMemorySize < 130_000_000_000L -> 128_000_000_000L
-            actualPhysicalMemorySize < 260_000_000_000L -> 256_000_000_000L
-            actualPhysicalMemorySize < 520_000_000_000L -> 512_000_000_000L
-            actualPhysicalMemorySize < 1_048_576_000_000L -> 1_024_000_000_000L
-            else -> 2_048_000_000L
-        }
+        return savedPhysicalMemorySize
     }
+    var savedPhysicalMemorySize = 0L
 
     /*
      * Returns the amount of free space on the primary disk
@@ -200,14 +218,14 @@ class CommonViewModel() : ViewModel() {
 
 
 data class HomeScreenState(
-    val uncompressedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (Megabytes)
-    val availableNowMB: Long = 0L,  //Amount of space available now
-    val currentExpansionMB: Long = 0L,  //Amount of space already added by FreeSpace
-    val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion
-    val addedMB: Long = 0L,  //Amount of space added through optimization/compression
+    val uncompressedMB: Long = 0L,  //Amount of space used for photos, videos, etc. (MB)
+    val freeMemoryMB: Long = 0L,  //Amount of space available now (MB)
+    val currentExpansionMB: Long = 0L,  //Amount of space already added by FreeSpace (MB)
+    val expansionAvailableMB: Long = 320_000L,  //Maximum amount of space available for expansion (MB)
+    val addedMB: Long = 0L,  //Amount of space added through optimization/compression (MB)
     val status: String = "",  //Status, as display string
-    val keepFreeOptionIdx: Int = 1,  //Index of keep free option selected by user
-    val physicalMB: Long = 64_000L,  //Amount of physical space available
+    val keepFreeOptionIdx: Int = 1,  //Index of keep free drop-down option selected by user
+    val physicalMB: Long = 64_000L,  //Amount of physical space on device (MB)
     val isSubscribed: Boolean = false,
 )
 {
