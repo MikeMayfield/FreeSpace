@@ -70,8 +70,9 @@ import kotlin.math.min
 @Composable
 fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, navController: NavHostController) {
     val tag = "AppSummaryScreen"
-    val mbToGb = 1000
+    val mbToGb = 1_000L
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     val screenHeightDp = LocalConfiguration.current.screenHeightDp.dp - paddingValues.calculateTopPadding() + paddingValues.calculateBottomPadding()
     val shortScreenHeightDp = 750.dp  //Height of screens too short to show full content
     val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
@@ -95,7 +96,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             Text(
                 text = buildAnnotatedString {
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Grow your ${formatter.format(uiState.physicalMB / mbToGb)} GB of built-in memory to ${formatter.format(uiState.expansionAvailableMB / 1000L)} GB with FreeSpace Max")
+                        append("Grow your ${formatter.format(uiState.physicalMB / mbToGb)} GB of built-in memory to ${formatter.format((uiState.currentExpansionMB + max(uiState.expansionAvailableMB, 0)) / mbToGb)} GB with FreeSpace Max")
                     }
                 },
                 fontSize = 24.sp,
@@ -113,7 +114,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
             StorageBar(
                 uncompressedMB,
                 uiState.currentExpansionMB,
-                uiState.availableNowMB,
+                uiState.freeMemoryMB,
                 uiState.expansionAvailableMB
             )
 
@@ -124,7 +125,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
                 uiState.physicalMB,
                 uncompressedMB,
                 uiState.currentExpansionMB,
-                uiState.availableNowMB,
+                uiState.freeMemoryMB,
                 uiState.expansionAvailableMB,
                 uiState.isSubscribed,
                 smallLayout
@@ -195,7 +196,7 @@ fun AppSummaryScreen(viewModel: CommonViewModel, paddingValues: PaddingValues, n
 @SuppressLint("DefaultLocale")
 @Composable
 fun StorageBar(uncompressedMB: Long, expandedMB: Long, availableNowMB: Long, futureExpansionMB: Long) {
-    val totalMemoryMB = max(uncompressedMB + expandedMB + availableNowMB + futureExpansionMB, 1)
+    val totalMemoryMB = max((uncompressedMB + expandedMB + availableNowMB + futureExpansionMB).toFloat(), 1f)
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopStart) {
         Row(
             modifier = Modifier
@@ -206,19 +207,19 @@ fun StorageBar(uncompressedMB: Long, expandedMB: Long, availableNowMB: Long, fut
         ) {
             //Weight of each Box is percentage of total sizes in GB
             Box(Modifier  //Apps, etc. bar (up to total without FreeSpace)
-                .weight((uncompressedMB + 1f) / totalMemoryMB)
+                .weight(max(uncompressedMB / totalMemoryMB, 0.0001f))
                 .fillMaxHeight()
                 .background(Color(0xFFFA79F6)))
-            Box(Modifier  //Available now bar
-                .weight((expandedMB + 1f) / totalMemoryMB)
+            Box(Modifier  //Current expansion bar
+                .weight(max(expandedMB / totalMemoryMB, 0.0001f))
                 .fillMaxHeight()
                 .background(Color(0xFFFA03F3)))
             Box(Modifier  //Available now bar
-                .weight((availableNowMB + 1f) / totalMemoryMB)
+                .weight(max(availableNowMB / totalMemoryMB, 0.0001f))
                 .fillMaxHeight()
                 .background(Color(0xFFACFACC)))
             Box(Modifier  //Future expansion space available bar
-                .weight((futureExpansionMB + 1f) / totalMemoryMB)
+                .weight(max(futureExpansionMB / totalMemoryMB, 0.0001f))
                 .fillMaxHeight()
                 .background(Color(0xFF00C752)),
             )
@@ -229,30 +230,33 @@ fun StorageBar(uncompressedMB: Long, expandedMB: Long, availableNowMB: Long, fut
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: Long, availableNowMB: Long = 0, futureExpansionMB: Long, isSubscribed: Boolean, smallLayout: Boolean) {
+fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: Long, freeMemoryMB: Long = 0, futureExpansionMB: Long, isSubscribed: Boolean, smallLayout: Boolean) {
     val mbToGb = 1000L
     val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
 
     Column(verticalArrangement = Arrangement.spacedBy(if (smallLayout) 12.dp else 24.dp)) {
 
+        //Physical SD memory usage
+        val physicalMBUsed = min(uncompressedMB, physicalMB)
         StorageDetailItem(
             color = Color(0xFFFA79F6),
-            storageAmount = "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB of ${formatter.format(physicalMB / mbToGb)} GB built-in SD memory used",
+            storageAmount = "${if (physicalMBUsed >= physicalMB) "All" else "${formatter.format(min(uncompressedMB, physicalMB) / 1_000f)} GB"} of your ${formatter.format(physicalMB / mbToGb)} GB built-in SD memory used",
             description = if (uncompressedMB < physicalMB)
                 "Your built-in memory still has room for more photos and videos"
             else
-                "All of your built-in memory has been used, but will automatically expand with FreeSpace",
+                "All of your built-in memory has been used, but FreeSpace will automatically add more when needed",
             smallLayout
         )
 
+        //Expanded SD memory
         val storageAmountDetail = if (expandedMB < mbToGb)
                 "${formatter.format(expandedMB)} MB more SD memory was added by FreeSpace" + if (isSubscribed) " Max" else ""
             else
                 "${formatter.format(expandedMB / mbToGb)} GB more SD memory was added by FreeSpace" + if (isSubscribed) " Max" else ""
-        val description = if (uncompressedMB < physicalMB)
+        val description = if (!isSubscribed)
             "FreeSpace Lite will add up to 10 GB"
         else
-            "FreeSpace Lite reached its 10 GB limit. FreeSpace Max removes this limit"
+            ""
         StorageDetailItem(
             color = Color(0xFFFA03F3),
             storageAmount = storageAmountDetail,
@@ -260,18 +264,19 @@ fun StorageInfoSection(physicalMB: Long, uncompressedMB: Long = 0, expandedMB: L
             smallLayout
         )
 
+        //Free physical SD memory
         StorageDetailItem(
             color = Color(0xFFACFACC),
-            storageAmount = "${formatter.format(availableNowMB / mbToGb)} GB of built-in SD memory is currently free",
-            description = "More free memory will be added when needed to store more photos and videos",
+            storageAmount = "${formatter.format(freeMemoryMB / mbToGb)} GB of built-in SD memory is currently free",
+            description = "More free memory will be added when needed",
             smallLayout
         )
 
-        val storageAmountGB  = (futureExpansionMB - expandedMB) / mbToGb  //Excludes trial space from total expansion so that totals add up
+        //Amount the SD memory can still be expanded
         StorageDetailItem(
             color = Color(0xFF00C752),
-            storageAmount = "${formatter.format(storageAmountGB)} GB more SD memory can be added with FreeSpace Max",
-            description = if (isSubscribed) "Relax - With FreeSpace Max you have all the memory you need for all your favorite photos and videos"
+            storageAmount = "${formatter.format(max(futureExpansionMB / mbToGb, 0L))} GB more free memory can be added with FreeSpace Max",
+            description = if (isSubscribed) if (futureExpansionMB > mbToGb) "Relax - With FreeSpace Max you have all the memory you need for all your favorite photos and videos" else "FreeSpace has added as much memory as possible."
                 else "Subscribe to FreeSpace Max now and stop worrying about running out of memory forever",
             smallLayout
         )
@@ -298,12 +303,14 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String, 
                 fontSize = if (smallLayout) 12.sp else 16.sp,
                 color = Color(0xFF010373)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = description,
-                fontSize = if (smallLayout) 12.sp else 16.sp,
-                color = Color.DarkGray
-            )
+            if (description.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = description,
+                    fontSize = if (smallLayout) 12.sp else 16.sp,
+                    color = Color.DarkGray
+                )
+            }
         }
     }
 }
