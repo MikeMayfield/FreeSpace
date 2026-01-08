@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -337,14 +339,21 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, smallLayout: Boolean, onC
                     expanded = true
                           },
                 shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.height(36.dp)
+                contentPadding = PaddingValues(0.dp),
+                elevation = ButtonDefaults.buttonElevation(),
+                modifier = Modifier.height(36.dp).align(Alignment.Center)
             ) {
-                Text(selectedOptionText, color = Color.Black)
+                Text(
+                    text = selectedOptionText,
+                    color = Color.Black,
+                    fontSize = 4.em,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
                 Icon(
                     painter = painterResource(id = android.R.drawable.arrow_down_float),
                     contentDescription = "Dropdown",
                     tint = Color.Black,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 8.dp, end = 4.dp)
                 )
             }
             DropdownMenu(
@@ -372,25 +381,48 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, smallLayout: Boolean, onC
 
 @Composable
 fun SubscribeButton(smallLayout: Boolean, onClick: () -> Unit) {
+    val textStyle = TextStyle(
+        fontSize = 48.sp,  //Start with a large font size and shrink from there
+        fontWeight = FontWeight.Bold,
+    )
+    var resizedTextStyle by remember { mutableStateOf(textStyle) }
+    var shouldShrink by remember { mutableStateOf(true) }
+
     Button(
         onClick = {
             onClick()
         },
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
+        contentPadding = PaddingValues(8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
         modifier = Modifier
-            .fillMaxWidth(if (smallLayout) 0.9f else 1f)
-            .border(2.dp, Color.Black, RoundedCornerShape(12.dp))
+            .fillMaxWidth(0.8f)
+            .border(2.dp, Color.Black, RoundedCornerShape(16.dp))
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(vertical = 4.dp)
         ) {
+            //Text box with text that resizes down until it will fit with constraints
             Text(
                 text = "Subscribe to FreeSpace Max",
                 color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                // These parameters enable auto-sizing
+                softWrap = false,
+                maxLines = 1,
+                style = resizedTextStyle,
+                onTextLayout = { result ->
+                    // When the text layout is calculated, check if it overflowed
+                    if (shouldShrink && result.didOverflowWidth) {
+                        // If it overflowed, calculate the new smaller font size
+                        resizedTextStyle = resizedTextStyle.copy(
+                            fontSize = resizedTextStyle.fontSize * 0.9f
+                        )
+                    } else {
+                        // If it fits, stop shrinking
+                        shouldShrink = false
+                    }
+                }
             )
         }
     }
