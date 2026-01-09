@@ -16,7 +16,7 @@ import com.tmf.freespace.presentationlayer.ui.composables.GenericTextBody
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 
 @Composable
-fun SubscriptionScreen(viewModel: CommonViewModel, navController: NavHostController, paddingValues: PaddingValues) {
+fun SubscriptionScreen(navController: NavHostController, paddingValues: PaddingValues, viewModel: CommonViewModel) {
     val products by viewModel.products.collectAsStateWithLifecycle()
     val subscriptionOfferDetails = products[ProductIds.MONTHLY_200]?.subscriptionOfferDetails
     val monthlyPrice = subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.firstOrNull()?.formattedPrice ?: "$2.00"
@@ -26,17 +26,9 @@ fun SubscriptionScreen(viewModel: CommonViewModel, navController: NavHostControl
         title = "FreeSpace MAX",
         bodyHtml =
             "FreeSpace keeps your life simple — and your memory limitless.<br>" +
-                    "<br>" +
-                    "You already get <b>${PropertyBag.getInt(TRIAL_GB_FREE)} GB of extra space for free</b>, but when you’re ready for more, <b>FreeSpace Max</b> gives you automatic expansion and almost <b>limitless</b> memory.<br>" +
-                    "<br>" +
-//                    "Go monthly, yearly, or unlock it forever with our lifetime plan — and never worry about running out of memory again!<br>" +
-//                    "<br>" +
-                    "&nbsp;&nbsp;&nbsp;<b>$monthlyPrice/month - Billed Monthly</b><br>",
-//                    + "<br>" +
-//                    "&nbsp;&nbsp;&nbsp;• \$1.67/month - Billed Annually (\$20)<br>" +
-//                    "<br>" +
-//                    "&nbsp;&nbsp;&nbsp;• Lifetime Subscription (\$60)<br>"
-        navButtonText = "SUBSCRIBE",
+            "<br>" +
+            "You already get <b>${PropertyBag.getInt(TRIAL_GB_FREE)} GB of extra space for free</b>, but when you’re ready for more, <b>FreeSpace Max</b> gives you automatic expansion and almost <b>limitless</b> memory.",
+        navButtonText = "SUBSCRIBE  -  ${monthlyPrice}/Mon",
         paddingValues = paddingValues,
         onNavButtonClick = handleSubscription(viewModel, LocalActivity.current!!, navController),
     )

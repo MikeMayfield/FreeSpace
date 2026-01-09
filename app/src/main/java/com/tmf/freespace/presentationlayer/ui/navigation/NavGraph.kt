@@ -27,8 +27,8 @@ import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 fun NavGraph(navController: NavHostController, startRoute: NavRoute, commonViewModel: CommonViewModel, paddingValues: PaddingValues) {
 
     //Overall navigation graph:
-    //  Welcome -> SetItForgetIt -> CloudBackup -> License -> Permissions -> SubscriptionPromo -> Start -> AppSummary
-    //    License.onBodyClick -> LicenseAgreement -> Permissions
+    //  Welcome -> HowDoesItWork -> SetItForgetIt -> CloudBackup -> License ->                                Permissions -> SubscriptionPromo -> Start -> AppSummary
+    //                                                                 └ License.onBodyClick -> LicenseAgreement ┘
     //  Welcome: If already have permissions -> AppSummary
     NavHost(
         navController = navController,
@@ -61,9 +61,9 @@ fun NavGraph(navController: NavHostController, startRoute: NavRoute, commonViewM
 
         addStart(navController, this, paddingValues)
 
-        addAppSummaryScreen(navController, this, commonViewModel, paddingValues)
+        addAppSummaryScreen(navController, paddingValues, this, commonViewModel)
 
-        addSubscriptionScreen(navController, this, paddingValues, commonViewModel)
+        addSubscriptionScreen(navController, paddingValues, this, commonViewModel)
     }
 }
 
@@ -159,22 +159,22 @@ private fun addStart(
 
 private fun addAppSummaryScreen(
     navController: NavHostController,
+    paddingValues: PaddingValues,
     navGraphBuilder: NavGraphBuilder,
-    viewModel: CommonViewModel,
-    paddingValues: PaddingValues
+    viewModel: CommonViewModel
 ) {
     navGraphBuilder.composable(route = NavRoute.AppSummary.path) {
-        AppSummaryScreen(viewModel, paddingValues, navController)
+        AppSummaryScreen(navController, paddingValues, viewModel)
     }
 }
 
 private fun addSubscriptionScreen(
     navController: NavHostController,
-    navGraphBuilder: NavGraphBuilder,
     paddingValues: PaddingValues,
+    navGraphBuilder: NavGraphBuilder,
     viewModel: CommonViewModel
 ) {
     navGraphBuilder.composable(route = NavRoute.Subscription.path) {
-        SubscriptionScreen(viewModel, navController, paddingValues)
+        SubscriptionScreen(navController, paddingValues, viewModel)
     }
 }

@@ -152,8 +152,7 @@ fun PermissionScreenAskForAllAccessPermission(context: Context, onClicked: () ->
             text = {
                 Text(text = "Please confirm that FreeSpace can modify your photos and videos during optimization. Press Grant Permission, below.\n" +
                         "\n" +
-                        "On the Media Management Apps screen, select FreeSpace, if it isn't already selected. Then enable the 'Allow app to manage media' option and navigate back to FreeSpace. " +
-                        "Note that some versions of Android may be slightly different.")
+                        "Enable the 'Allow app to manage media' option and navigate back to FreeSpace.")
             },
             confirmButton = {
                 TextButton(

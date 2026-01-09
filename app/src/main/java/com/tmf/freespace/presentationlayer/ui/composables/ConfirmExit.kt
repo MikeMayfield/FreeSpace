@@ -29,12 +29,16 @@ fun ConfirmExit(childComposable: @Composable () -> Unit) {
                 TextButton(onClick = {
                     context?.finishAffinity() // Exit the app
                 }) {
-                    Text("Yes")
+                    Text(
+                        text = "Yes",
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showExitDialog = false }) {
-                    Text("No")
+                    Text(
+                        text = "No",
+                    )
                 }
             }
         )

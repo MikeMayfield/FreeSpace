@@ -1,6 +1,5 @@
 package com.tmf.freespace.presentationlayer.ui.composables
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,15 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -29,12 +26,11 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.tmf.freespace.domainlayer.general.Const
 
-@SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun GenericTextBody(
     modifier: Modifier = Modifier,
@@ -46,83 +42,86 @@ fun GenericTextBody(
     onBodyClick: () -> Unit = {},  //Callback for body click
     onNavButtonClick: () -> Unit = {},  //Callback for navigation button click
 ) {
-    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp - paddingValues.calculateLeftPadding(LayoutDirection.Ltr) + paddingValues.calculateRightPadding(LayoutDirection.Ltr)
-    val smallLayout = screenWidthDp < 370.dp
-    val largeLayout = screenWidthDp >= 700.dp
-
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(paddingValues)
             .background(White)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
+            .padding(paddingValues)
+            .padding(horizontal = 24.dp), //Apply left/right border padding to the whole screen
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
-
-        //Top image
-        if (imageID != null) {
-            Image(
-                painter = painterResource(id = imageID),
-                contentDescription = "Content image",
-                modifier = Modifier.fillMaxWidth(if (largeLayout) 0.5f else 0.8f)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+        if (scrollState.canScrollBackward) {
+            HorizontalDivider()
         }
 
-        //Title
-        if (title != null) {
-            Text(
-                AnnotatedString.fromHtml(title),
-                fontSize = if (smallLayout) 18.sp else 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xff04049d),
-                modifier = modifier
-            )
+        // This inner Column holds all the scrollable content
+        Column(
+            modifier = Modifier
+                .weight(1f) // Takes up all available space, pushing the button to the bottom
+                .verticalScroll(scrollState), // Makes this section scrollable
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(Const.SpacerHeightDefault)) // Some space at the top
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        //Main body
-        Text(
-            AnnotatedString.fromHtml(
-                bodyHtml,
-                linkStyles = TextLinkStyles(
-                    style = SpanStyle(
-                        textDecoration = TextDecoration.Underline,
-                        fontStyle = FontStyle.Italic,
-                        color = Color.Blue
-                    )
-                ),
-            ),
-            fontSize = if (smallLayout) 12.sp else 18.sp,
-            modifier = modifier
-                .align(Alignment.Start)
-                .clickable() {
-                    onBodyClick()
-                }
-        )
-
-        //Bottom navigation button
-        Spacer(modifier = Modifier.weight(1f, fill = true))  //Proportionally add space between top and bottom areas
-
-        if (navButtonText != null) {
-            Button(
-                colors = ButtonColors(Color(0xff04049d), White, Color(0xff04049d), White),
-                onClick = { onNavButtonClick() }) {
-                Text(
-                    text = navButtonText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = White,
-                    modifier = modifier.padding(horizontal = 16.dp)
+            //Top image
+            if (imageID != null) {
+                Image(
+                    painter = painterResource(id = imageID),
+                    contentDescription = "Content image",
+                    modifier = Modifier.fillMaxWidth(0.8f)
                 )
+
+                Spacer(modifier = Modifier.height(Const.SpacerHeightDivision))
+            }
+
+            //Title
+            if (title != null) {
+                Text(
+                    AnnotatedString.fromHtml(title),
+                    fontSize = Const.FontSizeH1,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xff04049d),
+                    textAlign = TextAlign.Center,
+                    modifier = modifier
+                )
+
+                Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
+            }
+
+            //Main body
+            Text(
+                AnnotatedString.fromHtml(
+                    bodyHtml,
+                    linkStyles = TextLinkStyles(
+                        style = SpanStyle(
+                            textDecoration = TextDecoration.Underline,
+                            fontStyle = FontStyle.Italic,
+                            color = Color.Blue
+                        )
+                    ),
+                ),
+                fontSize = Const.FontSizeBody,
+                modifier = modifier
+                    .align(Alignment.Start)
+                    .clickable() {
+                        onBodyClick()
+                    }
+            )
+        }
+
+        //Bottom navigation button (This is outside the scrollable Column)
+        if (navButtonText != null) {
+            Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
+            if (scrollState.canScrollForward) {
+                HorizontalDivider()
+            }
+            Spacer(modifier = Modifier.height(Const.SpacerHeightDefault))
+
+            DynamicButton(navButtonText) {
+                onNavButtonClick()
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp)) // Padding at the very bottom
     }
 }
