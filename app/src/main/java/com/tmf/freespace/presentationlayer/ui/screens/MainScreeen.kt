@@ -38,7 +38,7 @@ import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var versionName: String = "unknown"
+    var versionName = "unknown"
 
     try {
         val pInfo: PackageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
