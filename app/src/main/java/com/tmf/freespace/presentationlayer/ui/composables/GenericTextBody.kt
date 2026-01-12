@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -43,7 +44,6 @@ fun GenericTextBody(
     onNavButtonClick: () -> Unit = {},  //Callback for navigation button click
 ) {
     val scrollState = rememberScrollState()
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -70,7 +70,9 @@ fun GenericTextBody(
                 Image(
                     painter = painterResource(id = imageID),
                     contentDescription = "Content image",
-                    modifier = Modifier.fillMaxWidth(0.8f)
+                    contentScale = ContentScale.Inside,
+                    modifier = Modifier
+                        .fillMaxWidth(0.75f)
                 )
 
                 Spacer(modifier = Modifier.height(Const.SpacerHeightDivision))

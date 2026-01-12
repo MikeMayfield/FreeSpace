@@ -1,15 +1,13 @@
 package com.tmf.freespace.presentationlayer.ui.screens
 
-import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.os.Environment
 import android.provider.Settings
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +25,7 @@ import com.tmf.freespace.presentationlayer.ui.composables.openAppSystemSettings
 import com.tmf.freespace.presentationlayer.ui.composables.requestMultiplePermission
 import com.tmf.freespace.presentationlayer.ui.composables.someNeverAsk
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -35,16 +34,24 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
     val request = requestMultiplePermission(permissions = Permissions.allPermissions) {
         permissionStatus = it
     }
+    val context = LocalContext.current
+    val permissions = Permissions()
+    var heartbeat by remember { mutableIntStateOf(0) }  //One-second heartbeat to keep the screen checking for state change
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(3000)
+            heartbeat++
+        }
+    }
+    if (heartbeat < 0) {
+        val heartbeatTicked = heartbeat
+    }
 
-    val specialScreenIdle = 0
     val specialScreenNormalPermissions = 1
     val specialScreenPermissionDeclined = 2
     val specialScreenAskForAllAccessPermission = 3
-    val specialScreenAlmostDone = 4
-    var specialScreen by remember { mutableIntStateOf(specialScreenIdle) }
-
-    val context = LocalContext.current
-    val permissions = Permissions()
+    var specialScreen by remember { mutableIntStateOf(specialScreenNormalPermissions) }
+//    var priorSpecialScreen = -1
 
 
     //If permissions have already been granted, we must have already done the setup flow and should skip right to the AppSummary screen
@@ -56,138 +63,80 @@ fun PermissionsScreen(navController: NavHostController, paddingValues: PaddingVa
         return
     }
 
-    //Base of screen display is a generic text body
-    GenericTextBody(
-        imageID = R.drawable.permisssions,
-        title = "PERMISSIONS",
-        bodyHtml =
-            "We need your permission to work for you.<br><br>" +
-                    "FreeSpace works a lot like your regular backup app — It needs access to all your photos and videos so it can safely optimize older ones to make room for new memories. It also needs to display a small icon on the notifications bar when processing in the background to give you more control.<br><br>" +
-                    "On the next screens, tap “Allow” or “Allow All” to confirm your permission. This access is required for FreeSpace to create more memory for you.",
-        paddingValues = paddingValues,
-    ) {
-        //onClick handler for normal screen
-        //Screen to show:
-        //  Blocked Permission: If some normal permissions declined; else
-        //  Normal Permissions: If all normal permissions are not yet granted; else
-        //  AllAccess Permissions: If All_FILES_ACCESS permission is not yet granted; else
-        //  Else: Navigate to next screen (since all permissions have been granted)
-        specialScreen = when {
-            permissionStatus.someNeverAsk() ->
-                specialScreenPermissionDeclined
+    //Screen to show:
+    //  Blocked Permission: If some normal permissions declined; else
+    //  Normal Permissions: If all normal permissions are not yet granted; else
+    //  AllAccess Permissions: If All_FILES_ACCESS permission is not yet granted; else
+    //  Else: Navigate to next screen (since all permissions have been granted)
+    specialScreen = when {
+        permissionStatus.someNeverAsk() ->
+            specialScreenPermissionDeclined
 
-            !permissionStatus.allGranted() ->
-                specialScreenNormalPermissions
+        !permissionStatus.allGranted() ->
+            specialScreenNormalPermissions
 
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager() ->
-                specialScreenAskForAllAccessPermission
+        Build.VERSION.SDK_INT >= VERSION_CODES.R && !Environment.isExternalStorageManager() ->
+            specialScreenAskForAllAccessPermission
 
-            else ->
-                specialScreenAlmostDone
-        }
+        else ->
+            specialScreenNormalPermissions
     }
 
-    if (specialScreen == specialScreenAlmostDone) {
-        AlmostDone() {
-            specialScreen = specialScreenIdle
-        }
-    }
-
-    if (specialScreen == specialScreenNormalPermissions) {
-        request.launch(Permissions.allPermissions.toTypedArray())
-        specialScreen = specialScreenAskForAllAccessPermission
-    }
-    if (specialScreen == specialScreenPermissionDeclined) {
-        PermissionScreenPermissionDeclined(context) {
-            specialScreen = specialScreenAlmostDone
-        }
-    }
-    if (specialScreen == specialScreenAskForAllAccessPermission) {
-        PermissionScreenAskForAllAccessPermission(context) {
-            specialScreen = if (!permissionStatus.allGranted()) specialScreenPermissionDeclined else specialScreenAlmostDone
-        }
-    }
-}
-
-@Composable
-fun PermissionScreenPermissionDeclined(context: Context, onClicked
-: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = {
-            onClicked()
-        },
-        title = {
-            Text("Blocked Permission")
-        },
-        text = {
-            Text(text = "It looks like you permanently denied a permission that FreeSpace requires to work for you. Press Grant Permissions, below, to go to the app’s settings and then grant the required permissions.\n" +
-                    "\n" +
-                    "Step-By-Step:\n" +
-                    "On the App Info screen, click the Permissions group. Click on any permission that is shown as not allowed and change it to Always Allow. When finished, navigate back to FreeSpace and you're ready to go. " +
-                    "Note that some versions of Android may be slightly different.")
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    context.openAppSystemSettings()
-                    onClicked()
-                }
+    when (specialScreen) {
+        //Base of UI screen when no permissions have been requested yet
+        specialScreenNormalPermissions -> {
+            GenericTextBody(
+                imageID = R.drawable.permisssions,
+                title = "PERMISSIONS",
+                bodyHtml =
+                    "We need your permission to work for you.<br><br>" +
+                            "FreeSpace works a lot like your regular backup app — It needs access to all your photos and videos so it can safely optimize older ones to make room for new memories. It also needs to display a small icon on the notifications bar when processing in the background to give you more control.<br><br>" +
+                            "On the next screens, tap <b>Allow</b> or <b>Allow All</b> to confirm your permission. This access is required for FreeSpace to create more memory for you.",
+                navButtonText = "NEXT",
+                paddingValues = paddingValues,
             ) {
-                Text("Grant Permissions")
+                request.launch(Permissions.allPermissions.toTypedArray())
             }
         }
-    )
-}
 
-@Composable
-fun PermissionScreenAskForAllAccessPermission(context: Context, onClicked: () -> Unit) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        AlertDialog(
-            onDismissRequest = {
-                onClicked()
-            },
-            title = {
-                Text("Media Management Permission")
-            },
-            text = {
-                Text(text = "Please confirm that FreeSpace can modify your photos and videos during optimization. Press Grant Permission, below.\n" +
-                        "\n" +
-                        "Enable the 'Allow app to manage media' option and navigate back to FreeSpace.")
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // Direct user to settings to enable permission
-                        val activity = context
-                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                        intent.data = "package:${activity.packageName}".toUri()
-                        activity.startActivity(intent)
-                        onClicked()
-                    }
+        //Permissions requested, but at least one normal permission declined
+        specialScreenPermissionDeclined -> {
+            GenericTextBody(
+                imageID = R.drawable.missing_permission_icon,
+                title = "MISSING PERMISSION",
+                bodyHtml =
+                    "It looks like you denied a permission that FreeSpace requires to work for you. Press GRANT PERMISSIONS, below, to go to the app’s settings and then grant the required permissions.<br><br>" +
+                            "► On the App Info screen, click the Permissions group.<br>" +
+                            "► Click on any permission that is shown as 'Not allowed'<br>" +
+                            "► Allow the permission, e.g. <b>Always allow all</b><br>" +
+                            "► When finished, navigate back to FreeSpace and you're ready to go.<br><br>" +
+                            "Note that some versions of Android may be slightly different.",
+                navButtonText = "GRANT PERMISSIONS",
+                paddingValues = paddingValues,
+            ) {
+                context.openAppSystemSettings()
+            }
+        }
+
+        specialScreenAskForAllAccessPermission -> {
+            if (Build.VERSION.SDK_INT >= VERSION_CODES.R) {
+                GenericTextBody(
+                    imageID = R.drawable.all_files_access_icon,
+                    title = "MANAGE MEDIA PERMISSION",
+                    bodyHtml =
+                        "Please confirm that FreeSpace can manage your photos and videos during optimization. Press GRANT PERMISSION, below.<br>" +
+                                "<br>" +
+                                "Enable the <b>Allow app to manage media</b> option and then navigate back to FreeSpace.",
+                    navButtonText = "GRANT PERMISSION",
+                    paddingValues = paddingValues,
                 ) {
-                    Text("Grant Permission")
+                    // Direct user to settings to enable permission
+                    val activity = context
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    intent.data = "package:${activity.packageName}".toUri()
+                    activity.startActivity(intent)
                 }
-            }
-        )
-    }
-}
-
-@Composable
-fun AlmostDone(onClicked: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = {
-            onClicked()
-        },
-        title = { Text(text = "Almost Done") },
-        text = { Text(text = "Press OK to continue") },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onClicked()
-                }
-            ) {
-                Text("OK")
             }
         }
-    )
+    }
 }

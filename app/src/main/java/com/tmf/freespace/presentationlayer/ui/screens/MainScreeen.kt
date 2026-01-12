@@ -68,7 +68,7 @@ fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
                         )
                         Text(
                             text = " v${versionName}",
-                            fontSize = Const.FontSizeTiny,
+                            fontSize = Const.FontSizeSmall,
                             color = Color.Gray,
                             modifier = Modifier
                                 .padding(top = 8.dp)
