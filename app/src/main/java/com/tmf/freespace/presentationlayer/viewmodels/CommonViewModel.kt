@@ -62,6 +62,7 @@ class CommonViewModel() : ViewModel() {
      * @param productId The ID of the product to purchase.
      */
     fun launchPurchaseFlow(activity: Activity, productId: String): Boolean {
+        DLog.d(tag, "Launching purchase flow for product ID: $productId")
         return BaseApplication.billingClient?.launchPurchaseFlow(activity, productId) ?: false
     }
 
