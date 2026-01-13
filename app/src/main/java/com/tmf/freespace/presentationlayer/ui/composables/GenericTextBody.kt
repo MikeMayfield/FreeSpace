@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -30,7 +31,7 @@ import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.tmf.freespace.domainlayer.general.Const
+import com.tmf.freespace.domainlayer.general.FontSize
 
 @Composable
 fun GenericTextBody(
@@ -63,7 +64,7 @@ fun GenericTextBody(
                 .verticalScroll(scrollState), // Makes this section scrollable
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(Const.SpacerHeightDefault)) // Some space at the top
+            Spacer(modifier = Modifier.height(FontSize.SpacerHeightDefault)) // Some space at the top
 
             //Top image
             if (imageID != null) {
@@ -72,24 +73,25 @@ fun GenericTextBody(
                     contentDescription = "Content image",
                     contentScale = ContentScale.Inside,
                     modifier = Modifier
+                        .sizeIn(maxWidth = 400.dp)
                         .fillMaxWidth(0.75f)
                 )
 
-                Spacer(modifier = Modifier.height(Const.SpacerHeightDivision))
+                Spacer(modifier = Modifier.height(FontSize.SpacerHeightDivision))
             }
 
             //Title
             if (title != null) {
                 Text(
                     AnnotatedString.fromHtml(title),
-                    fontSize = Const.FontSizeH1,
+                    fontSize = FontSize.H1,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xff04049d),
                     textAlign = TextAlign.Center,
                     modifier = modifier
                 )
 
-                Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
+                Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
             }
 
             //Main body
@@ -104,7 +106,7 @@ fun GenericTextBody(
                         )
                     ),
                 ),
-                fontSize = Const.FontSizeBody,
+                fontSize = FontSize.Body,
                 modifier = modifier
                     .align(Alignment.Start)
                     .clickable() {
@@ -115,11 +117,11 @@ fun GenericTextBody(
 
         //Bottom navigation button (This is outside the scrollable Column)
         if (navButtonText != null) {
-            Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
+            Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
             if (scrollState.canScrollForward) {
                 HorizontalDivider()
             }
-            Spacer(modifier = Modifier.height(Const.SpacerHeightDefault))
+            Spacer(modifier = Modifier.height(FontSize.SpacerHeightDefault))
 
             DynamicButton(navButtonText) {
                 onNavButtonClick()

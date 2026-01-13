@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,12 +20,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.tmf.freespace.domainlayer.general.Const
+import com.tmf.freespace.domainlayer.general.FontSize
 
 @Composable
 fun DynamicButton(text: String, onClick: () -> Unit) {
     val textStyle = TextStyle(
-        fontSize = Const.FontSizeBody,  //Start with a large font size and shrink from there
+        fontSize = FontSize.Body,  //Start with a large font size and shrink from there
         fontWeight = FontWeight.Bold,
     )
     var resizedTextStyle by remember { mutableStateOf(textStyle) }
@@ -38,6 +39,7 @@ fun DynamicButton(text: String, onClick: () -> Unit) {
         contentPadding = PaddingValues(8.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
         modifier = Modifier
+            .sizeIn(maxWidth = 500.dp)
             .fillMaxWidth(0.6f)
     ) {
         Column(

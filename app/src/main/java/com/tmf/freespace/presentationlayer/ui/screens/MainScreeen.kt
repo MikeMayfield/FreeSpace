@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.tmf.freespace.R
-import com.tmf.freespace.domainlayer.general.Const
+import com.tmf.freespace.domainlayer.general.FontSize
 import com.tmf.freespace.presentationlayer.ui.navigation.NavGraph
 import com.tmf.freespace.presentationlayer.ui.navigation.NavRoute
 import com.tmf.freespace.presentationlayer.ui.theme.FreeSpaceTheme
@@ -68,7 +68,7 @@ fun MainScreen(viewModel: CommonViewModel, startRoute: NavRoute) {
                         )
                         Text(
                             text = " v${versionName}",
-                            fontSize = Const.FontSizeSmall,
+                            fontSize = FontSize.Small,
                             color = Color.Gray,
                             modifier = Modifier
                                 .padding(top = 8.dp)

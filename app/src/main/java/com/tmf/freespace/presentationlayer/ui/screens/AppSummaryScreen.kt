@@ -48,16 +48,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.domainlayer.backgroundworkers.PeriodicBackgroundProcessingWorker
-import com.tmf.freespace.domainlayer.general.Const
 import com.tmf.freespace.domainlayer.general.DLog
+import com.tmf.freespace.domainlayer.general.FontSize
 import com.tmf.freespace.presentationlayer.ui.composables.ConfirmExit
 import com.tmf.freespace.presentationlayer.ui.composables.DynamicButton
+import com.tmf.freespace.presentationlayer.ui.composables.DynamicFontSize
 import com.tmf.freespace.presentationlayer.viewmodels.CommonViewModel
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -75,121 +75,123 @@ fun AppSummaryScreen(navController: NavHostController, paddingValues: PaddingVal
     val scrollState = rememberScrollState()
 
     ConfirmExit() {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(White)
-                .padding(paddingValues)
-                .padding(24.dp),  //Apply left/right border padding to the whole screen
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (scrollState.canScrollBackward) {
-                HorizontalDivider()
-            }
-
-            // This inner Column holds all the scrollable content
+        DynamicFontSize(20) {
             Column(
                 modifier = Modifier
-                    .weight(1f) // Takes up all available space, pushing the button to the bottom
-                    .verticalScroll(scrollState), // Makes this section scrollable
+                    .fillMaxSize()
+                    .background(White)
+                    .padding(paddingValues)
+                    .padding(24.dp),  //Apply left/right border padding to the whole screen
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
-                val uncompressedMB = min(uiState.uncompressedMB, uiState.physicalMB)
+                if (scrollState.canScrollBackward) {
+                    HorizontalDivider()
+                }
 
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                            append("Grow your ${formatter.format(uiState.physicalMB / mbToGb)} GB of built-in SD memory to ${
-                                formatter.format((uiState.currentExpansionMB + max(uiState.expansionAvailableMB,
-                                    0)) / mbToGb)
-                            } GB with FreeSpace Max")
-                        }
-                    },
-                    fontSize = Const.FontSizeH1,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
+                // This inner Column holds all the scrollable content
+                Column(
+                    modifier = Modifier
+                        .weight(1f) // Takes up all available space, pushing the button to the bottom
+                        .verticalScroll(scrollState), // Makes this section scrollable
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val formatter = DecimalFormat("###,###,##0", DecimalFormatSymbols(Locale.getDefault()))
+                    val uncompressedMB = min(uiState.uncompressedMB, uiState.physicalMB)
 
-                Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
-
-                //Storage bar section
-                StorageBar(
-                    uncompressedMB,
-                    uiState.currentExpansionMB,
-                    uiState.freeMemoryMB,
-                    uiState.expansionAvailableMB
-                )
-
-                //Storage info section
-                Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
-
-                StorageInfoSection(
-                    uiState.physicalMB,
-                    uncompressedMB,
-                    uiState.currentExpansionMB,
-                    uiState.freeMemoryMB,
-                    uiState.expansionAvailableMB,
-                    uiState.isSubscribed
-                )
-
-                Spacer(modifier = Modifier.height(Const.SpacerHeightDivision))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Status: ",
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Expand your ${formatter.format(uiState.physicalMB / mbToGb)} GB of built-in SD memory to ${
+                                    formatter.format((uiState.currentExpansionMB + max(uiState.expansionAvailableMB,
+                                        0)) / mbToGb)
+                                } GB")
+                            }
+                        },
+                        fontSize = FontSize.H1Dynamic,
                         color = Color.Black,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = Const.FontSizeBody
-                    )
-                    Text(
-                        text = uiState.status,
-                        color = Color.DarkGray,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = Const.FontSizeBody
+                        textAlign = TextAlign.Center
                     )
 
-                }
+                    Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
 
-                Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
+                    //Storage bar section
+                    StorageBar(
+                        uncompressedMB,
+                        uiState.currentExpansionMB,
+                        uiState.freeMemoryMB,
+                        uiState.expansionAvailableMB
+                    )
 
-                KeepStorageFreeSection(uiState.keepFreeOptionIdx) { selectedOptionIdx ->
-                    val newMinFreeSpaceGoalMb: Long = when (selectedOptionIdx) {
-                        0 -> 2_000L  //2GB
-                        1 -> 5_000L  //5GB
-                        2 -> 10_000L  //10GB
-                        3 -> (uiState.physicalMB * 0.05f).toLong()  //5%
-                        4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
-                        else -> 2_000L
+                    //Storage info section
+                    Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
+
+                    StorageInfoSection(
+                        uiState.physicalMB,
+                        uncompressedMB,
+                        uiState.currentExpansionMB,
+                        uiState.freeMemoryMB,
+                        uiState.expansionAvailableMB,
+                        uiState.isSubscribed
+                    )
+
+                    Spacer(modifier = Modifier.height(FontSize.SpacerHeightDivision))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Status: ",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = FontSize.BodyDynamic
+                        )
+                        Text(
+                            text = uiState.status,
+                            color = Color.DarkGray,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = FontSize.BodyDynamic
+                        )
+
                     }
-                    PropertyBag.setLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB, newMinFreeSpaceGoalMb)
-                    viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
-                    DLog.d(tag, "Starting background processing in case we need to free up space or stop processing against a larger size goal")
-                    PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing to free up more space
-                }
-            }
 
-            //Bottom navigation button (This is outside the scrollable Column)
-            Spacer(modifier = Modifier.height(Const.SpacerHeightExtra))
-            if (scrollState.canScrollForward) {
-                HorizontalDivider()
-            }
-            Spacer(modifier = Modifier.height(Const.SpacerHeightDefault))
+                    Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
 
-            if (!uiState.isSubscribed) {
-                DynamicButton("Subscribe to FreeSpace Max") {
-                    navController.navigate("subscription")
+                    KeepStorageFreeSection(uiState.keepFreeOptionIdx) { selectedOptionIdx ->
+                        val newMinFreeSpaceGoalMb: Long = when (selectedOptionIdx) {
+                            0 -> 2_000L  //2GB
+                            1 -> 5_000L  //5GB
+                            2 -> 10_000L  //10GB
+                            3 -> (uiState.physicalMB * 0.05f).toLong()  //5%
+                            4 -> (uiState.physicalMB * 0.10f).toLong()  //10%
+                            else -> 2_000L
+                        }
+                        PropertyBag.setLong(PropertyBag.MIN_FREE_SPACE_GOAL_MB, newMinFreeSpaceGoalMb)
+                        viewModel.updateKeepFreeOptionIdx(selectedOptionIdx)
+                        DLog.d(tag, "Starting background processing in case we need to free up space or stop processing against a larger size goal")
+                        PeriodicBackgroundProcessingWorker.queueImmediateProcessing()  //Start background processing to free up more space
+                    }
                 }
-            }
-            else {
-                val context = LocalContext.current
-                ManageSubscriptionButton() {
-                    try {
-                        val uri = "https://play.google.com/store/account/subscriptions".toUri()
-                        val webIntent = Intent(Intent.ACTION_VIEW, uri)
-                        context.startActivity(webIntent)
-                    } catch(e: Exception) {
-                        DLog.e(tag, "Failed to open subscription page: ${e.message}")
+
+                //Bottom navigation button (This is outside the scrollable Column)
+                Spacer(modifier = Modifier.height(FontSize.SpacerHeightExtra))
+                if (scrollState.canScrollForward) {
+                    HorizontalDivider()
+                }
+                Spacer(modifier = Modifier.height(FontSize.SpacerHeightDefault))
+
+                if (!uiState.isSubscribed) {
+                    DynamicButton("Subscribe to FreeSpace Max") {
+                        navController.navigate("subscription")
+                    }
+                } else {
+                    val context = LocalContext.current
+                    ManageSubscriptionButton() {
+                        try {
+                            val uri = "https://play.google.com/store/account/subscriptions".toUri()
+                            val webIntent = Intent(Intent.ACTION_VIEW, uri)
+                            context.startActivity(webIntent)
+                        }
+                        catch (e: Exception) {
+                            DLog.e(tag, "Failed to open subscription page: ${e.message}")
+                        }
                     }
                 }
             }
@@ -295,19 +297,21 @@ fun StorageDetailItem(color: Color, storageAmount: String, description: String) 
                 .clip(CircleShape)
                 .background(color)
         )
-        Spacer(modifier = Modifier.width(Const.SpacerHeightExtra))
+
+        Spacer(modifier = Modifier.width(12.dp))
+
         Column {
             Text(
                 text = storageAmount,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = Const.FontSizeBody,
+                fontSize = FontSize.BodyDynamic,
                 color = Color(0xFF010373)
             )
             if (description.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(FontSize.SpacerHeightSmall))
                 Text(
                     text = description,
-                    fontSize = Const.FontSizeBody,
+                    fontSize = FontSize.BodySmallDynamic,
                     color = Color.DarkGray
                 )
             }
@@ -326,25 +330,24 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Keep at least", fontSize = Const.FontSizeBody, color = Color.Black)
+        Text("Keep at least", fontSize = FontSize.BodyDynamic, color = Color.Black)
 
-        Spacer(modifier = Modifier.width(Const.SpacerHeightDefault))
+        Spacer(modifier = Modifier.width(FontSize.SpacerHeightDefault))
 
         Box {
             OutlinedButton(
-                onClick = {
-                    expanded = true
-                          },
+                onClick = { expanded = true },
                 shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(0.dp),
+                contentPadding = PaddingValues(4.dp),
                 elevation = ButtonDefaults.buttonElevation(),
-                modifier = Modifier.height(36.dp).align(Alignment.Center)
+                modifier = Modifier.height(48.dp).align(Alignment.Center)
             ) {
                 Text(
                     text = selectedOptionText,
                     color = Color.Black,
-                    fontSize = 3.em,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    fontSize = FontSize.BodyDynamic,
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 Icon(
                     painter = painterResource(id = android.R.drawable.arrow_down_float),
@@ -361,7 +364,7 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
                     DropdownMenuItem(
                         text = { Text(
                             text = selectionOption,
-                            fontSize = Const.FontSizeBody,
+                            fontSize = FontSize.BodyDynamic,
                             color = Color.Black
                         ) },
                         onClick = {
@@ -374,9 +377,9 @@ fun KeepStorageFreeSection(selectedOptionIdx: Int = 0, onClick: (selectedOptionI
             }
         }
 
-        Spacer(modifier = Modifier.width(Const.SpacerHeightDefault))
+        Spacer(modifier = Modifier.width(FontSize.SpacerHeightDefault))
 
-        Text("of memory free", fontSize = Const.FontSizeBody, color = Color.Black)
+        Text("of memory free", fontSize = FontSize.BodyDynamic, color = Color.Black)
     }
 }
 
@@ -392,7 +395,7 @@ fun ManageSubscriptionButton(onClick: () -> Unit) {
             text = "Manage Subscription",
             color = Color.LightGray,
             fontWeight = FontWeight.Bold,
-            fontSize = Const.FontSizeBody
+            fontSize = FontSize.BodyDynamic
         )
     }
 }
