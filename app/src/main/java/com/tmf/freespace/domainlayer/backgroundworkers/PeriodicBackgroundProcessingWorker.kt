@@ -16,6 +16,7 @@ import com.tmf.freespace.datalayer.datasources.local.PropertyBag
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.IS_IDLE
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.MAX_DATE_ADDED
 import com.tmf.freespace.datalayer.datasources.local.PropertyBag.PRIOR_MEDIA_STORE_VERSION
+import com.tmf.freespace.datalayer.datasources.local.PropertyBag.SUBSCRIPTION_STATUS
 import com.tmf.freespace.datalayer.models.MediaFile
 import com.tmf.freespace.datalayer.models.MediaType
 import com.tmf.freespace.datalayer.repositories.MediaFileRepository
@@ -23,6 +24,7 @@ import com.tmf.freespace.domainlayer.compression.CompressionLevels
 import com.tmf.freespace.domainlayer.general.DLog
 import com.tmf.freespace.domainlayer.general.ForegroundWorkerUtils
 import com.tmf.freespace.domainlayer.general.Permissions
+import com.tmf.freespace.presentationlayer.viewmodels.HomeScreenState
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -97,6 +99,16 @@ class PeriodicBackgroundProcessingWorker(val appContext: Context, params: Worker
                 FileOptimizationWorker().compressAllPendingMedia()
                 if (restartRequested()) {
                     DLog.d(tag, "Restarting $tag processing")
+                }
+
+                //Display notification that we need subscription every week if not subscribed
+                if ((PropertyBag.getString(SUBSCRIPTION_STATUS) != HomeScreenState.SubscriptionStatus.SUBSCRIBED.name) &&
+                    (PropertyBag.getLong(PropertyBag.DATE_LAST_SUBSCRIPTION_REMINDER) < System.currentTimeMillis() - 7 * 24 * 60 * 60_000) ) {
+                    ForegroundWorkerUtils().showStandardNotification(appContext, "More SD memory for photos and videos",
+                        "Add up to 1,000GB (1TB) of SD memory to store nearly unlimited photos and videos. Subscribe to FreeSpace Pro now for only $2.00! Press MORE INFO, below, for information on your current memory expansion and how to subscribe.",
+                        "MORE INFO"
+                    )
+                    PropertyBag.setLong(PropertyBag.DATE_LAST_SUBSCRIPTION_REMINDER, System.currentTimeMillis())
                 }
             } while (restartRequested())  //NOTE: There is a small race condition here, but the worst case is that processing wait until the next periodic processing instead of running immediately
 

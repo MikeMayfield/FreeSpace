@@ -4,4 +4,6 @@
     <string name="file_optimization_notification_cancel">Cancel</string>
     <string name="file_optimization_channel_name">Storage Optimization</string>
     <string name="file_optimization_channel_description">Ongoing storage optimization notification</string>
+    <string name="subscription_notification_channel_name">Add more SD Memory</string>
+    <string name="subscription_notification_channel_description">Add up to 1TB of additional SD memory with FreeSpace</string>
 </resources>

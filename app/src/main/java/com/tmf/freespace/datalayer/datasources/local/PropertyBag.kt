@@ -99,6 +99,7 @@ object PropertyBag {
         setString(PRIOR_MEDIA_STORE_VERSION, "0")
         setString(SUBSCRIPTION_STATUS, HomeScreenState.SubscriptionStatus.NOT_SUBSCRIBED.toString())
         setString(TRIAL_GB_FREE, "10")
+        setString(DATE_LAST_SUBSCRIPTION_REMINDER, System.currentTimeMillis().toString())
     }
 
     /**
@@ -140,4 +141,6 @@ object PropertyBag {
     const val PRIOR_MEDIA_STORE_VERSION = "PRIOR_MEDIA_STORE_VERSION"  //Latest media store version seen. If newer version becomes available, database needs to be updated with possibly different MediaIDs
     const val SUBSCRIPTION_STATUS = "SUBSCRIPTION_STATUS"  //Current subscription status
     const val TRIAL_GB_FREE = "TRIAL_GB_FREE"  //Size of free trial in GB
+    const val DATE_LAST_SUBSCRIPTION_REMINDER = "DATE_LAST_SUBSCRIPTION_REMINDER"  //Date of last subscription reminder
+
 }
